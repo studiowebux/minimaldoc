@@ -23,7 +23,6 @@ jobs:
       - name: Compile minimaldoc
         run: |
           go build -o ./bin/minimaldoc-${{ matrix.platform }} ./cmd/minimaldoc
-        working-directory: src
 
       - name: Release
         uses: softprops/action-gh-release@v2
