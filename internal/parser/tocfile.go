@@ -1,0 +1,129 @@
+package parser
+
+import (
+	"bufio"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+)
+
+// TOCEntry represents an entry in the TOC.md file
+type TOCEntry struct {
+	Title    string
+	FilePath string
+	Level    int
+	Children []*TOCEntry
+}
+
+// TOCFileParser parses a TOC.md file to extract navigation structure
+type TOCFileParser struct {
+	docsDir string
+}
+
+// NewTOCFileParser creates a new TOC file parser
+func NewTOCFileParser(docsDir string) *TOCFileParser {
+	return &TOCFileParser{
+		docsDir: docsDir,
+	}
+}
+
+// Parse parses a TOC.md file and returns the navigation structure
+func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
+	file, err := os.Open(tocFilePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var entries []*TOCEntry
+	var stack []*TOCEntry
+	scanner := bufio.NewScanner(file)
+
+	// Regex to match markdown list items with optional links
+	// Matches:  - [Title](path.md)
+	//          - Title
+	//        - [Title](path.md)
+	listItemRegex := regexp.MustCompile(`^(\s*)[-*]\s+(?:\[([^\]]+)\]\(([^\)]+)\)|(.+))$`)
+
+	lineNum := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineNum++
+
+		// Skip empty lines and headings
+		if strings.TrimSpace(line) == "" || strings.HasPrefix(strings.TrimSpace(line), "#") {
+			continue
+		}
+
+		matches := listItemRegex.FindStringSubmatch(line)
+		if matches == nil {
+			continue
+		}
+
+		indent := len(matches[1])
+		level := indent / 2 // Assuming 2 spaces per level
+
+		var title, filePath string
+		if matches[2] != "" {
+			// Link format: [Title](path)
+			title = matches[2]
+			filePath = matches[3]
+		} else {
+			// Plain text format: Title (section header)
+			title = strings.TrimSpace(matches[4])
+			filePath = ""
+		}
+
+		entry := &TOCEntry{
+			Title:    title,
+			FilePath: filePath,
+			Level:    level,
+			Children: []*TOCEntry{},
+		}
+
+		// Build the hierarchy
+		for len(stack) > 0 && stack[len(stack)-1].Level >= level {
+			stack = stack[:len(stack)-1]
+		}
+
+		if len(stack) == 0 {
+			// Top-level entry
+			entries = append(entries, entry)
+		} else {
+			// Child entry
+			parent := stack[len(stack)-1]
+			parent.Children = append(parent.Children, entry)
+		}
+
+		stack = append(stack, entry)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return entries, nil
+}
+
+// Flatten returns a flat list of all file paths in order
+func (p *TOCFileParser) Flatten(entries []*TOCEntry) []string {
+	var result []string
+	var flatten func([]*TOCEntry)
+
+	flatten = func(entries []*TOCEntry) {
+		for _, entry := range entries {
+			if entry.FilePath != "" {
+				// Resolve relative path
+				fullPath := filepath.Join(p.docsDir, entry.FilePath)
+				result = append(result, fullPath)
+			}
+			if len(entry.Children) > 0 {
+				flatten(entry.Children)
+			}
+		}
+	}
+
+	flatten(entries)
+	return result
+}

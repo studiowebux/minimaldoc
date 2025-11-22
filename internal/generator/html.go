@@ -1,0 +1,202 @@
+package generator
+
+import (
+	"bytes"
+	"embed"
+	"fmt"
+	"html/template"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/studiowebux/minimaldoc/internal/core"
+)
+
+// HTMLGenerator generates HTML files from pages
+type HTMLGenerator struct {
+	site      *core.Site
+	templates *template.Template
+	themeFS   embed.FS
+}
+
+// NewHTMLGenerator creates a new HTML generator
+func NewHTMLGenerator(site *core.Site, themeFS embed.FS) (*HTMLGenerator, error) {
+	// Create template with custom functions
+	tmpl := template.New("").Funcs(template.FuncMap{
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires an even number of arguments")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	})
+
+	// Parse templates from embedded filesystem using configured theme
+	themeName := site.Config.Theme
+	if themeName == "" {
+		themeName = "default"
+	}
+
+	tmpl, err := tmpl.ParseFS(
+		themeFS,
+		fmt.Sprintf("themes/%s/templates/*.html", themeName),
+		fmt.Sprintf("themes/%s/templates/partials/*.html", themeName),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse templates: %w", err)
+	}
+
+	return &HTMLGenerator{
+		site:      site,
+		templates: tmpl,
+		themeFS:   themeFS,
+	}, nil
+}
+
+// Generate generates HTML files for all pages
+func (g *HTMLGenerator) Generate() error {
+	fmt.Println("Generating HTML files...")
+
+	// Create output directory
+	if err := os.MkdirAll(g.site.OutputRoot, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Generate each page
+	for _, page := range g.site.Pages {
+		if err := g.generatePage(page); err != nil {
+			return fmt.Errorf("failed to generate page %s: %w", page.SourcePath, err)
+		}
+	}
+
+	// Copy static assets
+	if err := g.copyStaticAssets(); err != nil {
+		return fmt.Errorf("failed to copy static assets: %w", err)
+	}
+
+	fmt.Printf("Generated %d pages\n", len(g.site.Pages))
+	return nil
+}
+
+// generatePage generates a single HTML page
+func (g *HTMLGenerator) generatePage(page *core.Page) error {
+	// Prepare template data
+	data := map[string]interface{}{
+		"Site":     g.site,
+		"Page":     page,
+		"Content":  template.HTML(page.HTML),
+		"BasePath": g.getBasePath(),
+	}
+
+	// Execute template
+	var buf bytes.Buffer
+	if err := g.templates.ExecuteTemplate(&buf, "layout.html", data); err != nil {
+		return fmt.Errorf("template execution failed: %w", err)
+	}
+
+	// Create output directory
+	outputDir := filepath.Dir(page.OutputPath)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	// Write HTML file
+	if err := os.WriteFile(page.OutputPath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+// copyStaticAssets copies CSS, JS, and other static assets to the output directory
+func (g *HTMLGenerator) copyStaticAssets() error {
+	fmt.Println("Copying static assets...")
+
+	// Get theme name
+	themeName := g.site.Config.Theme
+	if themeName == "" {
+		themeName = "default"
+	}
+	staticPath := fmt.Sprintf("themes/%s/static", themeName)
+
+	// Walk the static directory
+	err := fs.WalkDir(g.themeFS, staticPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		// Read from embedded FS
+		content, err := g.themeFS.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read file %s: %w", path, err)
+		}
+
+		// Determine output path (remove "themes/{theme}/static/" prefix)
+		relPath := filepath.Join(strings.TrimPrefix(path, staticPath+"/"))
+		outPath := filepath.Join(g.site.OutputRoot, relPath)
+
+		// Create output directory
+		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory: %w", err)
+		}
+
+		// Write to destination
+		if err := os.WriteFile(outPath, content, 0644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", outPath, err)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// getBasePath extracts the path component from BaseURL for asset linking
+// Examples:
+//   - "https://example.com/docs/" → "/docs"
+//   - "https://example.com/" → ""
+//   - "" → ""
+func (g *HTMLGenerator) getBasePath() string {
+	baseURL := g.site.Config.BaseURL
+	if baseURL == "" {
+		return ""
+	}
+
+	// Parse the URL to extract the path
+	// Remove protocol and domain, keep only the path
+	if strings.HasPrefix(baseURL, "http://") {
+		baseURL = strings.TrimPrefix(baseURL, "http://")
+	} else if strings.HasPrefix(baseURL, "https://") {
+		baseURL = strings.TrimPrefix(baseURL, "https://")
+	}
+
+	// Find the first / after the domain
+	parts := strings.SplitN(baseURL, "/", 2)
+	if len(parts) < 2 {
+		return ""
+	}
+
+	// Get the path part and ensure it starts with / and doesn't end with /
+	path := "/" + parts[1]
+	path = strings.TrimSuffix(path, "/")
+
+	// If path is just "/", return empty string
+	if path == "/" {
+		return ""
+	}
+
+	return path
+}
