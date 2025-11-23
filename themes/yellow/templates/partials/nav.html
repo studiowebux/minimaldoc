@@ -12,8 +12,8 @@
 <a href="{{.BasePath}}{{.Item.Path}}" class="nav-link">{{.Item.Title}}</a>
 {{- else -}}
 <span class="nav-section">{{.Item.Title}}</span>
-{{- end -}}
-{{if .Item.Children -}}
+{{- end}}
+{{- if .Item.Children -}}
 <ul class="nav-list nav-list-nested">
 {{- range .Item.Children -}}
 {{template "nav-item" (dict "Item" . "BasePath" $.BasePath) -}}

@@ -175,9 +175,9 @@ body {
     color: var(--text-primary);
 }
 
-:root[data-theme="dark"] .theme-icon::before {
+[data-theme="dark"] .theme-icon::before {
     content: "◑";
-    color: var(--text-primary);
+    color: #ffffff;
 }
 
 /* Navigation */
