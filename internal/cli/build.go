@@ -56,7 +56,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println("╔══════════════════════════════════════╗")
-	fmt.Println("║     Minimal Doc - Static Site       ║")
+	fmt.Println("║     Minimal Doc - Static Site        ║")
 	fmt.Println("║          Generator                   ║")
 	fmt.Println("╚══════════════════════════════════════╝")
 	fmt.Println()

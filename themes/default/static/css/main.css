@@ -170,10 +170,12 @@ body {
 .theme-icon::before {
     content: "◐";
     font-size: 1.2rem;
+    color: var(--text-primary);
 }
 
 :root[data-theme="dark"] .theme-icon::before {
     content: "◑";
+    color: var(--text-primary);
 }
 
 /* Navigation */
