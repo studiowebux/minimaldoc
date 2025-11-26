@@ -39,3 +39,4 @@ dist/
 !cmd/minimaldoc
 
 my-docs
+test-output

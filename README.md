@@ -15,6 +15,7 @@ A modern, minimal static site generator for documentation written in Go.
 - **Syntax Highlighting** - Code blocks with syntax highlighting
 - **GFM Support** - Tables, strikethrough, task lists, and more
 - **Sitemap** - Automatic sitemap.xml generation for SEO
+- **OpenAPI/Swagger** - Interactive API documentation with live testing
 - **LLM-Friendly** - Generates `llms.txt` for AI tools
 - **Fast Builds** - Lightning-fast site generation
 - **GitHub Pages Ready** - Deploy anywhere static sites are supported
@@ -88,6 +89,8 @@ minimaldoc build [docs-directory] [flags]
 - `--output, -o` - Output directory (default: `public`)
 - `--theme, -t` - Theme name (default: `default`)
 - `--llms, -l` - Generate llms.txt (default: `true`)
+- `--openapi` - Enable OpenAPI/Swagger documentation
+- `--openapi-dir` - Directory containing OpenAPI spec files (default: `api`)
 - `--clean-urls` - Use clean URLs `/page/` instead of `/page.html`
 - `--title` - Site title (default: `Documentation`)
 - `--description` - Site description
@@ -106,6 +109,44 @@ Initialize a new documentation site with example files.
 ```bash
 minimaldoc init [directory]
 ```
+
+## Configuration
+
+MinimalDoc can be configured using either CLI flags or a `config.yaml` file in your docs directory.
+
+### Using config.yaml
+
+Create a `config.yaml` file in your docs root:
+
+```yaml
+title: My Project Documentation
+description: Comprehensive documentation for my project
+base_url: https://example.com/docs
+theme: default
+enable_llms: true
+clean_urls: false
+
+openapi:
+  enabled: true
+  spec_files:
+    - "api/openapi.yaml"
+    - "api/v2/api.yaml"
+  spec_urls:
+    - "https://api.example.com/openapi.json"
+  default_view: "path"  # Options: path, tag, flat
+  sync_on_build: false
+  cache_dir: ".openapi-cache"
+  enable_testing: true
+  enable_export: true
+  lazy_load_chunk_size: 51200
+```
+
+**Benefits:**
+- No need to pass flags every build
+- Commit configuration with your docs
+- Easier team collaboration
+
+**Note:** CLI flags always override config.yaml values.
 
 ## Documentation Structure
 
@@ -209,6 +250,53 @@ All headings get anchor IDs for deep linking:
 ```
 
 Links to: `#getting-started`
+
+## OpenAPI/Swagger Documentation
+
+MinimalDoc provides interactive API documentation from OpenAPI/Swagger specifications.
+
+### Quick Start
+
+1. Place your OpenAPI spec files (`.yaml` or `.json`) in the `api/` directory:
+
+```
+docs/
+├── index.md
+├── api/
+│   ├── openapi.yaml
+│   └── another-api.json
+└── ...
+```
+
+2. Build with OpenAPI support:
+
+```bash
+minimaldoc build --openapi
+```
+
+### Features
+
+- **Multiple Views** - Organize endpoints by path, tag, or flat list
+- **Live Testing** - Interactive API tester with authentication support
+- **Schema Viewer** - Collapsible schema explorer for complex types
+- **Export** - Generate cURL commands and restcli configurations
+- **Markdown Support** - Descriptions render with full markdown formatting
+- **$ref Resolution** - Automatic component reference resolution
+- **Single Endpoint View** - Spotify-style focused documentation
+
+### Authentication
+
+Supports multiple authentication methods:
+- Bearer Token
+- API Key
+- OAuth 2.0 (Authorization Code flow)
+
+### Customization
+
+```bash
+# Use a different directory for OpenAPI specs
+minimaldoc build --openapi --openapi-dir specs
+```
 
 ## Theme
 

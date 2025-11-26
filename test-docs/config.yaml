@@ -1,0 +1,21 @@
+title: Pet Store API Documentation
+description: Comprehensive API documentation for Pet Store
+base_url: ""
+author: Pet Store Team
+theme: default
+dark_mode: false
+enable_llms: true
+enable_search: true
+clean_urls: false
+
+openapi:
+  enabled: true
+  spec_files:
+    - "api/openapi.yaml"
+  spec_urls: []
+  default_view: "path"
+  sync_on_build: false
+  cache_dir: ".openapi-cache"
+  enable_testing: true
+  enable_export: true
+  lazy_load_chunk_size: 51200

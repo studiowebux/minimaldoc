@@ -48,6 +48,21 @@
 <kbd class="search-kbd-hint">⌘K</kbd>
 </button>
 {{template "nav" .}}
+{{if .Site.Config.OpenAPI.Enabled}}{{if .Site.APISpecs}}
+<div class="api-link-separator"></div>
+<nav class="api-navigation">
+<div class="api-nav-header">API Documentation</div>
+<ul class="nav-list">
+{{range .Site.APISpecs}}
+<li class="nav-item">
+<a href="{{$.BasePath}}/api/{{.Name | stripSpecExt}}" class="nav-link api-link">
+{{.Title}}
+</a>
+</li>
+{{end}}
+</ul>
+</nav>
+{{end}}{{end}}
 <div class="sidebar-footer">
 <a href="https://minimaldoc.com" target="_blank" rel="noopener noreferrer">Powered by MinimalDoc</a>
 </div>
@@ -88,5 +103,6 @@
 <script src="{{.BasePath}}/js/anchor-links.js"></script>
 <script src="{{.BasePath}}/js/external-links.js"></script>
 <script src="{{.BasePath}}/js/search.js"></script>
+<script src="{{.BasePath}}/js/code-copy.js"></script>
 </body>
 </html>

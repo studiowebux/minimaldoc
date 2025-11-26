@@ -17,6 +17,11 @@ type Metadata struct {
 	// SEO metadata
 	SEO SEO `yaml:"seo"`
 
+	// OpenAPI integration
+	OpenAPISpec   string `yaml:"openapi_spec"`    // Reference to OpenAPI spec file/URL
+	OpenAPIPath   string `yaml:"openapi_path"`    // Specific endpoint path to embed
+	OpenAPIMethod string `yaml:"openapi_method"`  // Specific HTTP method to embed
+
 	// Custom fields (for extensibility)
 	Custom map[string]interface{} `yaml:"custom"`
 }

@@ -9,6 +9,7 @@ type Site struct {
 	Pages      []*Page      // All pages
 	RootPages  []*Page      // Top-level pages (for navigation)
 	Navigation *Navigation  // Site navigation tree
+	APISpecs   []*APISpec   // OpenAPI specifications
 
 	// Paths
 	DocsRoot   string // Root directory of markdown files
@@ -37,6 +38,9 @@ type SiteConfig struct {
 	// Output
 	CleanURLs bool `yaml:"clean_urls"` // Use /page/ instead of /page.html
 
+	// OpenAPI
+	OpenAPI OpenAPIConfig `yaml:"openapi"` // OpenAPI/Swagger configuration
+
 	// Custom
 	Custom map[string]interface{} `yaml:"custom"`
 }
@@ -44,15 +48,16 @@ type SiteConfig struct {
 // DefaultSiteConfig returns a SiteConfig with sensible defaults
 func DefaultSiteConfig() SiteConfig {
 	return SiteConfig{
-		Title:       "Documentation",
-		Description: "Documentation site powered by Minimal Doc",
-		Theme:       "default",
-		DarkMode:    false,
-		EnableLLMS:  true,
+		Title:        "Documentation",
+		Description:  "Documentation site powered by Minimal Doc",
+		Theme:        "default",
+		DarkMode:     false,
+		EnableLLMS:   true,
 		EnableSearch: false,
-		NavDepth:    0,
-		CleanURLs:   false,
-		Custom:      make(map[string]interface{}),
+		NavDepth:     0,
+		CleanURLs:    false,
+		OpenAPI:      DefaultOpenAPIConfig(),
+		Custom:       make(map[string]interface{}),
 	}
 }
 
@@ -78,6 +83,7 @@ func NewSite(docsRoot, outputRoot string, config SiteConfig) *Site {
 		Pages:      []*Page{},
 		RootPages:  []*Page{},
 		Navigation: &Navigation{Items: []*NavItem{}},
+		APISpecs:   []*APISpec{},
 		DocsRoot:   docsRoot,
 		OutputRoot: outputRoot,
 	}

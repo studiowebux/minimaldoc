@@ -5,8 +5,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	minimaldoc "github.com/studiowebux/minimaldoc"
 	"github.com/studiowebux/minimaldoc/internal/builder"
+	"github.com/studiowebux/minimaldoc/internal/config"
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/studiowebux/minimaldoc/internal/generator"
 )
@@ -24,13 +26,15 @@ to the 'public' directory.`,
 }
 
 var (
-	outputDir   string
-	themeName   string
-	enableLLMS  bool
-	cleanURLs   bool
-	siteTitle   string
-	siteDesc    string
-	baseURL     string
+	outputDir      string
+	themeName      string
+	enableLLMS     bool
+	cleanURLs      bool
+	siteTitle      string
+	siteDesc       string
+	baseURL        string
+	enableOpenAPI  bool
+	openapiSpecDir string
 )
 
 func init() {
@@ -41,6 +45,8 @@ func init() {
 	BuildCmd.Flags().StringVar(&siteTitle, "title", "Documentation", "Site title")
 	BuildCmd.Flags().StringVar(&siteDesc, "description", "", "Site description")
 	BuildCmd.Flags().StringVar(&baseURL, "base-url", "", "Base URL for the site")
+	BuildCmd.Flags().BoolVar(&enableOpenAPI, "openapi", false, "Enable OpenAPI/Swagger documentation")
+	BuildCmd.Flags().StringVar(&openapiSpecDir, "openapi-dir", "api", "Directory containing OpenAPI spec files (relative to docs root)")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -61,8 +67,30 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	fmt.Println("╚══════════════════════════════════════╝")
 	fmt.Println()
 
+	// Load config.yaml if it exists
+	fileConfig, err := config.LoadConfig(docsDir)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Track which flags were explicitly set by the user
+	flagsSet := make(map[string]bool)
+	cmd.Flags().Visit(func(f *pflag.Flag) {
+		flagsSet[f.Name] = true
+	})
+
 	// Create site configuration
-	config := core.SiteConfig{
+	openapiConfig := core.DefaultOpenAPIConfig()
+	openapiConfig.Enabled = enableOpenAPI
+	if enableOpenAPI {
+		// Auto-discover spec files in the specified directory
+		openapiConfig.SpecFiles = []string{openapiSpecDir + "/*.yaml", openapiSpecDir + "/*.yml", openapiSpecDir + "/*.json"}
+		openapiConfig.DefaultView = "path"
+		openapiConfig.EnableTesting = true
+		openapiConfig.EnableExport = true
+	}
+
+	siteConfig := core.SiteConfig{
 		Title:       siteTitle,
 		Description: siteDesc,
 		BaseURL:     baseURL,
@@ -70,10 +98,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		EnableLLMS:  enableLLMS,
 		CleanURLs:   cleanURLs,
 		NavDepth:    0,
+		OpenAPI:     openapiConfig,
+	}
+
+	// Merge with config.yaml if it exists (CLI flags take precedence)
+	if fileConfig != nil {
+		siteConfig = fileConfig.MergeWithCLI(siteConfig, flagsSet)
+		fmt.Println("Loaded configuration from config.yaml")
 	}
 
 	// Create site
-	site := core.NewSite(docsDir, outputDir, config)
+	site := core.NewSite(docsDir, outputDir, siteConfig)
 
 	// Build site (parse and process all markdown)
 	siteBuilder := builder.NewBuilder(site)
@@ -89,6 +124,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	if err := htmlGen.Generate(); err != nil {
 		return fmt.Errorf("HTML generation failed: %w", err)
+	}
+
+	// Generate OpenAPI documentation (if enabled)
+	openapiGen, err := generator.NewOpenAPIGenerator(site, minimaldoc.ThemeFS)
+	if err != nil {
+		return fmt.Errorf("failed to create OpenAPI generator: %w", err)
+	}
+	if openapiGen != nil {
+		if err := openapiGen.Generate(); err != nil {
+			return fmt.Errorf("OpenAPI generation failed: %w", err)
+		}
 	}
 
 	// Generate llms.txt

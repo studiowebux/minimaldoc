@@ -18,6 +18,7 @@ type Builder struct {
 	frontmatterParser *parser.FrontmatterParser
 	markdownParser    *parser.MarkdownParser
 	tocParser         *parser.TOCParser
+	openapiParser     *parser.OpenAPIParser
 
 	// Builders
 	navBuilder *NavigationBuilder
@@ -25,11 +26,13 @@ type Builder struct {
 
 // NewBuilder creates a new site builder
 func NewBuilder(site *core.Site) *Builder {
+	cacheDir := filepath.Join(site.OutputRoot, site.Config.OpenAPI.CacheDir)
 	return &Builder{
 		site:              site,
 		frontmatterParser: parser.NewFrontmatterParser(),
 		markdownParser:    parser.NewMarkdownParser(),
 		tocParser:         parser.NewTOCParser(),
+		openapiParser:     parser.NewOpenAPIParser(cacheDir),
 		navBuilder:        NewNavigationBuilder(),
 	}
 }
@@ -50,13 +53,23 @@ func (b *Builder) Build() error {
 		}
 	}
 
-	// 3. Build navigation
+	// 3. Discover and parse OpenAPI specs (if enabled)
+	if b.site.Config.OpenAPI.Enabled {
+		if err := b.discoverAndParseOpenAPISpecs(); err != nil {
+			return fmt.Errorf("failed to parse OpenAPI specs: %w", err)
+		}
+	}
+
+	// 4. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
-	// 4. Compute prev/next links
+	// 5. Compute prev/next links
 	b.computePrevNext()
 
 	fmt.Printf("Discovered %d pages\n", len(b.site.Pages))
+	if b.site.Config.OpenAPI.Enabled {
+		fmt.Printf("Discovered %d OpenAPI specs\n", len(b.site.APISpecs))
+	}
 	return nil
 }
 
@@ -182,4 +195,155 @@ func (b *Builder) flattenNavigation(items []*core.NavItem) []*core.Page {
 	}
 
 	return pages
+}
+
+// discoverAndParseOpenAPISpecs discovers and parses all OpenAPI specifications
+func (b *Builder) discoverAndParseOpenAPISpecs() error {
+	// 1. Discover local OpenAPI files
+	localFiles, err := b.discoverOpenAPIFiles()
+	if err != nil {
+		return fmt.Errorf("failed to discover OpenAPI files: %w", err)
+	}
+
+	// 2. Parse local files
+	for _, filePath := range localFiles {
+		spec, err := b.openapiParser.ParseFile(filePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to parse OpenAPI spec %s: %v\n", filePath, err)
+			continue
+		}
+		b.site.APISpecs = append(b.site.APISpecs, spec)
+	}
+
+	// 3. Parse remote URLs
+	if len(b.site.Config.OpenAPI.SpecURLs) > 0 {
+		cacheDir := filepath.Join(b.site.OutputRoot, b.site.Config.OpenAPI.CacheDir)
+
+		for _, url := range b.site.Config.OpenAPI.SpecURLs {
+			// Generate cache file name from URL
+			cacheName := b.openapiParser.NameFromURL(url) + ".json"
+			cachePath := filepath.Join(cacheDir, cacheName)
+
+			// Check if cache exists
+			cacheExists := false
+			if _, err := os.Stat(cachePath); err == nil {
+				cacheExists = true
+			}
+
+			// Decide whether to fetch from URL or use cache
+			var spec *core.APISpec
+			var err error
+
+			if b.site.Config.OpenAPI.SyncOnBuild || !cacheExists {
+				// Fetch from URL (either sync is enabled or no cache exists)
+				spec, err = b.openapiParser.ParseURL(url)
+				if err != nil {
+					// If fetch fails and cache exists, try loading from cache
+					if cacheExists {
+						fmt.Fprintf(os.Stderr, "Warning: failed to fetch OpenAPI spec from %s, using cache: %v\n", url, err)
+						spec, err = b.openapiParser.ParseFile(cachePath)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Warning: failed to load cached spec: %v\n", err)
+							continue
+						}
+					} else {
+						fmt.Fprintf(os.Stderr, "Warning: failed to fetch OpenAPI spec from %s: %v\n", url, err)
+						continue
+					}
+				}
+			} else {
+				// Use cached spec
+				spec, err = b.openapiParser.ParseFile(cachePath)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Warning: failed to load cached spec from %s, trying to fetch: %v\n", cachePath, err)
+					spec, err = b.openapiParser.ParseURL(url)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "Warning: failed to fetch OpenAPI spec from %s: %v\n", url, err)
+						continue
+					}
+				}
+			}
+
+			b.site.APISpecs = append(b.site.APISpecs, spec)
+		}
+	}
+
+	return nil
+}
+
+// discoverOpenAPIFiles walks the docs directory and discovers OpenAPI spec files
+func (b *Builder) discoverOpenAPIFiles() ([]string, error) {
+	var specFiles []string
+
+	// 1. Check explicitly configured spec files
+	for _, pattern := range b.site.Config.OpenAPI.SpecFiles {
+		// If it's a glob pattern, expand it
+		if strings.Contains(pattern, "*") {
+			matches, err := filepath.Glob(filepath.Join(b.site.DocsRoot, pattern))
+			if err != nil {
+				return nil, fmt.Errorf("invalid glob pattern %s: %w", pattern, err)
+			}
+			specFiles = append(specFiles, matches...)
+		} else {
+			// It's a direct file path
+			fullPath := filepath.Join(b.site.DocsRoot, pattern)
+			if _, err := os.Stat(fullPath); err == nil {
+				specFiles = append(specFiles, fullPath)
+			}
+		}
+	}
+
+	// 2. Auto-discover OpenAPI files in docs directory (if spec files list is empty)
+	if len(b.site.Config.OpenAPI.SpecFiles) == 0 {
+		err := filepath.WalkDir(b.site.DocsRoot, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// Skip directories
+			if d.IsDir() {
+				return nil
+			}
+
+			// Check if file looks like an OpenAPI spec
+			if b.isOpenAPIFile(path) {
+				specFiles = append(specFiles, path)
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return specFiles, nil
+}
+
+// isOpenAPIFile checks if a file is likely an OpenAPI specification
+func (b *Builder) isOpenAPIFile(path string) bool {
+	ext := filepath.Ext(path)
+
+	// Check extension
+	if ext != ".yaml" && ext != ".yml" && ext != ".json" {
+		return false
+	}
+
+	// Check filename patterns
+	base := strings.ToLower(filepath.Base(path))
+	patterns := []string{
+		"openapi",
+		"swagger",
+		"api-spec",
+		"api_spec",
+	}
+
+	for _, pattern := range patterns {
+		if strings.Contains(base, pattern) {
+			return true
+		}
+	}
+
+	return false
 }

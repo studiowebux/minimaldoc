@@ -3,6 +3,7 @@ package generator
 import (
 	"bytes"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -37,6 +38,48 @@ func NewHTMLGenerator(site *core.Site, themeFS embed.FS) (*HTMLGenerator, error)
 				dict[key] = values[i+1]
 			}
 			return dict, nil
+		},
+		"json": func(v interface{}) (template.JS, error) {
+			bytes, err := json.Marshal(v)
+			if err != nil {
+				return "", err
+			}
+			return template.JS(bytes), nil
+		},
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"lower": strings.ToLower,
+		"replace": func(input, old, new string) string {
+			return strings.ReplaceAll(input, old, new)
+		},
+		"stripSpecExt": func(name string) string {
+			// Remove common OpenAPI spec extensions
+			name = strings.TrimSuffix(name, ".yaml")
+			name = strings.TrimSuffix(name, ".yml")
+			name = strings.TrimSuffix(name, ".json")
+			return name
+		},
+		"endpointID": func(endpoint *core.APIEndpoint) string {
+			if endpoint.OperationID != "" {
+				return endpoint.OperationID
+			}
+			// Fallback: use Method-Path with non-alphanumeric chars replaced
+			id := endpoint.Method + "-" + endpoint.Path
+			// Replace non-alphanumeric characters with dashes
+			result := ""
+			lastWasDash := false
+			for _, r := range id {
+				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+					result += string(r)
+					lastWasDash = false
+				} else if !lastWasDash {
+					result += "-"
+					lastWasDash = true
+				}
+			}
+			// Trim trailing dash
+			return strings.TrimSuffix(result, "-")
 		},
 	})
 
@@ -136,6 +179,19 @@ func (g *HTMLGenerator) copyStaticAssets() error {
 
 		if d.IsDir() {
 			return nil
+		}
+
+		// Skip OpenAPI files if OpenAPI is not enabled
+		if !g.site.Config.OpenAPI.Enabled {
+			filename := filepath.Base(path)
+			// Skip OpenAPI-specific CSS and JS files
+			if filename == "openapi.css" ||
+				filename == "openapi-explorer.js" ||
+				filename == "api-tester.js" ||
+				filename == "oauth-handler.js" ||
+				filename == "export.js" {
+				return nil
+			}
 		}
 
 		// Read from embedded FS

@@ -41,11 +41,11 @@
     --bg-code: #252525;
     --bg-hover: #3a3a3a;
 
-    /* Text - Soft White */
-    --text-primary: #f5f5f5;
-    --text-secondary: #d0d0d0;
-    --text-tertiary: #b0b0b0;
-    --text-muted: #8a8a8a;
+    /* Text - Brighter for readability */
+    --text-primary: #ffffff;
+    --text-secondary: #e8e8e8;
+    --text-tertiary: #d0d0d0;
+    --text-muted: #b0b0b0;
 
     /* Borders */
     --border-primary: #3a3a3a;
@@ -55,9 +55,9 @@
     --accent-primary: #e5e5e5;
     --accent-hover: #f5f5f5;
 
-    /* Links */
-    --link-color: #60a5fa;
-    --link-hover: #93c5fd;
+    /* Links - Brighter blue for better contrast */
+    --link-color: #7bb3ff;
+    --link-hover: #a5cfff;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -485,6 +485,53 @@ body {
     background-color: transparent;
 }
 
+/* Code Copy Button */
+.code-block-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.code-copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1;
+    opacity: 0;
+}
+
+.code-block-wrapper:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.code-copy-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border-color: var(--text-muted);
+}
+
+.code-copy-btn:active {
+    transform: scale(0.95);
+}
+
+.code-copy-btn.copied {
+    color: #49cc90;
+    border-color: #49cc90;
+    opacity: 1;
+}
+
+.code-block-wrapper pre {
+    margin: 0;
+}
+
 .markdown-body blockquote {
     margin: 1rem 0;
     padding-left: 1rem;
@@ -755,6 +802,29 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-tertiary);
+}
+
+/* ========================================
+   API Navigation
+   ======================================== */
+
+.api-link-separator {
+    margin: 1.5rem 0;
+    border-top: 1px solid var(--border-primary);
+}
+
+.api-navigation {
+    margin-bottom: 1.5rem;
+}
+
+.api-nav-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin-bottom: 0.75rem;
+    padding: 0 0.75rem;
 }
 
 /* ========================================
