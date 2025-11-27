@@ -5,7 +5,7 @@
 
 (function() {
     const toggle = document.getElementById('mobile-menu-toggle');
-    const sidebar = document.getElementById('sidebar-left');
+    const sidebar = document.getElementById('sidebar-left') || document.getElementById('openapi-sidebar-left');
     const backdrop = document.getElementById('mobile-menu-backdrop');
 
     if (!toggle || !sidebar || !backdrop) return;
@@ -35,7 +35,7 @@
     backdrop.addEventListener('click', closeMenu);
 
     // Close menu when clicking a navigation link
-    const navLinks = sidebar.querySelectorAll('.nav-link');
+    const navLinks = sidebar.querySelectorAll('.nav-link, .openapi-endpoint-link');
     navLinks.forEach(function(link) {
         link.addEventListener('click', closeMenu);
     });

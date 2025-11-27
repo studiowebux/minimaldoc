@@ -210,8 +210,8 @@
       `;
       endpoint.Parameters.forEach(param => {
         html += `
-          <tr>
-            <td><code>${escapeHtml(param.Name)}</code></td>
+          <tr${param.Deprecated ? ' class="deprecated-param"' : ''}>
+            <td><code>${escapeHtml(param.Name)}</code>${param.Deprecated ? ' <span class="openapi-badge-deprecated">deprecated</span>' : ''}</td>
             <td><code>${param.Schema ? escapeHtml(param.Schema.Type || 'any') : 'any'}</code></td>
             <td><span class="param-in">${escapeHtml(param.In)}</span></td>
             <td>${param.Required ? 'Yes' : 'No'}</td>

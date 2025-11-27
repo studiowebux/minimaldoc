@@ -626,6 +626,14 @@
   font-size: 0.8125rem;
 }
 
+.parameters-table .deprecated-param {
+  opacity: 0.7;
+}
+
+.parameters-table .deprecated-param code {
+  text-decoration: line-through;
+}
+
 .param-in {
   display: inline-block;
   padding: 0.125rem 0.5rem;
