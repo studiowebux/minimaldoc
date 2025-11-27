@@ -18,10 +18,11 @@ type OpenAPIGenerator struct {
 	site      *core.Site
 	templates *template.Template
 	themeFS   embed.FS
+	version   string
 }
 
 // NewOpenAPIGenerator creates a new OpenAPI generator
-func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS) (*OpenAPIGenerator, error) {
+func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS, version string) (*OpenAPIGenerator, error) {
 	if !site.Config.OpenAPI.Enabled {
 		return nil, nil // Skip if OpenAPI is not enabled
 	}
@@ -98,6 +99,7 @@ func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS) (*OpenAPIGenerator, 
 		site:      site,
 		templates: tmpl,
 		themeFS:   themeFS,
+		version:   version,
 	}, nil
 }
 
@@ -169,10 +171,11 @@ func (g *OpenAPIGenerator) generateSpec(spec *core.APISpec, apiDir string) error
 func (g *OpenAPIGenerator) generateSpecHTML(spec *core.APISpec, specDir string) error {
 	// Prepare template data
 	data := map[string]interface{}{
-		"Site":       g.site,
-		"Spec":       spec,
-		"BasePath":   g.getBasePath(),
+		"Site":        g.site,
+		"Spec":        spec,
+		"BasePath":    g.getBasePath(),
 		"DefaultView": g.site.Config.OpenAPI.DefaultView,
+		"Version":     g.version,
 	}
 
 	var buf bytes.Buffer

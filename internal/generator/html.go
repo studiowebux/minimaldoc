@@ -19,10 +19,11 @@ type HTMLGenerator struct {
 	site      *core.Site
 	templates *template.Template
 	themeFS   embed.FS
+	version   string
 }
 
 // NewHTMLGenerator creates a new HTML generator
-func NewHTMLGenerator(site *core.Site, themeFS embed.FS) (*HTMLGenerator, error) {
+func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLGenerator, error) {
 	// Create template with custom functions
 	tmpl := template.New("").Funcs(template.FuncMap{
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
@@ -102,6 +103,7 @@ func NewHTMLGenerator(site *core.Site, themeFS embed.FS) (*HTMLGenerator, error)
 		site:      site,
 		templates: tmpl,
 		themeFS:   themeFS,
+		version:   version,
 	}, nil
 }
 
@@ -138,6 +140,7 @@ func (g *HTMLGenerator) generatePage(page *core.Page) error {
 		"Page":     page,
 		"Content":  template.HTML(page.HTML),
 		"BasePath": g.getBasePath(),
+		"Version":  g.version,
 	}
 
 	// Execute template

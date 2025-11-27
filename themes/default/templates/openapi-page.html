@@ -9,8 +9,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{.Spec.Title}} - API Documentation">
 <meta property="og:description" content="{{.Spec.Description}}">
-<link rel="stylesheet" href="{{.BasePath}}/css/main.css">
-<link rel="stylesheet" href="{{.BasePath}}/css/openapi.css">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/openapi.css?v={{.Version}}">
 </head>
 <body class="openapi-body">
 <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation">
@@ -172,12 +172,12 @@
 	window.OPENAPI_DEFAULT_VIEW = {{.DefaultView | json}};
 	window.OPENAPI_BASE_PATH = {{.BasePath | json}};
 </script>
-<script src="{{.BasePath}}/js/theme-toggle.js"></script>
-<script src="{{.BasePath}}/js/mobile-menu.js"></script>
-<script src="{{.BasePath}}/js/sidebar-resize.js"></script>
-<script src="{{.BasePath}}/js/openapi-explorer.js"></script>
-<script src="{{.BasePath}}/js/api-tester.js"></script>
-<script src="{{.BasePath}}/js/oauth-handler.js"></script>
-<script src="{{.BasePath}}/js/export.js"></script>
+<script src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/mobile-menu.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/sidebar-resize.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/openapi-explorer.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/api-tester.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/oauth-handler.js?v={{.Version}}"></script>
+<script src="{{.BasePath}}/js/export.js?v={{.Version}}"></script>
 </body>
 </html>

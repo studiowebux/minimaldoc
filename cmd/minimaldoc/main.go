@@ -6,10 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/studiowebux/minimaldoc/internal/cli"
-)
-
-var (
-	version = "0.0.5"
+	"github.com/studiowebux/minimaldoc/internal/version"
 )
 
 // rootCmd represents the base command
@@ -29,7 +26,7 @@ Features:
   • Clean, minimal design
   • SEO optimized
   • GitHub Pages ready`,
-	Version: version,
+	Version: version.Version,
 }
 
 func init() {

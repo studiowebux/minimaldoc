@@ -11,6 +11,7 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/config"
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/studiowebux/minimaldoc/internal/generator"
+	"github.com/studiowebux/minimaldoc/internal/version"
 )
 
 // BuildCmd represents the build command
@@ -117,7 +118,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate HTML
-	htmlGen, err := generator.NewHTMLGenerator(site, minimaldoc.ThemeFS)
+	htmlGen, err := generator.NewHTMLGenerator(site, minimaldoc.ThemeFS, version.Version)
 	if err != nil {
 		return fmt.Errorf("failed to create HTML generator: %w", err)
 	}
@@ -127,7 +128,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate OpenAPI documentation (if enabled)
-	openapiGen, err := generator.NewOpenAPIGenerator(site, minimaldoc.ThemeFS)
+	openapiGen, err := generator.NewOpenAPIGenerator(site, minimaldoc.ThemeFS, version.Version)
 	if err != nil {
 		return fmt.Errorf("failed to create OpenAPI generator: %w", err)
 	}
