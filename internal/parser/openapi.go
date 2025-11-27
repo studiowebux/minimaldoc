@@ -466,6 +466,7 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 		Nullable:    schema.Nullable,
 		ReadOnly:    schema.ReadOnly,
 		WriteOnly:   schema.WriteOnly,
+		Deprecated:  schema.Deprecated,
 		Pattern:     schema.Pattern,
 		UniqueItems: schema.UniqueItems,
 	}

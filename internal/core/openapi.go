@@ -121,6 +121,7 @@ type APISchema struct {
 	Nullable    bool                   // Can be null
 	ReadOnly    bool                   // Read-only property
 	WriteOnly   bool                   // Write-only property
+	Deprecated  bool                   // Is deprecated
 
 	// Validation
 	Minimum          *float64 // Minimum value

@@ -389,6 +389,9 @@
           html += '<details class="schema-details">';
           html += '<summary class="schema-summary">';
           html += `<span class="property-name">${escapeHtml(propName)}</span>`;
+          if (prop.Deprecated) {
+            html += ' <span class="openapi-badge openapi-badge-deprecated">deprecated</span>';
+          }
           html += `<span class="property-type">${escapeHtml(getSchemaTypeDisplay(prop))}</span>`;
           if (isRequired) {
             html += '<span class="property-required">required</span>';
@@ -414,6 +417,9 @@
           // Simple property - no nesting
           html += '<div class="schema-property-simple">';
           html += `<span class="property-name">${escapeHtml(propName)}</span>`;
+          if (prop.Deprecated) {
+            html += ' <span class="openapi-badge openapi-badge-deprecated">deprecated</span>';
+          }
           html += `<span class="property-type">${escapeHtml(getSchemaTypeDisplay(prop))}</span>`;
           if (isRequired) {
             html += '<span class="property-required">required</span>';
