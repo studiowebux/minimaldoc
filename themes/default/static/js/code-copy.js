@@ -15,12 +15,12 @@
   }
 
   function addCopyButtonsToCodeBlocks() {
-    // Find all pre elements that contain code
-    const preElements = document.querySelectorAll('pre:has(code), pre');
+    // Find all pre elements
+    const preElements = document.querySelectorAll('pre');
 
     preElements.forEach(pre => {
       // Skip if already has a copy button
-      if (pre.parentElement.classList.contains('code-block-wrapper')) {
+      if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) {
         return;
       }
 
