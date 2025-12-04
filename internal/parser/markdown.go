@@ -51,19 +51,20 @@ func NewMarkdownParser() *MarkdownParser {
 
 // Parse converts markdown content to HTML
 func (p *MarkdownParser) Parse(content []byte) ([]byte, error) {
-	return p.ParseWithContext(content, "")
+	return p.ParseWithContext(content, "", "")
 }
 
 // ParseWithContext converts markdown content to HTML with link transformation
 // currentPagePath is the relative path from docs root (e.g., "api/getting-started.md")
-func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string) ([]byte, error) {
+// basePath is the base path to prepend to all links (e.g., "/docs")
+func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string, basePath string) ([]byte, error) {
 	// Parse markdown to AST
 	reader := text.NewReader(content)
 	doc := p.md.Parser().Parse(reader)
 
 	// Transform .md links to .html if we have page context
 	if currentPagePath != "" {
-		TransformMarkdownLinks(doc, currentPagePath)
+		TransformMarkdownLinks(doc, currentPagePath, basePath)
 	}
 
 	// Render AST to HTML

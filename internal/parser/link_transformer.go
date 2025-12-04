@@ -9,7 +9,8 @@ import (
 
 // TransformMarkdownLinks walks the AST and converts relative .md links to .html
 // It applies slug transformation logic to match the navigation URL structure
-func TransformMarkdownLinks(doc ast.Node, currentPagePath string) {
+// basePath is prepended to all transformed links (e.g., "/docs")
+func TransformMarkdownLinks(doc ast.Node, currentPagePath string, basePath string) {
 	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
@@ -29,7 +30,7 @@ func TransformMarkdownLinks(doc ast.Node, currentPagePath string) {
 		}
 
 		// Transform the link
-		transformed := transformLink(destination, currentPagePath)
+		transformed := transformLink(destination, currentPagePath, basePath)
 		link.Destination = []byte(transformed)
 
 		return ast.WalkContinue, nil
@@ -54,7 +55,8 @@ func isInternalMarkdownLink(link string) bool {
 }
 
 // transformLink converts a .md link to .html with slug transformation
-func transformLink(link string, currentPagePath string) string {
+// basePath is prepended to the final link (e.g., "/docs")
+func transformLink(link string, currentPagePath string, basePath string) string {
 	// Split link into path and fragment
 	parts := strings.SplitN(link, "#", 2)
 	mdPath := parts[0]
@@ -69,8 +71,8 @@ func transformLink(link string, currentPagePath string) string {
 	// Apply slug transformation (remove .md, number prefixes, etc.)
 	slug := generateSlugFromPath(resolvedPath)
 
-	// Construct final .html link as absolute path (starting with /)
-	htmlLink := "/" + slug + ".html"
+	// Construct final .html link with basePath prepended
+	htmlLink := basePath + "/" + slug + ".html"
 	if fragment != "" {
 		htmlLink += "#" + fragment
 	}

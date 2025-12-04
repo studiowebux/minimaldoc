@@ -119,7 +119,8 @@ func (b *Builder) parsePage(page *core.Page) error {
 	}
 
 	// 2. Parse markdown to HTML with link transformation
-	html, err := b.markdownParser.ParseWithContext(content, page.RelPath)
+	basePath := b.getBasePath()
+	html, err := b.markdownParser.ParseWithContext(content, page.RelPath, basePath)
 	if err != nil {
 		return fmt.Errorf("markdown parse error: %w", err)
 	}
@@ -347,3 +348,43 @@ func (b *Builder) isOpenAPIFile(path string) bool {
 
 	return false
 }
+
+// getBasePath extracts the path component from BaseURL for asset linking
+// Examples:
+//   - "https://example.com/docs/" → "/docs"
+//   - "https://example.com/" → ""
+//   - "" → ""
+func (b *Builder) getBasePath() string {
+	baseURL := b.site.Config.BaseURL
+	if baseURL == "" {
+		return ""
+	}
+
+	// Parse the URL to extract the path
+	// Remove protocol and domain, keep only the path
+	if strings.HasPrefix(baseURL, "http://") {
+		baseURL = strings.TrimPrefix(baseURL, "http://")
+	} else if strings.HasPrefix(baseURL, "https://") {
+		baseURL = strings.TrimPrefix(baseURL, "https://")
+	}
+
+	// Find the first / after the domain
+	parts := strings.SplitN(baseURL, "/", 2)
+	if len(parts) < 2 {
+		return ""
+	}
+
+	// Get the path part and ensure it starts with / and doesn't end with /
+	path := "/" + parts[1]
+	path = strings.TrimSuffix(path, "/")
+
+	// If path is just "/", return empty string
+	if path == "/" {
+		return ""
+	}
+
+	return path
+}
+
+// extractOrder extracts a numeric order prefix from a filename
+// Examples: "01-intro.md" → 1, "02_guide.md" → 2
