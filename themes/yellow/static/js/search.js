@@ -239,6 +239,7 @@
             }
 
             item.addEventListener('click', function() {
+                closeSearch();
                 window.location.href = match.entry.url;
             });
 
@@ -270,6 +271,7 @@
         if (selectedIndex >= 0 && selectedIndex < items.length) {
             const url = items[selectedIndex].dataset.url;
             if (url) {
+                closeSearch();
                 window.location.href = url;
             }
         }
