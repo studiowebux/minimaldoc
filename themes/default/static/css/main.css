@@ -229,6 +229,54 @@ body {
     letter-spacing: 0.05em;
 }
 
+.nav-item-with-children {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.nav-toggle-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+    border-radius: 4px;
+    margin-left: -0.25rem;
+}
+
+.nav-toggle-btn:hover {
+    background-color: var(--bg-hover);
+}
+
+.nav-toggle-icon {
+    display: inline-block;
+    font-size: 0.65rem;
+    transition: transform 0.15s ease;
+    color: var(--text-secondary);
+    line-height: 1;
+}
+
+.nav-item:not(.collapsed) .nav-toggle-icon {
+    transform: rotate(90deg);
+}
+
+.nav-toggle-btn:hover .nav-toggle-icon {
+    color: var(--text-primary);
+}
+
+.nav-link-parent {
+    flex: 1;
+}
+
+.nav-item.collapsed > .nav-list-nested {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .container {
         grid-template-columns: 1fr;

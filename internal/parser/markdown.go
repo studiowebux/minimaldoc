@@ -7,6 +7,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/text"
 	htmlrenderer "github.com/yuin/goldmark/renderer/html"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
@@ -50,10 +51,27 @@ func NewMarkdownParser() *MarkdownParser {
 
 // Parse converts markdown content to HTML
 func (p *MarkdownParser) Parse(content []byte) ([]byte, error) {
+	return p.ParseWithContext(content, "")
+}
+
+// ParseWithContext converts markdown content to HTML with link transformation
+// currentPagePath is the relative path from docs root (e.g., "api/getting-started.md")
+func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string) ([]byte, error) {
+	// Parse markdown to AST
+	reader := text.NewReader(content)
+	doc := p.md.Parser().Parse(reader)
+
+	// Transform .md links to .html if we have page context
+	if currentPagePath != "" {
+		TransformMarkdownLinks(doc, currentPagePath)
+	}
+
+	// Render AST to HTML
 	var buf bytes.Buffer
-	if err := p.md.Convert(content, &buf); err != nil {
+	if err := p.md.Renderer().Render(&buf, content, doc); err != nil {
 		return nil, err
 	}
+
 	return buf.Bytes(), nil
 }
 

@@ -118,8 +118,8 @@ func (b *Builder) parsePage(page *core.Page) error {
 		page.Order = meta.MenuOrder
 	}
 
-	// 2. Parse markdown to HTML
-	html, err := b.markdownParser.Parse(content)
+	// 2. Parse markdown to HTML with link transformation
+	html, err := b.markdownParser.ParseWithContext(content, page.RelPath)
 	if err != nil {
 		return fmt.Errorf("markdown parse error: %w", err)
 	}
