@@ -18,6 +18,7 @@
 <meta property="twitter:title" content="{{if .Page.Metadata.SEO.Title}}{{.Page.Metadata.SEO.Title}}{{else}}{{.Page.Metadata.Title}}{{end}}">
 <meta property="twitter:description" content="{{if .Page.Metadata.SEO.Description}}{{.Page.Metadata.SEO.Description}}{{else}}{{.Page.Metadata.Description}}{{end}}">
 {{if .Page.Metadata.SEO.Image}}<meta property="twitter:image" content="{{.Page.Metadata.SEO.Image}}">{{end}}
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 </head>
 <body>

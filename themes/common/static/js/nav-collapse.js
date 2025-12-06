@@ -49,10 +49,18 @@ function restoreNavState() {
             const titleEl = container.querySelector('.nav-section, .nav-link-parent');
             const navItem = container.closest('.nav-item');
 
-            if (titleEl && navItem && collapsedSections.includes(titleEl.textContent.trim())) {
-                // Don't collapse if it's the active section
-                if (!navItem.classList.contains('active')) {
+            if (titleEl && navItem) {
+                const isActive = navItem.classList.contains('active');
+                const shouldBeCollapsed = collapsedSections.includes(titleEl.textContent.trim());
+
+                if (isActive) {
+                    // Always expand active sections
+                    navItem.classList.remove('collapsed');
+                } else if (shouldBeCollapsed) {
                     navItem.classList.add('collapsed');
+                } else {
+                    // Remove collapsed class for sections not in the saved list
+                    navItem.classList.remove('collapsed');
                 }
             }
         });

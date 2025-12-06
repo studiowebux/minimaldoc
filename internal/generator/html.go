@@ -90,13 +90,16 @@ func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLG
 		themeName = "default"
 	}
 
-	tmpl, err := tmpl.ParseFS(
+	// Parse common templates (all structure is in common, themes only provide CSS)
+	var err error
+
+	tmpl, err = tmpl.ParseFS(
 		themeFS,
-		fmt.Sprintf("themes/%s/templates/*.html", themeName),
-		fmt.Sprintf("themes/%s/templates/partials/*.html", themeName),
+		"themes/common/templates/*.html",
+		"themes/common/templates/partials/*.html",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse templates: %w", err)
+		return nil, fmt.Errorf("failed to parse common templates: %w", err)
 	}
 
 	return &HTMLGenerator{
@@ -172,55 +175,73 @@ func (g *HTMLGenerator) copyStaticAssets() error {
 	if themeName == "" {
 		themeName = "default"
 	}
-	staticPath := fmt.Sprintf("themes/%s/static", themeName)
 
-	// Walk the static directory
-	err := fs.WalkDir(g.themeFS, staticPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+	// Helper function to copy files from a static directory
+	copyFromPath := func(staticPath string) error {
+		return fs.WalkDir(g.themeFS, staticPath, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				// If common directory doesn't exist, skip it silently
+				if staticPath == "themes/common/static" {
+					return nil
+				}
+				return err
+			}
 
-		if d.IsDir() {
-			return nil
-		}
-
-		// Skip OpenAPI files if OpenAPI is not enabled
-		if !g.site.Config.OpenAPI.Enabled {
-			filename := filepath.Base(path)
-			// Skip OpenAPI-specific CSS and JS files
-			if filename == "openapi.css" ||
-				filename == "openapi-explorer.js" ||
-				filename == "api-tester.js" ||
-				filename == "oauth-handler.js" ||
-				filename == "export.js" {
+			if d.IsDir() {
 				return nil
 			}
-		}
 
-		// Read from embedded FS
-		content, err := g.themeFS.ReadFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to read file %s: %w", path, err)
-		}
+			// Skip OpenAPI files if OpenAPI is not enabled
+			if !g.site.Config.OpenAPI.Enabled {
+				filename := filepath.Base(path)
+				// Skip OpenAPI-specific CSS and JS files
+				if filename == "openapi.css" ||
+					filename == "openapi-explorer.js" ||
+					filename == "api-tester.js" ||
+					filename == "oauth-handler.js" ||
+					filename == "export.js" ||
+					filename == "code-copy.js" ||
+					filename == "sidebar-resize.js" {
+					return nil
+				}
+			}
 
-		// Determine output path (remove "themes/{theme}/static/" prefix)
-		relPath := filepath.Join(strings.TrimPrefix(path, staticPath+"/"))
-		outPath := filepath.Join(g.site.OutputRoot, relPath)
+			// Read from embedded FS
+			content, err := g.themeFS.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("failed to read file %s: %w", path, err)
+			}
 
-		// Create output directory
-		if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
-		}
+			// Determine output path (remove "themes/*/static/" prefix)
+			relPath := filepath.Join(strings.TrimPrefix(path, staticPath+"/"))
+			outPath := filepath.Join(g.site.OutputRoot, relPath)
 
-		// Write to destination
-		if err := os.WriteFile(outPath, content, 0644); err != nil {
-			return fmt.Errorf("failed to write file %s: %w", outPath, err)
-		}
+			// Create output directory
+			if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+				return fmt.Errorf("failed to create directory: %w", err)
+			}
 
-		return nil
-	})
+			// Write to destination
+			if err := os.WriteFile(outPath, content, 0644); err != nil {
+				return fmt.Errorf("failed to write file %s: %w", outPath, err)
+			}
 
-	return err
+			return nil
+		})
+	}
+
+	// Copy common static assets first
+	if err := copyFromPath("themes/common/static"); err != nil {
+		return err
+	}
+
+	// Copy theme-specific static assets (will override common files if they exist)
+	themePath := fmt.Sprintf("themes/%s/static", themeName)
+	if err := copyFromPath(themePath); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // getBasePath extracts the path component from BaseURL for asset linking
