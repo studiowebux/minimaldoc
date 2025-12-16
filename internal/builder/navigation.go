@@ -90,23 +90,29 @@ func (b *NavigationBuilder) tocEntriesToNavItems(entries []*parser.TOCEntry, pag
 
 	for i, entry := range entries {
 		item := &core.NavItem{
-			Title:    entry.Title,
-			Order:    i, // Use position in TOC as order
-			Children: []*core.NavItem{},
+			Title:      entry.Title,
+			Order:      i, // Use position in TOC as order
+			IsExternal: entry.IsExternal,
+			Children:   []*core.NavItem{},
 		}
 
 		// If entry has a file path, find the corresponding page
 		if entry.FilePath != "" {
-			// Try to find the page in the map
-			if page, found := pageMap[entry.FilePath]; found {
-				item.Path = "/" + page.Slug + ".html"
-				item.Page = page
+			if entry.IsExternal {
+				// External URL - use as-is
+				item.Path = entry.FilePath
 			} else {
-				// Try normalized path
-				normalized := filepath.ToSlash(entry.FilePath)
-				if page, found := pageMap[normalized]; found {
+				// Internal file path - try to find the page in the map
+				if page, found := pageMap[entry.FilePath]; found {
 					item.Path = "/" + page.Slug + ".html"
 					item.Page = page
+				} else {
+					// Try normalized path
+					normalized := filepath.ToSlash(entry.FilePath)
+					if page, found := pageMap[normalized]; found {
+						item.Path = "/" + page.Slug + ".html"
+						item.Page = page
+					}
 				}
 			}
 		}

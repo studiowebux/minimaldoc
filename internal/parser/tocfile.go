@@ -10,10 +10,11 @@ import (
 
 // TOCEntry represents an entry in the TOC.md file
 type TOCEntry struct {
-	Title    string
-	FilePath string
-	Level    int
-	Children []*TOCEntry
+	Title      string
+	FilePath   string
+	Level      int
+	IsExternal bool
+	Children   []*TOCEntry
 }
 
 // TOCFileParser parses a TOC.md file to extract navigation structure
@@ -65,21 +66,26 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 		level := indent / 2 // Assuming 2 spaces per level
 
 		var title, filePath string
+		var isExternal bool
 		if matches[2] != "" {
 			// Link format: [Title](path)
 			title = matches[2]
 			filePath = matches[3]
+			// Check if path is an external URL
+			isExternal = strings.HasPrefix(filePath, "http://") || strings.HasPrefix(filePath, "https://")
 		} else {
 			// Plain text format: Title (section header)
 			title = strings.TrimSpace(matches[4])
 			filePath = ""
+			isExternal = false
 		}
 
 		entry := &TOCEntry{
-			Title:    title,
-			FilePath: filePath,
-			Level:    level,
-			Children: []*TOCEntry{},
+			Title:      title,
+			FilePath:   filePath,
+			Level:      level,
+			IsExternal: isExternal,
+			Children:   []*TOCEntry{},
 		}
 
 		// Build the hierarchy

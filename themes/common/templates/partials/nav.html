@@ -14,14 +14,22 @@
 <span class="nav-toggle-icon">▶</span>
 </button>
 {{- if .Item.Path -}}
+{{- if .Item.IsExternal -}}
+<a href="{{.Item.Path}}" class="nav-link nav-link-parent nav-link-external" target="_blank" rel="noopener noreferrer">{{.Item.Title}}<svg class="external-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+{{- else -}}
 <a href="{{.BasePath}}{{.Item.Path}}" class="nav-link nav-link-parent">{{.Item.Title}}</a>
+{{- end -}}
 {{- else -}}
 <span class="nav-section">{{.Item.Title}}</span>
 {{- end -}}
 </div>
 {{- else -}}
 {{- if .Item.Path -}}
+{{- if .Item.IsExternal -}}
+<a href="{{.Item.Path}}" class="nav-link nav-link-external" target="_blank" rel="noopener noreferrer">{{.Item.Title}}<svg class="external-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+{{- else -}}
 <a href="{{.BasePath}}{{.Item.Path}}" class="nav-link">{{.Item.Title}}</a>
+{{- end -}}
 {{- else -}}
 <span class="nav-section">{{.Item.Title}}</span>
 {{- end -}}

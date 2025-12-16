@@ -31,8 +31,7 @@ body {
     display: grid;
     grid-template-columns: 280px 1fr 240px;
     gap: 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
+    margin: 0;
     padding: 0;
     min-height: 100vh;
 }
@@ -205,6 +204,24 @@ body {
 
 .nav-link-parent {
     flex: 1;
+}
+
+.nav-link-external {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.external-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link-external:hover .external-icon {
+    opacity: 1;
 }
 
 .nav-item.collapsed > .nav-list-nested {

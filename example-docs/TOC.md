@@ -4,6 +4,8 @@ This file defines the complete navigation structure for the MinimalDoc documenta
 
 ## Navigation Structure
 
+- [Github](https://github.com/studiowebux/minimaldoc)
+
 - [Welcome](index.md)
 - Getting Started
   - [Installation](getting-started/installation.md)
@@ -20,3 +22,6 @@ This file defines the complete navigation structure for the MinimalDoc documenta
   - [FAQ](guides/faq.md)
 - API Reference
   - [CLI & API Reference](api/reference.md)
+- Resources
+  - [GitHub Repository](https://github.com/studiowebux/minimaldoc)
+  - [Report an Issue](https://github.com/studiowebux/minimaldoc/issues)

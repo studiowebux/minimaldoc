@@ -88,10 +88,34 @@ For complete control over navigation, create a `TOC.md` file in your docs root:
 - **Custom hierarchy** - Create any nesting structure
 - **Section headers** - Add sections without links
 - **Flexible paths** - Use relative paths to your markdown files
+- **External links** - Link to external resources with full URLs
 
 :::note
 When `TOC.md` exists, it takes precedence over automatic navigation. Files not listed in `TOC.md` won't appear in navigation.
 :::
+
+### External Links in TOC.md
+
+Add external resources to your navigation by using full URLs:
+
+```markdown
+# Table of Contents
+
+- [Home](index.md)
+- Getting Started
+  - [Installation](getting-started/installation.md)
+  - [Quick Start](getting-started/quick-start.md)
+- Resources
+  - [GitHub Repository](https://github.com/studiowebux/minimaldoc)
+  - [Official Website](https://minimaldoc.com)
+  - [Report an Issue](https://github.com/studiowebux/minimaldoc/issues)
+```
+
+External links:
+- Open in a new tab automatically
+- Display with an external link icon
+- Support both `http://` and `https://` URLs
+- Work alongside internal documentation links
 
 ## Page Table of Contents
 

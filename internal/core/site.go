@@ -68,12 +68,13 @@ type Navigation struct {
 
 // NavItem represents a single navigation item
 type NavItem struct {
-	Title    string     // Display title
-	Path     string     // URL path
-	Order    int        // Sort order
-	Active   bool       // Is current page
-	Children []*NavItem // Nested items
-	Page     *Page      // Associated page
+	Title      string     // Display title
+	Path       string     // URL path
+	Order      int        // Sort order
+	Active     bool       // Is current page
+	IsExternal bool       // True if external URL (opens in new tab)
+	Children   []*NavItem // Nested items
+	Page       *Page      // Associated page
 }
 
 // NewSite creates a new Site instance
