@@ -43,14 +43,18 @@ func (g *SitemapGenerator) Generate() error {
 		return nil
 	}
 
+	// Validate that baseURL is absolute (contains protocol)
+	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
+		return fmt.Errorf("base_url must be an absolute URL (e.g., https://example.com), got: %s", g.site.Config.BaseURL)
+	}
+
 	fmt.Println("Generating sitemap.xml...")
 
 	urlSet := URLSet{
 		XMLNS: "http://www.sitemaps.org/schemas/sitemap/0.9",
 		URLs:  []URL{},
 	}
-
-	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
 
 	// Add all pages
 	for _, page := range g.site.Pages {
@@ -79,8 +83,11 @@ func (g *SitemapGenerator) Generate() error {
 			changeFreq = "weekly"
 		}
 
+		// Remove leading slash from slug to avoid double slashes
+		slug := strings.TrimPrefix(page.Slug, "/")
+
 		url := URL{
-			Loc:        fmt.Sprintf("%s/%s.html", baseURL, page.Slug),
+			Loc:        fmt.Sprintf("%s/%s.html", baseURL, slug),
 			LastMod:    lastMod,
 			ChangeFreq: changeFreq,
 			Priority:   priority,
