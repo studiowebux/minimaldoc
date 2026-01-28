@@ -9,6 +9,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{.Spec.Title}} - API Documentation">
 <meta property="og:description" content="{{.Spec.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/openapi.css?v={{.Version}}">
 </head>
@@ -171,10 +172,12 @@
 	window.OPENAPI_SPEC_NAME = {{.Spec.Name | json}};
 	window.OPENAPI_DEFAULT_VIEW = {{.DefaultView | json}};
 	window.OPENAPI_BASE_PATH = {{.BasePath | json}};
+	window.OPENAPI_ENABLE_CODE_SAMPLES = {{.EnableCodeSamples | json}};
 </script>
 <script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/mobile-menu.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/sidebar-resize.js?v={{.Version}}"></script>
+{{if .EnableCodeSamples}}<script defer src="{{.BasePath}}/js/code-samples.js?v={{.Version}}"></script>{{end}}
 <script defer src="{{.BasePath}}/js/openapi-explorer.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/api-tester.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/oauth-handler.js?v={{.Version}}"></script>

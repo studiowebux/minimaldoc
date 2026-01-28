@@ -77,17 +77,11 @@ func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS, version string) (*Op
 		},
 	})
 
-	// Parse OpenAPI templates
-	themeName := site.Config.Theme
-	if themeName == "" {
-		themeName = "default"
-	}
-
-	// Parse OpenAPI templates
+	// Parse OpenAPI templates from common (all structure is shared, themes only provide CSS)
 	tmpl, err := tmpl.ParseFS(
 		themeFS,
-		fmt.Sprintf("themes/%s/templates/openapi-page.html", themeName),
-		fmt.Sprintf("themes/%s/templates/partials/openapi-nav.html", themeName),
+		"themes/common/templates/openapi-page.html",
+		"themes/common/templates/partials/openapi-nav.html",
 	)
 	if err != nil {
 		// Templates don't exist, return nil generator
@@ -171,11 +165,12 @@ func (g *OpenAPIGenerator) generateSpec(spec *core.APISpec, apiDir string) error
 func (g *OpenAPIGenerator) generateSpecHTML(spec *core.APISpec, specDir string) error {
 	// Prepare template data
 	data := map[string]interface{}{
-		"Site":        g.site,
-		"Spec":        spec,
-		"BasePath":    g.getBasePath(),
-		"DefaultView": g.site.Config.OpenAPI.DefaultView,
-		"Version":     g.version,
+		"Site":              g.site,
+		"Spec":              spec,
+		"BasePath":          g.getBasePath(),
+		"DefaultView":       g.site.Config.OpenAPI.DefaultView,
+		"EnableCodeSamples": g.site.Config.OpenAPI.EnableCodeSamples,
+		"Version":           g.version,
 	}
 
 	var buf bytes.Buffer
@@ -237,7 +232,9 @@ func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) 
 		"servers":        spec.Servers,
 		"tags":           spec.Tags,
 		"securitySchemes": spec.SecuritySchemes,
+		"schemas":        spec.Schemas,
 		"endpointCount":  len(spec.Endpoints),
+		"schemaCount":    len(spec.Schemas),
 	}
 
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")

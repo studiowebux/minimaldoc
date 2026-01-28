@@ -147,6 +147,7 @@ func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
 		Servers:        p.convertServers(doc.Servers),
 		Tags:           p.convertTags(doc.Tags),
 		SecuritySchemes: p.convertSecuritySchemes(doc.Components.SecuritySchemes),
+		Schemas:        p.convertSchemas(doc.Components.Schemas),
 		Endpoints:      []*core.APIEndpoint{},
 	}
 
@@ -161,6 +162,22 @@ func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
 	spec.FlatEndpoints = spec.Endpoints
 
 	return spec
+}
+
+// convertSchemas converts OpenAPI component schemas
+func (p *OpenAPIParser) convertSchemas(schemas openapi3.Schemas) map[string]*core.APISchema {
+	if schemas == nil {
+		return nil
+	}
+
+	result := make(map[string]*core.APISchema)
+	for name, schemaRef := range schemas {
+		if schemaRef == nil {
+			continue
+		}
+		result[name] = p.convertSchema(schemaRef)
+	}
+	return result
 }
 
 // convertServers converts OpenAPI servers

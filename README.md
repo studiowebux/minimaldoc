@@ -138,6 +138,7 @@ openapi:
   cache_dir: ".openapi-cache"
   enable_testing: true
   enable_export: true
+  enable_code_samples: true
   lazy_load_chunk_size: 51200
 ```
 
@@ -283,6 +284,9 @@ minimaldoc build --openapi
 - **Markdown Support** - Descriptions render with full markdown formatting
 - **$ref Resolution** - Automatic component reference resolution
 - **Single Endpoint View** - Spotify-style focused documentation
+- **Code Samples** - Auto-generated code examples in curl, JavaScript, Go, Swift and Python
+- **Response Tabs** - Tabbed interface for viewing different response status codes
+- **Collapsible Navigation** - Navigation groups collapsed by default for large APIs
 
 ### Authentication
 
@@ -297,6 +301,34 @@ Supports multiple authentication methods:
 # Use a different directory for OpenAPI specs
 minimaldoc build --openapi --openapi-dir specs
 ```
+
+### Schemas Browser
+
+The Schemas tab provides a dedicated view for browsing all reusable data models defined in your OpenAPI specification:
+
+- **Alphabetical listing** of all schemas from `components/schemas`
+- **Type indicators** showing object, array, string, etc.
+- **Property viewer** with name, type, required markers, and constraints
+- **Nested schema expansion** for complex object hierarchies
+- **JSON example generation** from schema definitions
+- **Constraint display** showing min/max, patterns, enums, defaults
+
+Click any schema in the navigation to view its full definition with properties and generated examples.
+
+### Code Samples
+
+When `enable_code_samples: true` is set, each endpoint displays auto-generated code examples in a right sidebar:
+
+- **curl** - Command-line HTTP requests
+- **JavaScript** - Using the Fetch API
+- **Swift** - Using URLSession
+- **Go** - Using net/http package
+- **Python** - Using the requests library
+
+Code samples include:
+- Full URL with path parameters
+- Authentication headers based on security schemes (Bearer, API Key, OAuth2)
+- Request body examples generated from schema
 
 ## Theme
 
@@ -313,6 +345,12 @@ The default theme uses soft, eye-friendly colors:
 
 - Background: `#1a1a1a` (soft black)
 - Text: `#f5f5f5` (soft white)
+
+**OpenAPI Dark Mode:**
+
+- Background: `#0d1117` (GitHub dark)
+- Text: `#e6edf3` (high contrast)
+- Cards: `#161b22` (elevated surfaces)
 
 ### Customization
 

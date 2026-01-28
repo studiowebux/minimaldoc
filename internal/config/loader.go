@@ -30,6 +30,7 @@ type FileConfig struct {
 		CacheDir           string   `yaml:"cache_dir"`
 		EnableTesting      bool     `yaml:"enable_testing"`
 		EnableExport       bool     `yaml:"enable_export"`
+		EnableCodeSamples  bool     `yaml:"enable_code_samples"`
 		LazyLoadChunkSize  int      `yaml:"lazy_load_chunk_size"`
 	} `yaml:"openapi"`
 }
@@ -112,6 +113,9 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		}
 		if cfg.OpenAPI.EnableExport {
 			result.OpenAPI.EnableExport = cfg.OpenAPI.EnableExport
+		}
+		if cfg.OpenAPI.EnableCodeSamples {
+			result.OpenAPI.EnableCodeSamples = cfg.OpenAPI.EnableCodeSamples
 		}
 		if cfg.OpenAPI.LazyLoadChunkSize > 0 {
 			result.OpenAPI.LazyLoadChunkSize = cfg.OpenAPI.LazyLoadChunkSize

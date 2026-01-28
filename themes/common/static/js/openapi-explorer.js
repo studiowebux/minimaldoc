@@ -11,8 +11,10 @@
       flat: []
     },
     allEndpoints: [],  // Flat list of all endpoints for easy lookup
+    schemas: {},       // All schemas from spec
     currentView: window.OPENAPI_DEFAULT_VIEW || 'path',
     currentEndpoint: null,
+    currentSchema: null,
     searchQuery: ''
   };
 
@@ -52,9 +54,52 @@
       const response = await fetch('./spec-data.json');
       state.spec = await response.json();
       console.log('Loaded spec:', state.spec.title, 'v' + state.spec.version);
+
+      // Store schemas
+      if (state.spec.schemas) {
+        state.schemas = state.spec.schemas;
+        populateSchemasNavigation();
+      }
     } catch (error) {
       console.error('Failed to load spec data:', error);
     }
+  }
+
+  // Populate schemas navigation list
+  function populateSchemasNavigation() {
+    const navList = document.getElementById('schemas-nav-list');
+    if (!navList || !state.schemas) return;
+
+    const schemaNames = Object.keys(state.schemas).sort();
+    if (schemaNames.length === 0) {
+      navList.innerHTML = '<li class="openapi-nav-empty">No schemas defined</li>';
+      return;
+    }
+
+    let html = '';
+    schemaNames.forEach(name => {
+      const schema = state.schemas[name];
+      const typeLabel = schema.Type || 'object';
+      html += `<li class="openapi-schema-item" data-schema-name="${escapeAttr(name)}">`;
+      html += `<a href="#schema-${escapeAttr(name)}" class="openapi-schema-link">`;
+      html += `<span class="openapi-schema-type">${escapeHtml(typeLabel)}</span>`;
+      html += `<span class="openapi-schema-name">${escapeHtml(name)}</span>`;
+      html += `</a></li>`;
+    });
+    navList.innerHTML = html;
+
+    // Add click handlers
+    navList.querySelectorAll('.openapi-schema-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const name = link.closest('.openapi-schema-item').dataset.schemaName;
+        renderSchemaDetail(name);
+
+        // Update active state
+        navList.querySelectorAll('.openapi-schema-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
   }
 
   // Load endpoints data (don't render - we show one at a time)
@@ -143,6 +188,135 @@
     `;
   }
 
+  // Render schema detail view
+  function renderSchemaDetail(schemaName) {
+    const container = document.getElementById('endpoints-container');
+    if (!container) return;
+
+    const schema = state.schemas[schemaName];
+    if (!schema) {
+      container.innerHTML = `<div class="welcome-state"><p>Schema not found: ${escapeHtml(schemaName)}</p></div>`;
+      return;
+    }
+
+    state.currentSchema = schemaName;
+    state.currentEndpoint = null;
+
+    const example = schemaToExample(schema);
+    const hasSchema = schema.Properties || schema.Type;
+    const hasExample = example !== null && example !== undefined;
+
+    let html = `<div class="schema-detail">`;
+    html += `<div class="schema-card">`;
+    html += `<div class="schema-card-header">`;
+    html += `<h2 class="schema-card-title">${escapeHtml(schemaName)}</h2>`;
+    html += `<span class="property-type">${escapeHtml(schema.Type || 'object')}</span>`;
+    html += `</div>`;
+    html += `<div class="schema-card-body">`;
+
+    // Description
+    if (schema.Description) {
+      html += `<div class="endpoint-description" style="margin-bottom: 1.5rem;">${schema.Description}</div>`;
+    }
+
+    // Only show schema viewer if there's content
+    if (hasSchema || hasExample) {
+      html += `<div class="schema-viewer">`;
+      html += `<div class="schema-viewer-header">`;
+      html += `<span class="schema-viewer-title">Schema Definition</span>`;
+
+      // Only show tabs if we have both
+      if (hasSchema && hasExample) {
+        html += `<div class="schema-viewer-tabs">`;
+        html += `<button class="schema-viewer-tab active" data-view="schema">Properties</button>`;
+        html += `<button class="schema-viewer-tab" data-view="example">Example</button>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="schema-viewer-content">`;
+
+      // Schema view
+      if (hasSchema) {
+        html += `<div class="schema-view-panel active" data-view="schema">`;
+        html += renderSchemaProperties(schema);
+        html += `</div>`;
+      }
+
+      // Example view
+      if (hasExample) {
+        const displayStyle = hasSchema ? 'display: none;' : '';
+        html += `<div class="schema-view-panel${!hasSchema ? ' active' : ''}" data-view="example" style="${displayStyle}">`;
+        html += `<pre class="schema-json-view">${escapeHtml(JSON.stringify(example, null, 2))}</pre>`;
+        html += `</div>`;
+      }
+
+      html += `</div></div>`;
+    }
+
+    html += `</div></div></div>`;
+
+    container.innerHTML = html;
+
+    // Add tab handlers
+    container.querySelectorAll('.schema-viewer-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.view;
+        const viewer = tab.closest('.schema-viewer');
+
+        viewer.querySelectorAll('.schema-viewer-tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.view === view);
+        });
+
+        viewer.querySelectorAll('.schema-view-panel').forEach(p => {
+          p.style.display = p.dataset.view === view ? 'block' : 'none';
+        });
+      });
+    });
+  }
+
+  // Render all schemas page
+  function renderAllSchemas() {
+    const container = document.getElementById('endpoints-container');
+    if (!container) return;
+
+    state.currentEndpoint = null;
+    state.currentSchema = null;
+
+    const schemaNames = Object.keys(state.schemas).sort();
+
+    if (schemaNames.length === 0) {
+      container.innerHTML = `<div class="welcome-state"><h2>No Schemas</h2><p>This API specification does not define any reusable schemas.</p></div>`;
+      return;
+    }
+
+    let html = `<div class="schemas-container">`;
+    html += `<header class="openapi-header"><h1 class="openapi-title">Schemas</h1>`;
+    html += `<p class="openapi-description">${schemaNames.length} reusable schema definitions</p></header>`;
+    html += `<div class="schemas-list">`;
+
+    schemaNames.forEach(name => {
+      const schema = state.schemas[name];
+      html += `<div class="schema-card" id="schema-${escapeAttr(name)}">`;
+      html += `<div class="schema-card-header">`;
+      html += `<h3 class="schema-card-title">${escapeHtml(name)}</h3>`;
+      html += `<span class="property-type">${escapeHtml(schema.Type || 'object')}</span>`;
+      html += `</div>`;
+      html += `<div class="schema-card-body">`;
+
+      if (schema.Description) {
+        html += `<p style="margin-bottom: 1rem; color: var(--openapi-fg-secondary);">${schema.Description}</p>`;
+      }
+
+      html += renderSchemaProperties(schema);
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+
+    container.innerHTML = html;
+  }
+
   // Render a single endpoint (Spotify-style)
   function renderSingleEndpoint(endpoint) {
     const container = document.getElementById('endpoints-container');
@@ -160,141 +334,559 @@
     container.scrollTop = 0;
   }
 
+  // Get server URL
+  function getServerURL() {
+    const serverSelect = document.getElementById('server-select');
+    if (serverSelect) {
+      return serverSelect.value;
+    }
+    return state.spec && state.spec.Servers && state.spec.Servers[0] ? state.spec.Servers[0].URL : '';
+  }
+
+  // Build full URL for endpoint
+  function buildFullURL(endpoint) {
+    const server = getServerURL();
+    let url = server + endpoint.Path;
+    return url;
+  }
+
+  // Render Authentication Section
+  function renderAuthSection(security, securitySchemes) {
+    if (!security || security.length === 0) return '';
+
+    let html = `<div class="endpoint-section auth-section"><h4>Authentication</h4>`;
+    html += `<div class="auth-schemes">`;
+
+    security.forEach(req => {
+      Object.keys(req).forEach(schemeName => {
+        const scheme = securitySchemes && securitySchemes[schemeName];
+        const scopes = req[schemeName] || [];
+
+        html += `<div class="auth-scheme">`;
+        html += `<div class="auth-scheme-header">`;
+
+        if (scheme) {
+          const authType = getAuthTypeDisplay(scheme);
+          html += `<span class="auth-scheme-type">${escapeHtml(authType)}</span>`;
+          html += `<span class="auth-scheme-name">${escapeHtml(schemeName)}</span>`;
+        } else {
+          html += `<span class="auth-scheme-type">Auth</span>`;
+          html += `<span class="auth-scheme-name">${escapeHtml(schemeName)}</span>`;
+        }
+
+        html += `</div>`;
+
+        // Description
+        if (scheme && scheme.Description) {
+          html += `<div class="auth-scheme-description">${scheme.Description}</div>`;
+        }
+
+        // Scheme details table
+        if (scheme) {
+          html += `<table class="auth-details-table">`;
+
+          if (scheme.Type === 'http') {
+            if (scheme.BearerFormat) {
+              html += `<tr><td class="auth-detail-label">Format</td><td class="auth-detail-value">${escapeHtml(scheme.BearerFormat)}</td></tr>`;
+            }
+          } else if (scheme.Type === 'apiKey') {
+            html += `<tr><td class="auth-detail-label">Type</td><td class="auth-detail-value">API Key</td></tr>`;
+            html += `<tr><td class="auth-detail-label">Parameter</td><td class="auth-detail-value"><code>${escapeHtml(scheme.Name || '')}</code></td></tr>`;
+            html += `<tr><td class="auth-detail-label">Location</td><td class="auth-detail-value">${escapeHtml(scheme.In || '')}</td></tr>`;
+          } else if (scheme.Type === 'oauth2' && scheme.Flows) {
+            html += `<tr><td class="auth-detail-label">Type</td><td class="auth-detail-value">OAuth 2.0</td></tr>`;
+
+            // Show each flow with its URLs
+            Object.keys(scheme.Flows).forEach(flowName => {
+              const flow = scheme.Flows[flowName];
+              if (!flow) return;
+
+              html += `<tr><td class="auth-detail-label">Flow</td><td class="auth-detail-value">${escapeHtml(flowName)}</td></tr>`;
+              if (flow.AuthorizationURL) {
+                html += `<tr><td class="auth-detail-label">Auth URL</td><td class="auth-detail-value"><code>${escapeHtml(flow.AuthorizationURL)}</code></td></tr>`;
+              }
+              if (flow.TokenURL) {
+                html += `<tr><td class="auth-detail-label">Token URL</td><td class="auth-detail-value"><code>${escapeHtml(flow.TokenURL)}</code></td></tr>`;
+              }
+              if (flow.RefreshURL) {
+                html += `<tr><td class="auth-detail-label">Refresh URL</td><td class="auth-detail-value"><code>${escapeHtml(flow.RefreshURL)}</code></td></tr>`;
+              }
+
+              // Show available scopes from flow
+              if (flow.Scopes && Object.keys(flow.Scopes).length > 0) {
+                html += `<tr><td class="auth-detail-label">Available Scopes</td><td class="auth-detail-value">`;
+                Object.keys(flow.Scopes).forEach(scopeName => {
+                  const scopeDesc = flow.Scopes[scopeName];
+                  html += `<div class="auth-scope-item"><code>${escapeHtml(scopeName)}</code>`;
+                  if (scopeDesc) {
+                    html += ` - ${escapeHtml(scopeDesc)}`;
+                  }
+                  html += `</div>`;
+                });
+                html += `</td></tr>`;
+              }
+            });
+          } else if (scheme.Type === 'openIdConnect') {
+            html += `<tr><td class="auth-detail-label">Type</td><td class="auth-detail-value">OpenID Connect</td></tr>`;
+            if (scheme.OpenIdConnectUrl) {
+              html += `<tr><td class="auth-detail-label">Discovery URL</td><td class="auth-detail-value"><code>${escapeHtml(scheme.OpenIdConnectUrl)}</code></td></tr>`;
+            }
+          }
+
+          html += `</table>`;
+        }
+
+        // Required scopes for this endpoint
+        if (scopes.length > 0) {
+          html += `<div class="auth-scopes">`;
+          html += `<div class="auth-scopes-label">Required Scopes</div>`;
+          html += `<div class="auth-scopes-list">`;
+          scopes.forEach(scope => {
+            html += `<span class="auth-scope">${escapeHtml(scope)}</span>`;
+          });
+          html += `</div></div>`;
+        }
+
+        html += `</div>`;
+      });
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  // Get readable auth type display
+  function getAuthTypeDisplay(scheme) {
+    if (!scheme) return 'Auth';
+
+    if (scheme.Type === 'http') {
+      if (scheme.Scheme === 'bearer') return 'Bearer Token';
+      if (scheme.Scheme === 'basic') return 'Basic Auth';
+      return scheme.Scheme || 'HTTP';
+    }
+    if (scheme.Type === 'apiKey') return 'API Key';
+    if (scheme.Type === 'oauth2') return 'OAuth 2.0';
+    if (scheme.Type === 'openIdConnect') return 'OpenID Connect';
+
+    return scheme.Type || 'Auth';
+  }
+
+  // Render Request Body Section
+  function renderRequestBodySection(requestBody) {
+    if (!requestBody || !requestBody.Content) return '';
+
+    // Check if there's any actual content to show
+    const contentTypes = Object.keys(requestBody.Content);
+    if (contentTypes.length === 0) return '';
+
+    // Check if at least one content type has schema or example
+    const hasContent = contentTypes.some(ct => {
+      const mediaType = requestBody.Content[ct];
+      return mediaType && (mediaType.Schema || mediaType.Example);
+    });
+    if (!hasContent) return '';
+
+    let html = `<div class="endpoint-section"><h4>Request Body</h4>`;
+
+    // Show if required
+    if (requestBody.Required) {
+      html += `<p style="font-size: var(--openapi-font-sm); color: var(--status-5xx); margin-bottom: 1rem;">Required</p>`;
+    }
+
+    // Description
+    if (requestBody.Description) {
+      html += `<p style="margin-bottom: 1rem; color: var(--openapi-fg-secondary);">${escapeHtml(requestBody.Description)}</p>`;
+    }
+
+    // Content types
+    contentTypes.forEach(contentType => {
+      const mediaType = requestBody.Content[contentType];
+      if (!mediaType) return;
+
+      // Skip if no schema and no example
+      if (!mediaType.Schema && !mediaType.Example) return;
+
+      const example = mediaType.Example || (mediaType.Schema ? schemaToExample(mediaType.Schema) : null);
+      const hasSchema = mediaType.Schema && (mediaType.Schema.Properties || mediaType.Schema.Type);
+      const hasExample = example !== null && example !== undefined;
+
+      // Skip if nothing to show
+      if (!hasSchema && !hasExample) return;
+
+      html += `<div class="schema-viewer">`;
+      html += `<div class="schema-viewer-header">`;
+      html += `<span class="schema-viewer-title">${escapeHtml(contentType)}</span>`;
+
+      // Only show tabs if we have both schema and example
+      if (hasSchema && hasExample) {
+        html += `<div class="schema-viewer-tabs">`;
+        html += `<button class="schema-viewer-tab active" data-view="schema">Schema</button>`;
+        html += `<button class="schema-viewer-tab" data-view="example">Example</button>`;
+        html += `</div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="schema-viewer-content">`;
+
+      // Schema view
+      if (hasSchema) {
+        html += `<div class="schema-view-panel active" data-view="schema">`;
+        html += renderSchemaProperties(mediaType.Schema);
+        html += `</div>`;
+      }
+
+      // Example view
+      if (hasExample) {
+        const displayStyle = hasSchema ? 'display: none;' : '';
+        html += `<div class="schema-view-panel${!hasSchema ? ' active' : ''}" data-view="example" style="${displayStyle}">`;
+        html += `<pre class="schema-json-view">${escapeHtml(JSON.stringify(example, null, 2))}</pre>`;
+        html += `</div>`;
+      }
+
+      html += `</div></div>`;
+    });
+
+    html += `</div>`;
+    return html;
+  }
+
+  // Render Responses Section
+  function renderResponsesSection(responses) {
+    if (!responses || Object.keys(responses).length === 0) return '';
+
+    const statusCodes = Object.keys(responses).sort();
+    if (statusCodes.length === 0) return '';
+
+    let html = `<div class="endpoint-section"><h4>Responses</h4>`;
+    html += `<div class="response-tabs">`;
+    statusCodes.forEach((code, i) => {
+      html += `<button class="response-tab${i === 0 ? ' active' : ''}" data-code="${code}">${code}</button>`;
+    });
+    html += `</div>`;
+
+    html += `<div class="response-panels">`;
+    statusCodes.forEach((code, i) => {
+      const response = responses[code];
+      if (!response) return;
+
+      html += `<div class="response-panel${i === 0 ? ' active' : ''}" data-code="${code}">`;
+
+      if (response.Description) {
+        html += `<p class="response-desc">${response.Description}</p>`;
+      }
+
+      // Response content
+      if (response.Content) {
+        Object.keys(response.Content).forEach(contentType => {
+          const mediaType = response.Content[contentType];
+          if (!mediaType) return;
+
+          // Skip if no schema and no example
+          if (!mediaType.Schema && !mediaType.Example) return;
+
+          const example = mediaType.Example || (mediaType.Schema ? schemaToExample(mediaType.Schema) : null);
+          const hasSchema = mediaType.Schema && (mediaType.Schema.Properties || mediaType.Schema.Type);
+          const hasExample = example !== null && example !== undefined;
+
+          // Skip if nothing to show
+          if (!hasSchema && !hasExample) return;
+
+          html += `<div class="schema-viewer" style="margin-top: 1rem;">`;
+          html += `<div class="schema-viewer-header">`;
+          html += `<span class="schema-viewer-title">${escapeHtml(contentType)}</span>`;
+
+          // Only show tabs if we have both schema and example
+          if (hasSchema && hasExample) {
+            html += `<div class="schema-viewer-tabs">`;
+            html += `<button class="schema-viewer-tab active" data-view="schema">Schema</button>`;
+            html += `<button class="schema-viewer-tab" data-view="example">Example</button>`;
+            html += `</div>`;
+          }
+          html += `</div>`;
+
+          html += `<div class="schema-viewer-content">`;
+
+          // Schema view
+          if (hasSchema) {
+            html += `<div class="schema-view-panel active" data-view="schema">`;
+            html += renderSchemaProperties(mediaType.Schema);
+            html += `</div>`;
+          }
+
+          // Example view
+          if (hasExample) {
+            const displayStyle = hasSchema ? 'display: none;' : '';
+            html += `<div class="schema-view-panel${!hasSchema ? ' active' : ''}" data-view="example" style="${displayStyle}">`;
+            html += `<pre class="schema-json-view">${escapeHtml(JSON.stringify(example, null, 2))}</pre>`;
+            html += `</div>`;
+          }
+
+          html += `</div></div>`;
+        });
+      }
+
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+
+    return html;
+  }
+
+  // Render schema properties as a list
+  function renderSchemaProperties(schema, depth = 0) {
+    if (!schema) return '';
+
+    let html = '';
+
+    if (schema.Type === 'object' && schema.Properties) {
+      html += `<ul class="schema-properties-list${depth > 0 ? ' schema-nested' : ''}">`;
+
+      Object.keys(schema.Properties).forEach(propName => {
+        const prop = schema.Properties[propName];
+        const isRequired = schema.Required && schema.Required.includes(propName);
+        const typeDisplay = getSchemaTypeDisplay(prop);
+
+        html += `<li class="schema-property-row">`;
+        html += `<div class="schema-prop-name${isRequired ? ' required' : ''}">${escapeHtml(propName)}</div>`;
+        html += `<div class="schema-prop-type">${escapeHtml(typeDisplay)}</div>`;
+        html += `<div class="schema-prop-desc">`;
+        if (prop.Description) {
+          html += escapeHtml(prop.Description);
+        }
+
+        // Show constraints
+        const constraints = getSchemaConstraints(prop);
+        if (constraints.length > 0) {
+          html += `<div class="schema-prop-constraints">`;
+          constraints.forEach(c => {
+            html += `<span class="schema-constraint">${escapeHtml(c)}</span>`;
+          });
+          html += `</div>`;
+        }
+
+        html += `</div>`;
+        html += `</li>`;
+
+        // Nested properties
+        if (prop.Type === 'object' && prop.Properties && depth < 2) {
+          html += renderSchemaProperties(prop, depth + 1);
+        } else if (prop.Type === 'array' && prop.Items && prop.Items.Type === 'object' && prop.Items.Properties && depth < 2) {
+          html += renderSchemaProperties(prop.Items, depth + 1);
+        }
+      });
+
+      html += `</ul>`;
+    } else if (schema.Type === 'array' && schema.Items) {
+      if (schema.Items.Type === 'object' && schema.Items.Properties) {
+        html += `<p style="padding: 0.75rem 1rem; color: var(--openapi-fg-muted); font-size: var(--openapi-font-sm);">Array of objects:</p>`;
+        html += renderSchemaProperties(schema.Items, depth);
+      } else {
+        const itemType = getSchemaTypeDisplay(schema.Items);
+        html += `<p style="padding: 0.75rem 1rem; font-size: var(--openapi-font-sm);">Array of <code style="background: var(--openapi-hover); padding: 0.2rem 0.4rem; border-radius: 3px;">${escapeHtml(itemType)}</code></p>`;
+      }
+    } else {
+      const typeDisplay = getSchemaTypeDisplay(schema);
+      html += `<p style="padding: 0.75rem 1rem; font-size: var(--openapi-font-sm);">Type: <code style="background: var(--openapi-hover); padding: 0.2rem 0.4rem; border-radius: 3px;">${escapeHtml(typeDisplay)}</code></p>`;
+    }
+
+    return html;
+  }
+
+  // Get schema constraints
+  function getSchemaConstraints(schema) {
+    const constraints = [];
+    if (!schema) return constraints;
+
+    if (schema.Minimum != null) constraints.push(`min: ${schema.Minimum}`);
+    if (schema.Maximum != null) constraints.push(`max: ${schema.Maximum}`);
+    if (schema.MinLength != null) constraints.push(`minLength: ${schema.MinLength}`);
+    if (schema.MaxLength != null) constraints.push(`maxLength: ${schema.MaxLength}`);
+    if (schema.Pattern) constraints.push(`pattern: ${schema.Pattern}`);
+    if (schema.Enum && schema.Enum.length > 0) constraints.push(`enum: ${schema.Enum.join(', ')}`);
+    if (schema.Default != null) constraints.push(`default: ${JSON.stringify(schema.Default)}`);
+    if (schema.Format) constraints.push(`format: ${schema.Format}`);
+
+    return constraints;
+  }
+
   // Create endpoint detail element
   function createEndpointElement(endpoint) {
     const div = document.createElement('div');
     div.className = 'endpoint-detail';
     div.id = generateEndpointID(endpoint);
 
-    let html = `
-      <div class="endpoint-detail-header">
-        <div class="endpoint-method-path">
-          <span class="endpoint-method endpoint-method-${endpoint.Method.toLowerCase()}">${endpoint.Method}</span>
-          <span class="endpoint-path">${endpoint.Path}</span>
-        </div>
-        <div class="endpoint-actions">
-          <button class="btn-icon" data-action="test" title="Test this endpoint">Test</button>
-          <button class="btn-icon" data-action="copy-link" title="Copy link">Link</button>
-        </div>
-      </div>
-    `;
+    const fullUrl = buildFullURL(endpoint);
+    const securitySchemes = state.spec ? state.spec.securitySchemes : {};
 
-    if (endpoint.Summary) {
-      html += `<h2 class="endpoint-summary">${escapeHtml(endpoint.Summary)}</h2>`;
+    let html = '';
+
+    // Main content
+    html += `<div class="endpoint-main">`;
+
+    // Header
+    html += `<div class="endpoint-header">`;
+    html += `<div class="endpoint-title-row">`;
+    html += `<span class="endpoint-method endpoint-method-${endpoint.Method.toLowerCase()}">${endpoint.Method}</span>`;
+    html += `<code class="endpoint-path">${escapeHtml(endpoint.Path)}</code>`;
+    if (endpoint.Deprecated) {
+      html += `<span class="endpoint-deprecated-badge">Deprecated</span>`;
     }
+    html += `</div>`;
+    html += `<div class="endpoint-url-row">`;
+    html += `<button class="btn-copy-small" data-action="copy-url">Copy URL</button>`;
+    html += `<button class="btn-test" data-action="test">Try it</button>`;
+    html += `</div>`;
+    html += `</div>`;
 
+    // Summary & Description
+    if (endpoint.Summary) {
+      html += `<p class="endpoint-summary">${escapeHtml(endpoint.Summary)}</p>`;
+    }
     if (endpoint.Description) {
       html += `<div class="endpoint-description">${endpoint.Description}</div>`;
     }
 
-    if (endpoint.Deprecated) {
-      html += `<div class="endpoint-deprecated-notice"><strong>DEPRECATED:</strong> This endpoint is deprecated</div>`;
+    // Authentication Section
+    if (endpoint.Security && endpoint.Security.length > 0) {
+      html += renderAuthSection(endpoint.Security, securitySchemes);
     }
 
     // Parameters
     if (endpoint.Parameters && endpoint.Parameters.length > 0) {
-      html += `
-        <div class="endpoint-section">
-          <h3>Parameters</h3>
-          <table class="parameters-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>In</th>
-                <th>Required</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
+      html += `<div class="endpoint-section"><h4>Parameters</h4>`;
+      html += `<table class="params-table"><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>`;
       endpoint.Parameters.forEach(param => {
-        html += `
-          <tr${param.Deprecated ? ' class="deprecated-param"' : ''}>
-            <td><code>${escapeHtml(param.Name)}</code>${param.Deprecated ? ' <span class="openapi-badge-deprecated">deprecated</span>' : ''}</td>
-            <td><code>${param.Schema ? escapeHtml(param.Schema.Type || 'any') : 'any'}</code></td>
-            <td><span class="param-in">${escapeHtml(param.In)}</span></td>
-            <td>${param.Required ? 'Yes' : 'No'}</td>
-            <td>${param.Description || ''}</td>
-          </tr>
-        `;
+        const reqClass = param.Required ? ' class="required"' : '';
+        html += `<tr${reqClass}>`;
+        html += `<td><code>${escapeHtml(param.Name)}</code></td>`;
+        html += `<td>${escapeHtml(param.In)}</td>`;
+        html += `<td>${param.Schema ? escapeHtml(param.Schema.Type || 'any') : 'any'}</td>`;
+        html += `<td>${param.Required ? 'Yes' : 'No'}</td>`;
+        html += `<td>${param.Description || ''}</td>`;
+        html += `</tr>`;
       });
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
+      html += `</tbody></table></div>`;
     }
 
     // Request Body
-    if (endpoint.RequestBody) {
-      html += `
-        <div class="endpoint-section">
-          <h3>Request Body${endpoint.RequestBody.Required ? ' (required)' : ''}</h3>
-          ${endpoint.RequestBody.Description ? `<p>${endpoint.RequestBody.Description}</p>` : ''}
-          <div class="schema-viewer">
-            ${renderSchema(endpoint.RequestBody.Content)}
-          </div>
-        </div>
-      `;
+    if (endpoint.RequestBody && endpoint.RequestBody.Content) {
+      html += renderRequestBodySection(endpoint.RequestBody);
     }
 
     // Responses
     if (endpoint.Responses && Object.keys(endpoint.Responses).length > 0) {
-      html += `<div class="endpoint-section"><h3>Responses</h3><div class="responses-container">`;
-
-      Object.keys(endpoint.Responses).forEach(statusCode => {
-        const response = endpoint.Responses[statusCode];
-        html += `
-          <div class="response-item">
-            <div class="response-header">
-              <span class="response-code response-code-${statusCode}">${statusCode}</span>
-              <span class="response-description">${response.Description || ''}</span>
-            </div>
-            ${response.Content ? `<div class="response-content">${renderSchema(response.Content)}</div>` : ''}
-          </div>
-        `;
-      });
-
-      html += `</div></div>`;
+      html += renderResponsesSection(endpoint.Responses);
     }
 
-    // Security
-    if (endpoint.Security && endpoint.Security.length > 0) {
-      html += `<div class="endpoint-section"><h3>Security</h3><div class="security-requirements">`;
+    html += `</div>`;
 
-      endpoint.Security.forEach(req => {
-        Object.keys(req).forEach(schemeName => {
-          const scopes = req[schemeName];
-          html += `
-            <div class="security-requirement">
-              <code>${escapeHtml(schemeName)}</code>
-              ${scopes && scopes.length > 0 ? ` (scopes: ${scopes.map(s => escapeHtml(s)).join(', ')})` : ''}
-            </div>
-          `;
-        });
-      });
-
-      html += `</div></div>`;
+    // Code Samples (right column)
+    if (window.OPENAPI_ENABLE_CODE_SAMPLES !== false && window.CodeSamples) {
+      html += `<div class="endpoint-samples">`;
+      html += window.CodeSamples.createCodeSamplesSection(endpoint, getServerURL(), securitySchemes);
+      html += `</div>`;
     }
 
     div.innerHTML = html;
 
     // Attach event listeners
+
+    // Test button
     const testBtn = div.querySelector('[data-action="test"]');
     if (testBtn) {
       testBtn.addEventListener('click', () => loadEndpointInTester(endpoint));
     }
 
-    const copyBtn = div.querySelector('[data-action="copy-link"]');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', (e) => {
+    // Copy URL button
+    const copyUrlBtn = div.querySelector('[data-action="copy-url"]');
+    if (copyUrlBtn) {
+      copyUrlBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        copyEndpointLink(div.id, e.currentTarget);
+        copyToClipboard(fullUrl, e.currentTarget);
       });
     }
 
+    // Copy JSON buttons
+    div.querySelectorAll('[data-copy-json]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const json = btn.dataset.copyJson;
+        copyToClipboard(json, btn);
+      });
+    });
+
+    // Response tabs
+    div.querySelectorAll('.response-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const code = tab.dataset.code;
+        const section = tab.closest('.endpoint-section');
+
+        // Update tabs
+        section.querySelectorAll('.response-tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.code === code);
+        });
+
+        // Update panels
+        section.querySelectorAll('.response-panel').forEach(p => {
+          p.classList.toggle('active', p.dataset.code === code);
+        });
+      });
+    });
+
+    // Schema viewer tabs (Schema/Example toggle)
+    div.querySelectorAll('.schema-viewer-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const view = tab.dataset.view;
+        const viewer = tab.closest('.schema-viewer');
+
+        // Update tabs
+        viewer.querySelectorAll('.schema-viewer-tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.view === view);
+        });
+
+        // Update panels
+        viewer.querySelectorAll('.schema-view-panel').forEach(p => {
+          p.style.display = p.dataset.view === view ? 'block' : 'none';
+        });
+      });
+    });
+
+    // Code sample tabs (if CodeSamples loaded)
+    if (window.CodeSamples) {
+      window.CodeSamples.setupCodeSampleTabs(div);
+    }
+
     return div;
+  }
+
+  // Copy to clipboard helper
+  async function copyToClipboard(text, button) {
+    try {
+      await navigator.clipboard.writeText(text);
+
+      // Visual feedback
+      const originalText = button.textContent;
+      button.textContent = 'Copied!';
+      button.classList.add('copied');
+
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('copied');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+
+  // Helper: escape attribute value
+  function escapeAttr(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   // Render schema with accordion (Spotify-style)
@@ -492,6 +1084,13 @@
           el.classList.toggle('hidden', el.dataset.viewContent !== view);
         });
 
+        // Handle schemas view separately
+        if (view === 'schemas') {
+          state.currentView = view;
+          renderAllSchemas();
+          return;
+        }
+
         // Load and render endpoints
         state.currentView = view;
         await loadEndpointsView(view);
@@ -510,22 +1109,29 @@
     }, 300));
   }
 
-  // Filter endpoints based on search
+  // Filter endpoints and schemas based on search
   function filterEndpoints(query) {
-    // Filter navigation items in the sidebar, not main content
+    // Filter endpoint navigation items
     const navItems = document.querySelectorAll('.openapi-endpoint-item');
-
     navItems.forEach(item => {
       const text = item.textContent.toLowerCase();
       const matches = query === '' || text.includes(query);
       item.style.display = matches ? '' : 'none';
     });
 
-    // Also filter group headers - hide if all children are hidden
+    // Filter group headers - hide if all children are hidden
     const groups = document.querySelectorAll('.openapi-path-group, .openapi-tag-group');
     groups.forEach(group => {
       const visibleItems = group.querySelectorAll('.openapi-endpoint-item:not([style*="display: none"])');
       group.style.display = visibleItems.length > 0 ? '' : 'none';
+    });
+
+    // Filter schema navigation items
+    const schemaItems = document.querySelectorAll('.openapi-schema-item');
+    schemaItems.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      const matches = query === '' || text.includes(query);
+      item.style.display = matches ? '' : 'none';
     });
   }
 
@@ -552,21 +1158,31 @@
     const navigation = document.querySelector('.openapi-navigation');
     if (!navigation) return;
 
-    // Use event delegation for collapse buttons
+    // Use event delegation - click anywhere on header to collapse
     navigation.addEventListener('click', (e) => {
-      const btn = e.target.closest('.openapi-collapse-btn');
-      if (!btn) return;
+      // Check if clicked on header (path or tag)
+      const header = e.target.closest('.openapi-path-header, .openapi-tag-header');
+      if (!header) return;
+
+      // Don't collapse if clicking on an endpoint link
+      if (e.target.closest('.openapi-endpoint-link')) return;
 
       e.stopPropagation();
-      btn.classList.toggle('collapsed');
+
+      // Find the collapse button and toggle it
+      const btn = header.querySelector('.openapi-collapse-btn');
+      if (btn) {
+        btn.classList.toggle('collapsed');
+      }
 
       // Find the parent item
-      const parent = btn.closest('.openapi-nav-item');
+      const parent = header.closest('.openapi-nav-item');
       if (parent) {
+        const isCollapsed = btn && btn.classList.contains('collapsed');
         // Toggle all lists (endpoints and nested paths)
-        const lists = parent.querySelectorAll('.openapi-endpoint-list, .openapi-nav-nested');
+        const lists = parent.querySelectorAll(':scope > .openapi-endpoint-list, :scope > .openapi-nav-nested');
         lists.forEach(list => {
-          list.style.display = btn.classList.contains('collapsed') ? 'none' : '';
+          list.style.display = isCollapsed ? 'none' : '';
         });
       }
     });

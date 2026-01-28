@@ -21,6 +21,7 @@ type APISpec struct {
 	Endpoints      []*APIEndpoint      // All endpoints/operations
 	SecuritySchemes map[string]*APISecurityScheme // Security schemes defined in spec
 	Tags           []APITag            // Tags for organization
+	Schemas        map[string]*APISchema // Reusable schemas from components
 
 	// Organization
 	OrganizedByPath []*APIPathGroup   // Endpoints organized by path hierarchy
@@ -217,15 +218,16 @@ type APISpecSource struct {
 
 // OpenAPIConfig holds OpenAPI-specific configuration
 type OpenAPIConfig struct {
-	Enabled         bool     // Enable OpenAPI support
-	SpecFiles       []string // Local spec file paths/globs
-	SpecURLs        []string // Remote spec URLs to fetch
-	DefaultView     string   // Default organization view: "path", "tag", "flat"
-	SyncOnBuild     bool     // Sync remote specs on every build
-	CacheDir        string   // Cache directory for remote specs
-	EnableTesting   bool     // Enable API testing UI
-	EnableExport    bool     // Enable export to restcli/curl
-	LazyLoadChunkSize int    // Chunk size for lazy loading (bytes)
+	Enabled           bool     // Enable OpenAPI support
+	SpecFiles         []string // Local spec file paths/globs
+	SpecURLs          []string // Remote spec URLs to fetch
+	DefaultView       string   // Default organization view: "path", "tag", "flat"
+	SyncOnBuild       bool     // Sync remote specs on every build
+	CacheDir          string   // Cache directory for remote specs
+	EnableTesting     bool     // Enable API testing UI
+	EnableExport      bool     // Enable export to restcli/curl
+	EnableCodeSamples bool     // Enable code samples (curl, fetch, Go, Python)
+	LazyLoadChunkSize int      // Chunk size for lazy loading (bytes)
 }
 
 // DefaultOpenAPIConfig returns an OpenAPIConfig with sensible defaults
@@ -239,6 +241,7 @@ func DefaultOpenAPIConfig() OpenAPIConfig {
 		CacheDir:          ".openapi-cache",
 		EnableTesting:     true,
 		EnableExport:      true,
+		EnableCodeSamples: true,
 		LazyLoadChunkSize: 51200, // 50KB chunks
 	}
 }

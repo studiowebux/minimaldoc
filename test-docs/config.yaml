@@ -18,4 +18,5 @@ openapi:
   cache_dir: ".openapi-cache"
   enable_testing: true
   enable_export: true
+  enable_code_samples: true
   lazy_load_chunk_size: 51200

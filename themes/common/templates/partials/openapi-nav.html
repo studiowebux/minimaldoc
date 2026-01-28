@@ -19,6 +19,11 @@
 					<path d="M1 2h14v1H1V2zm0 3h14v1H1V5zm0 3h14v1H1V8zm0 3h14v1H1v-1z"/>
 				</svg>
 			</button>
+			<button class="view-toggle-btn" data-view="schemas" title="Schemas">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+					<path d="M3 1h10a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V3a2 2 0 012-2zm0 1a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V3a1 1 0 00-1-1H3zm1 2h8v1H4V4zm0 3h5v1H4V7zm0 3h8v1H4v-1z"/>
+				</svg>
+			</button>
 		</div>
 	</div>
 
@@ -53,6 +58,13 @@
 			{{end -}}
 		</ul>
 	</div>
+
+	<!-- Schemas Navigation -->
+	<div class="openapi-nav-content hidden" data-view-content="schemas">
+		<ul class="openapi-nav-list openapi-nav-schemas" id="schemas-nav-list">
+			<!-- Populated by JavaScript from spec-data.json -->
+		</ul>
+	</div>
 </nav>
 {{- end -}}
 
@@ -60,7 +72,7 @@
 {{define "openapi-path-group" -}}
 <li class="openapi-nav-item openapi-path-group">
 	<div class="openapi-path-header">
-		<button class="openapi-collapse-btn">
+		<button class="openapi-collapse-btn collapsed">
 			<svg class="collapse-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
 				<path d="M4 2l4 4-4 4V2z"/>
 			</svg>
@@ -69,14 +81,14 @@
 		<span class="openapi-endpoint-count">{{len .Group.Endpoints}}</span>
 	</div>
 	{{- if .Group.Endpoints -}}
-	<ul class="openapi-endpoint-list">
+	<ul class="openapi-endpoint-list" style="display: none;">
 		{{- range .Group.Endpoints -}}
 		{{template "openapi-endpoint-item" (dict "Endpoint" . "BasePath" $.BasePath "SpecName" $.SpecName) -}}
 		{{end -}}
 	</ul>
 	{{- end -}}
 	{{- if .Group.Children -}}
-	<ul class="openapi-nav-list openapi-nav-nested">
+	<ul class="openapi-nav-list openapi-nav-nested" style="display: none;">
 		{{- range .Group.Children -}}
 		{{template "openapi-path-group" (dict "Group" . "BasePath" $.BasePath "SpecName" $.SpecName) -}}
 		{{end -}}
@@ -89,7 +101,7 @@
 {{define "openapi-tag-group" -}}
 <li class="openapi-nav-item openapi-tag-group">
 	<div class="openapi-tag-header">
-		<button class="openapi-collapse-btn">
+		<button class="openapi-collapse-btn collapsed">
 			<svg class="collapse-icon" width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
 				<path d="M4 2l4 4-4 4V2z"/>
 			</svg>
@@ -100,7 +112,7 @@
 	{{- if .Group.Tag.Description -}}
 	<p class="openapi-tag-desc">{{.Group.Tag.Description}}</p>
 	{{- end -}}
-	<ul class="openapi-endpoint-list">
+	<ul class="openapi-endpoint-list" style="display: none;">
 		{{- range .Group.Endpoints -}}
 		{{template "openapi-endpoint-item" (dict "Endpoint" . "BasePath" $.BasePath "SpecName" $.SpecName) -}}
 		{{end -}}
