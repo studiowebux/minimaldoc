@@ -30,6 +30,11 @@ type Page struct {
 
 	// Table of Contents
 	TOC *TOC // Parsed table of contents from headings
+
+	// Stale content warning (computed at build time)
+	IsStale         bool   // True if content is older than threshold
+	StaleAge        string // Human-readable age: "2 years", "18 months"
+	DaysSinceUpdate int    // Exact days since last update
 }
 
 // TOC represents the table of contents for a page

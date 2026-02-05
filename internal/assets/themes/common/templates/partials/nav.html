@@ -1,0 +1,45 @@
+{{define "nav" -}}
+<nav class="navigation"><ul class="nav-list">
+{{- range .Site.Navigation.Items -}}
+{{template "nav-item" (dict "Item" . "BasePath" $.BasePath) -}}
+{{end -}}
+</ul></nav>
+{{- end -}}
+
+{{define "nav-item" -}}
+<li class="nav-item{{if .Item.Active}} active{{end}}{{if and .Item.Children (not .Item.Active)}} collapsed{{end}}">
+{{- if .Item.Children -}}
+<div class="nav-item-with-children">
+<button type="button" class="nav-toggle-btn" aria-label="Toggle {{.Item.Title}}" aria-expanded="{{if .Item.Active}}true{{else}}false{{end}}">
+<span class="nav-toggle-icon">▶</span>
+</button>
+{{- if .Item.Path -}}
+{{- if .Item.IsExternal -}}
+<a href="{{.Item.Path}}" class="nav-link nav-link-parent nav-link-external" target="_blank" rel="noopener noreferrer">{{.Item.Title}}<svg class="external-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+{{- else -}}
+<a href="{{.BasePath}}{{.Item.Path}}" class="nav-link nav-link-parent">{{.Item.Title}}</a>
+{{- end -}}
+{{- else -}}
+<span class="nav-section">{{.Item.Title}}</span>
+{{- end -}}
+</div>
+{{- else -}}
+{{- if .Item.Path -}}
+{{- if .Item.IsExternal -}}
+<a href="{{.Item.Path}}" class="nav-link nav-link-external" target="_blank" rel="noopener noreferrer">{{.Item.Title}}<svg class="external-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5 1.5L1.5 10.5M10.5 1.5H4.5M10.5 1.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+{{- else -}}
+<a href="{{.BasePath}}{{.Item.Path}}" class="nav-link">{{.Item.Title}}</a>
+{{- end -}}
+{{- else -}}
+<span class="nav-section">{{.Item.Title}}</span>
+{{- end -}}
+{{- end}}
+{{- if .Item.Children -}}
+<ul class="nav-list nav-list-nested">
+{{- range .Item.Children -}}
+{{template "nav-item" (dict "Item" . "BasePath" $.BasePath) -}}
+{{end -}}
+</ul>
+{{- end -}}
+</li>
+{{- end}}

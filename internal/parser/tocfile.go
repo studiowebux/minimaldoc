@@ -73,6 +73,10 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 			filePath = matches[3]
 			// Check if path is an external URL
 			isExternal = strings.HasPrefix(filePath, "http://") || strings.HasPrefix(filePath, "https://")
+			// Normalize relative paths: strip ./ prefix
+			if !isExternal {
+				filePath = strings.TrimPrefix(filePath, "./")
+			}
 		} else {
 			// Plain text format: Title (section header)
 			title = strings.TrimSpace(matches[4])

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}" class="openapi-page no-js">
+<head>
+<script>
+document.documentElement.classList.remove('no-js');
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.Spec.Title}} | {{.Site.Config.Title}}</title>
+<meta name="title" content="{{.Spec.Title}} - API Documentation">
+<meta name="description" content="{{.Spec.Description}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{.Spec.Title}} - API Documentation">
+<meta property="og:description" content="{{.Spec.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/openapi.css?v={{.Version}}">
+</head>
+<body class="openapi-body">
+<a href="#endpoints-container" class="skip-link">Skip to API endpoints</a>
+<button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="openapi-sidebar-left">
+<span></span>
+</button>
+<div class="mobile-menu-backdrop" id="mobile-menu-backdrop" aria-hidden="true"></div>
+
+<div class="openapi-container">
+	<!-- Left Sidebar - Navigation -->
+	<aside class="openapi-sidebar openapi-sidebar-left" id="openapi-sidebar-left" aria-label="API navigation">
+		<div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+		<div class="openapi-sidebar-header">
+			<h1 class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></h1>
+			<div class="sidebar-header-actions">
+				<button id="sidebar-collapse-toggle" class="sidebar-collapse-toggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+					<svg class="sidebar-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+						<path d="M10.5 3L5.5 8L10.5 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+					</svg>
+				</button>
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+					<span class="theme-icon"></span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Spec Info -->
+		<div class="openapi-spec-info">
+			<div class="openapi-spec-version">
+				<span class="version-label">Version</span>
+				<span class="version-value">{{.Spec.Version}}</span>
+			</div>
+			{{if .Spec.Servers}}
+			<div class="openapi-servers">
+				<label for="server-select" class="server-label">Server:</label>
+				<select id="server-select" class="server-select">
+					{{range $i, $server := .Spec.Servers}}
+					<option value="{{$server.URL}}" {{if eq $i 0}}selected{{end}}>
+						{{if $server.Description}}{{$server.Description}}{{else}}{{$server.URL}}{{end}}
+					</option>
+					{{end}}
+				</select>
+			</div>
+			{{end}}
+		</div>
+
+		<!-- Navigation -->
+		{{template "openapi-nav" .}}
+
+		<div class="openapi-sidebar-footer">
+			<a href="{{.BasePath}}/">← Back to Docs</a>
+		</div>
+	</aside>
+
+	<!-- Main Content Area -->
+	<main class="openapi-main-content">
+		<!-- Header -->
+		<header class="openapi-header">
+			<h1 class="openapi-title">{{.Spec.Title}}</h1>
+			{{if .Spec.Description}}
+			<div class="openapi-description">{{.Spec.Description | safeHTML}}</div>
+			{{end}}
+			<div class="openapi-meta">
+				<span class="openapi-meta-item">
+					<strong>OpenAPI:</strong> {{.Spec.OpenAPIVersion}}
+				</span>
+				<span class="openapi-meta-item">
+					<strong>Endpoints:</strong> {{len .Spec.Endpoints}}
+				</span>
+				{{if .Spec.URL}}
+				<span class="openapi-meta-item">
+					<strong>Spec URL:</strong> <a href="{{.Spec.URL}}" target="_blank" rel="noopener">{{.Spec.URL}}</a>
+				</span>
+				{{else if .Spec.FilePath}}
+				<span class="openapi-meta-item">
+					<strong>Spec File:</strong> <code>{{.Spec.FilePath}}</code>
+				</span>
+				{{end}}
+				{{if not .Spec.LastFetched.IsZero}}
+				<span class="openapi-meta-item">
+					<strong>Last Updated:</strong> {{.Spec.LastFetched.Format "Jan 2, 2006 15:04"}}
+				</span>
+				{{end}}
+			</div>
+		</header>
+
+		<!-- Endpoints Container (will be populated by JavaScript) -->
+		<div id="endpoints-container" class="endpoints-container">
+			<!-- Loading state -->
+			<div class="loading-state">
+				<p>Loading API endpoints...</p>
+			</div>
+			<noscript>
+				<div class="noscript-message">
+					<h2>JavaScript Required</h2>
+					<p>This interactive API documentation requires JavaScript to display endpoints and enable the API tester.</p>
+					<p>Please enable JavaScript in your browser settings to use this feature.</p>
+				</div>
+			</noscript>
+		</div>
+	</main>
+
+	<!-- Right Sidebar - API Tester -->
+	<aside class="openapi-sidebar openapi-sidebar-right" id="openapi-sidebar-right" aria-label="API tester">
+		<div class="sidebar-resize-handle-right" id="sidebar-resize-handle-right"></div>
+		<div class="api-tester" id="api-tester" role="region" aria-label="API request tester">
+			<div class="api-tester-header">
+				<h3 id="api-tester-heading">Try it out</h3>
+				<button class="api-tester-close" id="api-tester-close" aria-label="Close API tester">&times;</button>
+			</div>
+
+			<div class="api-tester-content">
+				<!-- Auth -->
+				<div class="api-tester-section">
+					<label for="auth-type" class="api-tester-label">Authentication</label>
+					<select id="auth-type" class="api-tester-select">
+						<option value="none">None</option>
+						<option value="bearer">Bearer Token</option>
+						<option value="apikey">API Key</option>
+						<option value="oauth2">OAuth 2.0</option>
+					</select>
+					<div id="auth-config" class="auth-config" role="group" aria-label="Authentication configuration"></div>
+				</div>
+
+				<!-- Parameters -->
+				<div class="api-tester-section">
+					<span class="api-tester-label" id="parameters-label">Parameters</span>
+					<div id="parameters-container" class="parameters-container" role="group" aria-labelledby="parameters-label"></div>
+				</div>
+
+				<!-- Headers -->
+				<div class="api-tester-section">
+					<span class="api-tester-label" id="headers-label">Headers</span>
+					<div id="headers-container" class="headers-container" role="group" aria-labelledby="headers-label">
+						<button class="add-header-btn" id="add-header-btn">+ Add Header</button>
+					</div>
+				</div>
+
+				<!-- Request Body -->
+				<div class="api-tester-section" id="request-body-section" style="display: none;">
+					<label for="content-type-select" class="api-tester-label">Request Body</label>
+					<select id="content-type-select" class="api-tester-select" aria-label="Content type">
+						<option value="application/json">application/json</option>
+						<option value="application/xml">application/xml</option>
+						<option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+						<option value="multipart/form-data">multipart/form-data</option>
+					</select>
+					<label for="request-body" class="sr-only">Request body content</label>
+					<textarea id="request-body" class="request-body-editor" rows="10" aria-label="Request body JSON"></textarea>
+				</div>
+
+				<!-- Actions -->
+				<div class="api-tester-actions">
+					<button class="btn btn-primary" id="send-request-btn">Send Request</button>
+					<button class="btn btn-secondary" id="export-curl-btn">Export cURL</button>
+					<button class="btn btn-secondary" id="export-restcli-btn">Export restcli</button>
+				</div>
+
+				<!-- Response -->
+				<div class="api-tester-section" id="response-section" style="display: none;" role="region" aria-label="API response" aria-live="polite">
+					<span class="api-tester-label" id="response-label">Response</span>
+					<div class="response-status" id="response-status" aria-label="Response status"></div>
+					<div class="response-headers" id="response-headers" aria-label="Response headers"></div>
+					<pre class="response-body" id="response-body" aria-label="Response body" tabindex="0"></pre>
+				</div>
+			</div>
+		</div>
+	</aside>
+</div>
+
+<!-- Scripts -->
+<script>
+	// Load spec data
+	window.OPENAPI_SPEC_NAME = {{.Spec.Name | json}};
+	window.OPENAPI_DEFAULT_VIEW = {{.DefaultView | json}};
+	window.OPENAPI_BASE_PATH = {{.BasePath | json}};
+	window.OPENAPI_ENABLE_CODE_SAMPLES = {{.EnableCodeSamples | json}};
+</script>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/mobile-menu.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/sidebar-resize.js?v={{.Version}}"></script>
+{{if .EnableCodeSamples}}<script defer src="{{.BasePath}}/js/code-samples.js?v={{.Version}}"></script>{{end}}
+<script defer src="{{.BasePath}}/js/openapi-explorer.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/api-tester.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/oauth-handler.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/export.js?v={{.Version}}"></script>
+</body>
+</html>

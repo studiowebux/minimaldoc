@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="Release {{.Release.Version}}{{if .Release.Title}} - {{.Release.Title}}{{end}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/changelog.css?v={{.Version}}">
+</head>
+<body>
+<div class="changelog-page release-detail">
+<header class="changelog-header">
+<div class="changelog-header-content">
+<a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/" class="back-link">Back to Changelog</a>
+<div class="release-badges">
+{{if .Release.Prerelease}}<span class="prerelease-badge">Prerelease</span>{{end}}
+</div>
+<h1>{{.Release.Version}}</h1>
+{{if .Release.Title}}<p class="release-title-text">{{.Release.Title}}</p>{{end}}
+<div class="release-detail-meta">
+<span class="meta-item"><strong>Released:</strong> {{.Release.Date | formatDate}}</span>
+{{if .Release.CompareURL}}<a href="{{.Release.CompareURL}}" target="_blank" rel="noopener noreferrer" class="compare-link">View changes on GitHub</a>{{end}}
+</div>
+</div>
+</header>
+<main class="changelog-main">
+<article class="release-full-content">
+{{if .Release.Categories}}
+{{range .Release.Categories}}
+<section class="change-category">
+<h2 class="category-header">
+<span class="category-badge category-{{.Type | changeColor}}">{{.Type}}</span>
+</h2>
+<ul class="change-list">
+{{range .Entries}}
+<li class="change-entry">{{.HTML | safeHTML}}</li>
+{{end}}
+</ul>
+</section>
+{{end}}
+{{else}}
+<div class="release-html-content markdown-body">
+{{.Release.HTML | safeHTML}}
+</div>
+{{end}}
+</article>
+</main>
+<footer class="changelog-footer">
+<p><a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/">Back to Changelog</a></p>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

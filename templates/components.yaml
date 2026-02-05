@@ -1,0 +1,75 @@
+# Status Page Components
+# Place this file in docs/__status__/components.yaml
+
+# Core Services Group
+- id: api
+  name: API
+  description: Core REST API
+  status: operational
+  group: Core Services
+  order: 1
+  url: https://api.example.com
+  health_endpoint: /health
+  health_interval: 30
+  uptime:
+    mode: incidents      # incidents | api
+    sla_target: 99.9
+    period_days: 90
+
+- id: web-app
+  name: Web Application
+  description: Main web interface
+  status: operational
+  group: Core Services
+  order: 2
+  url: https://app.example.com
+  health_endpoint: /api/health
+  health_interval: 60
+  uptime:
+    mode: incidents
+    sla_target: 99.5
+    period_days: 90
+
+# Infrastructure Group
+- id: database
+  name: Database
+  description: Primary database cluster
+  status: operational
+  group: Infrastructure
+  order: 1
+  uptime:
+    mode: incidents
+    sla_target: 99.99
+    period_days: 90
+
+- id: cdn
+  name: CDN
+  description: Content delivery network
+  status: operational
+  group: Infrastructure
+  order: 2
+  url: https://cdn.example.com
+
+# COMPONENT FIELDS:
+#
+# id: (required) Unique identifier, used in incident affected_components
+# name: (required) Display name
+# description: (optional) Component description
+# status: (optional) operational | degraded | partial_outage | major_outage | maintenance
+# group: (optional) Group name for visual organization
+# order: (optional) Sort order within group
+# url: (optional) Link to the service
+# health_endpoint: (optional) Health check path (e.g., /health)
+# health_interval: (optional) Seconds between health checks
+# uptime: (optional) Uptime tracking configuration
+#   mode: incidents (derive from incident files) | api (fetch from endpoint)
+#   endpoint: (api mode only) Path to uptime data endpoint
+#   sla_target: Target SLA percentage
+#   period_days: Days of history to track (default: 90)
+
+# STATUS VALUES:
+# operational    - Fully functional (green)
+# degraded       - Reduced performance (yellow)
+# partial_outage - Some features unavailable (orange)
+# major_outage   - Service unavailable (red)
+# maintenance    - Under maintenance (blue)

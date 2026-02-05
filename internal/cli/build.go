@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	minimaldoc "github.com/studiowebux/minimaldoc"
+	"github.com/studiowebux/minimaldoc/internal/assets"
 	"github.com/studiowebux/minimaldoc/internal/builder"
 	"github.com/studiowebux/minimaldoc/internal/config"
 	"github.com/studiowebux/minimaldoc/internal/core"
@@ -27,15 +27,23 @@ to the 'public' directory.`,
 }
 
 var (
-	outputDir      string
-	themeName      string
-	enableLLMS     bool
-	cleanURLs      bool
-	siteTitle      string
-	siteDesc       string
-	baseURL        string
-	enableOpenAPI  bool
-	openapiSpecDir string
+	outputDir        string
+	themeName        string
+	enableLLMS       bool
+	cleanURLs        bool
+	siteTitle        string
+	siteDesc         string
+	baseURL          string
+	enableOpenAPI    bool
+	openapiSpecDir   string
+	enableStatus     bool
+	statusTitle      string
+	statusPath       string
+	enableChangelog  bool
+	changelogTitle   string
+	changelogPath    string
+	enableStaleWarn  bool
+	staleThreshold   int
 )
 
 func init() {
@@ -48,6 +56,14 @@ func init() {
 	BuildCmd.Flags().StringVar(&baseURL, "base-url", "", "Base URL for the site")
 	BuildCmd.Flags().BoolVar(&enableOpenAPI, "openapi", false, "Enable OpenAPI/Swagger documentation")
 	BuildCmd.Flags().StringVar(&openapiSpecDir, "openapi-dir", "api", "Directory containing OpenAPI spec files (relative to docs root)")
+	BuildCmd.Flags().BoolVar(&enableStatus, "status", false, "Enable status page")
+	BuildCmd.Flags().StringVar(&statusTitle, "status-title", "Service Status", "Status page title")
+	BuildCmd.Flags().StringVar(&statusPath, "status-path", "status", "Status page output path")
+	BuildCmd.Flags().BoolVar(&enableChangelog, "changelog", false, "Enable changelog")
+	BuildCmd.Flags().StringVar(&changelogTitle, "changelog-title", "Changelog", "Changelog page title")
+	BuildCmd.Flags().StringVar(&changelogPath, "changelog-path", "changelog", "Changelog output path")
+	BuildCmd.Flags().BoolVar(&enableStaleWarn, "stale-warning", false, "Enable stale content warnings")
+	BuildCmd.Flags().IntVar(&staleThreshold, "stale-threshold", 365, "Days before content is considered stale")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -91,15 +107,41 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		openapiConfig.EnableExport = true
 	}
 
+	// Create status configuration
+	statusConfig := core.DefaultStatusConfig()
+	statusConfig.Enabled = enableStatus
+	if enableStatus {
+		statusConfig.Title = statusTitle
+		statusConfig.Path = statusPath
+	}
+
+	// Create changelog configuration
+	changelogConfig := core.DefaultChangelogConfig()
+	changelogConfig.Enabled = enableChangelog
+	if enableChangelog {
+		changelogConfig.Title = changelogTitle
+		changelogConfig.Path = changelogPath
+	}
+
+	// Create stale warning configuration
+	staleWarningConfig := core.DefaultStaleWarningConfig()
+	staleWarningConfig.Enabled = enableStaleWarn
+	if enableStaleWarn {
+		staleWarningConfig.ThresholdDays = staleThreshold
+	}
+
 	siteConfig := core.SiteConfig{
-		Title:       siteTitle,
-		Description: siteDesc,
-		BaseURL:     baseURL,
-		Theme:       themeName,
-		EnableLLMS:  enableLLMS,
-		CleanURLs:   cleanURLs,
-		NavDepth:    0,
-		OpenAPI:     openapiConfig,
+		Title:        siteTitle,
+		Description:  siteDesc,
+		BaseURL:      baseURL,
+		Theme:        themeName,
+		EnableLLMS:   enableLLMS,
+		CleanURLs:    cleanURLs,
+		NavDepth:     0,
+		OpenAPI:      openapiConfig,
+		Status:       statusConfig,
+		Changelog:    changelogConfig,
+		StaleWarning: staleWarningConfig,
 	}
 
 	// Merge with config.yaml if it exists (CLI flags take precedence)
@@ -118,7 +160,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate HTML
-	htmlGen, err := generator.NewHTMLGenerator(site, minimaldoc.ThemeFS, version.Version)
+	htmlGen, err := generator.NewHTMLGenerator(site, assets.ThemeFS, version.Version)
 	if err != nil {
 		return fmt.Errorf("failed to create HTML generator: %w", err)
 	}
@@ -128,7 +170,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate OpenAPI documentation (if enabled)
-	openapiGen, err := generator.NewOpenAPIGenerator(site, minimaldoc.ThemeFS, version.Version)
+	openapiGen, err := generator.NewOpenAPIGenerator(site, assets.ThemeFS, version.Version)
 	if err != nil {
 		return fmt.Errorf("failed to create OpenAPI generator: %w", err)
 	}
@@ -156,6 +198,28 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	searchGen := generator.NewSearchGenerator(site)
 	if err := searchGen.Generate(); err != nil {
 		return fmt.Errorf("search index generation failed: %w", err)
+	}
+
+	// Generate status page (if enabled)
+	statusGen, err := generator.NewStatusGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create status generator: %w", err)
+	}
+	if statusGen != nil {
+		if err := statusGen.Generate(); err != nil {
+			return fmt.Errorf("status page generation failed: %w", err)
+		}
+	}
+
+	// Generate changelog (if enabled)
+	changelogGen, err := generator.NewChangelogGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create changelog generator: %w", err)
+	}
+	if changelogGen != nil {
+		if err := changelogGen.Generate(); err != nil {
+			return fmt.Errorf("changelog generation failed: %w", err)
+		}
 	}
 
 	fmt.Println()

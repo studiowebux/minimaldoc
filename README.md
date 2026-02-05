@@ -16,6 +16,8 @@ A modern, minimal static site generator for documentation written in Go.
 - **GFM Support** - Tables, strikethrough, task lists, and more
 - **Sitemap** - Automatic sitemap.xml generation for SEO
 - **OpenAPI/Swagger** - Interactive API documentation with live testing
+- **Status Page** - Service health dashboard with incidents, maintenance, uptime tracking
+- **Social Links** - Configurable social media links in sidebar
 - **LLM-Friendly** - Generates `llms.txt` for AI tools
 - **Fast Builds** - Lightning-fast site generation
 - **GitHub Pages Ready** - Deploy anywhere static sites are supported
@@ -91,6 +93,9 @@ minimaldoc build [docs-directory] [flags]
 - `--llms, -l` - Generate llms.txt (default: `true`)
 - `--openapi` - Enable OpenAPI/Swagger documentation
 - `--openapi-dir` - Directory containing OpenAPI spec files (default: `api`)
+- `--status` - Enable status page generation
+- `--status-title` - Status page title
+- `--status-path` - Status page output path (default: `status`)
 - `--clean-urls` - Use clean URLs `/page/` instead of `/page.html`
 - `--title` - Site title (default: `Documentation`)
 - `--description` - Site description
@@ -140,6 +145,18 @@ openapi:
   enable_export: true
   enable_code_samples: true
   lazy_load_chunk_size: 51200
+
+status:
+  enabled: true
+  title: "Service Status"
+  path: "status"
+  show_history: true
+  rss_enabled: true
+
+social_links:
+  - name: GitHub
+    url: https://github.com/org/project
+    icon: github
 ```
 
 **Benefits:**
@@ -314,6 +331,87 @@ The Schemas tab provides a dedicated view for browsing all reusable data models 
 - **Constraint display** showing min/max, patterns, enums, defaults
 
 Click any schema in the navigation to view its full definition with properties and generated examples.
+
+## Status Page
+
+MinimalDoc includes a built-in status page for displaying service health, incidents, and maintenance schedules.
+
+### Quick Start
+
+1. Enable in your `config.yaml`:
+
+```yaml
+status:
+  enabled: true
+  title: "Service Status"
+  description: "Current operational status"
+  path: "status"
+  show_history: true
+  rss_enabled: true
+```
+
+2. Create the status content directory:
+
+```
+docs/
+└── __status__/
+    ├── components.yaml
+    ├── incidents/
+    │   └── 2025-01-28-api-outage.md
+    └── maintenance/
+        └── 2025-02-01-upgrade.md
+```
+
+3. Build your site:
+
+```bash
+minimaldoc build docs
+```
+
+### Features
+
+- **Component Status** - Track multiple services with operational/degraded/outage states
+- **Incident Timeline** - Markdown-based incidents with update history
+- **Scheduled Maintenance** - Display upcoming maintenance windows
+- **Uptime Calendar** - 90-day visual uptime grid (GitHub-style)
+- **SLA Display** - Track SLA targets with 7d/30d/90d breakdowns
+- **Live Health Checks** - Browser-based endpoint polling with latency display
+- **RSS Feed** - Subscribe to incident updates
+- **JSON API** - Machine-readable status data at `/status/status.json`
+
+### Uptime Tracking
+
+Two modes for uptime data:
+
+```yaml
+# Mode 1: Derive from incidents (static)
+uptime:
+  mode: incidents
+  sla_target: 99.9
+  period_days: 90
+
+# Mode 2: Fetch from API (dynamic)
+uptime:
+  mode: api
+  endpoint: /uptime
+  sla_target: 99.9
+```
+
+## Social Links
+
+Add social media links to the sidebar:
+
+```yaml
+social_links:
+  - name: GitHub
+    url: https://github.com/your-org/project
+    icon: github
+  - name: Discord
+    url: https://discord.gg/invite
+    icon: discord
+```
+
+**Supported icons:** `github`, `twitter`, `linkedin`, `youtube`, `discord`, `mastodon`, `rss`, `email`, `website`
 
 ### Code Samples
 

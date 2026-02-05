@@ -1,0 +1,46 @@
+# Documentation Services
+- id: docs-site
+  name: Documentation Site
+  description: Main documentation website
+  status: operational
+  group: Documentation
+  order: 1
+  url: https://minimaldoc.dev
+  uptime:
+    mode: incidents
+    sla_target: 99.9
+    period_days: 90
+
+- id: search
+  name: Search Service
+  description: Client-side documentation search
+  status: operational
+  group: Documentation
+  order: 2
+
+# Build Infrastructure
+- id: build-system
+  name: Build System
+  description: Documentation build pipeline
+  status: operational
+  group: Infrastructure
+  order: 1
+
+- id: cdn
+  name: CDN
+  description: Content delivery network
+  status: operational
+  group: Infrastructure
+  order: 2
+  uptime:
+    mode: incidents
+    sla_target: 99.99
+
+# External Services
+- id: github
+  name: GitHub
+  description: Source code repository
+  status: operational
+  group: External
+  order: 1
+  url: https://github.com/studiowebux/minimaldoc

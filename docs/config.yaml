@@ -1,0 +1,37 @@
+title: MinimalDoc Documentation
+description: The minimal static site generator for beautiful documentation
+base_url: https://minimaldoc.dev
+author: Studio Webux
+theme: default
+dark_mode: false
+enable_llms: true
+enable_search: true
+clean_urls: false
+
+openapi:
+  enabled: false
+
+status:
+  enabled: true
+  title: "MinimalDoc Status"
+  description: "Operational status of MinimalDoc services"
+  path: "status"
+  show_history: true
+  rss_enabled: true
+
+changelog:
+  enabled: true
+  title: "Changelog"
+  path: "changelog"
+  rss_enabled: true
+  repository: "https://github.com/studiowebux/minimaldoc"
+
+stale_warning:
+  enabled: true
+  threshold_days: 365
+  show_update_date: true
+
+social_links:
+  - name: GitHub
+    url: https://github.com/studiowebux/minimaldoc
+    icon: github

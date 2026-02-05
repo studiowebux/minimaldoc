@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.Incident.Title}} - {{.StatusPage.Config.Title}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/status.css?v={{.Version}}">
+</head>
+<body>
+<div class="status-page">
+<header class="status-header">
+<div class="status-header-content">
+<h1>{{.StatusPage.Config.Title}}</h1>
+<a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/" class="back-link">Back to Status</a>
+</div>
+</header>
+<main class="status-main">
+<article class="incident-detail">
+<header class="incident-detail-header">
+<div class="incident-badges">
+<span class="incident-severity severity-{{.Incident.Severity | severityColor}}">{{.Incident.Severity | upper}}</span>
+<span class="incident-status status-{{if ne (print .Incident.Status) "resolved"}}active{{else}}resolved{{end}}">{{.Incident.Status | incidentStatusLabel}}</span>
+</div>
+<h1>{{.Incident.Title}}</h1>
+<div class="incident-detail-meta">
+<div class="meta-item">
+<strong>Started:</strong> {{.Incident.CreatedAt | formatTime}}
+</div>
+{{if .Incident.ResolvedAt}}
+<div class="meta-item">
+<strong>Resolved:</strong> {{.Incident.ResolvedAt | formatTime}}
+</div>
+{{end}}
+{{if .Incident.AffectedComponents}}
+<div class="meta-item">
+<strong>Affected Components:</strong>
+{{range $i, $c := .Incident.AffectedComponents}}{{if $i}}, {{end}}{{$c}}{{end}}
+</div>
+{{end}}
+</div>
+</header>
+{{if .Incident.Updates}}
+<section class="incident-timeline">
+<h2>Timeline</h2>
+<ul class="timeline">
+{{range .Incident.Updates}}
+<li class="timeline-item">
+<div class="timeline-marker"></div>
+<div class="timeline-content">
+<div class="timeline-header">
+<span class="timeline-time">{{.Timestamp | formatTime}}</span>
+<span class="timeline-status">{{.Status | incidentStatusLabel}}</span>
+</div>
+<div class="timeline-body">
+{{.Message | safeHTML}}
+</div>
+</div>
+</li>
+{{end}}
+</ul>
+</section>
+{{end}}
+{{if .Incident.HTML}}
+<section class="incident-content">
+<h2>Details</h2>
+<div class="markdown-body">
+{{.Incident.HTML | safeHTML}}
+</div>
+</section>
+{{end}}
+</article>
+</main>
+<footer class="status-footer">
+<p><a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/">Return to Status Page</a></p>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

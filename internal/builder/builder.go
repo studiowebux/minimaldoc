@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/studiowebux/minimaldoc/internal/parser"
@@ -21,7 +22,9 @@ type Builder struct {
 	openapiParser     *parser.OpenAPIParser
 
 	// Builders
-	navBuilder *NavigationBuilder
+	navBuilder       *NavigationBuilder
+	statusBuilder    *StatusBuilder
+	changelogBuilder *ChangelogBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -34,6 +37,8 @@ func NewBuilder(site *core.Site) *Builder {
 		tocParser:         parser.NewTOCParser(),
 		openapiParser:     parser.NewOpenAPIParser(cacheDir),
 		navBuilder:        NewNavigationBuilder(),
+		statusBuilder:     NewStatusBuilder(),
+		changelogBuilder:  NewChangelogBuilder(),
 	}
 }
 
@@ -60,15 +65,41 @@ func (b *Builder) Build() error {
 		}
 	}
 
-	// 4. Build navigation
+	// 4. Build status page (if enabled)
+	if b.site.Config.Status.Enabled {
+		statusPage, err := b.statusBuilder.Build(b.site.DocsRoot, b.site.Config.Status)
+		if err != nil {
+			return fmt.Errorf("failed to build status page: %w", err)
+		}
+		b.site.StatusPage = statusPage
+	}
+
+	// 5. Build changelog (if enabled)
+	if b.site.Config.Changelog.Enabled {
+		changelogPage, err := b.changelogBuilder.Build(b.site.DocsRoot, b.site.Config.Changelog)
+		if err != nil {
+			return fmt.Errorf("failed to build changelog: %w", err)
+		}
+		b.site.ChangelogPage = changelogPage
+	}
+
+	// 6. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
-	// 5. Compute prev/next links
+	// 7. Compute prev/next links
 	b.computePrevNext()
 
 	fmt.Printf("Discovered %d pages\n", len(b.site.Pages))
 	if b.site.Config.OpenAPI.Enabled {
 		fmt.Printf("Discovered %d OpenAPI specs\n", len(b.site.APISpecs))
+	}
+	if b.site.Config.Status.Enabled && b.site.StatusPage != nil {
+		fmt.Printf("Status page: %d components, %d active incidents\n",
+			len(b.site.StatusPage.Components),
+			len(b.site.StatusPage.ActiveIncidents))
+	}
+	if b.site.Config.Changelog.Enabled && b.site.ChangelogPage != nil {
+		fmt.Printf("Changelog: %d releases\n", len(b.site.ChangelogPage.Releases))
 	}
 	return nil
 }
@@ -78,6 +109,16 @@ func (b *Builder) discoverPages() error {
 	return filepath.WalkDir(b.site.DocsRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
+		}
+
+		// Skip the status directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == "__status__" {
+			return filepath.SkipDir
+		}
+
+		// Skip the changelog directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == "__changelog__" {
+			return filepath.SkipDir
 		}
 
 		// Skip directories and non-markdown files
@@ -137,6 +178,9 @@ func (b *Builder) parsePage(page *core.Page) error {
 
 	// 4. Determine output path
 	page.OutputPath = b.getOutputPath(page)
+
+	// 5. Calculate stale warning (if enabled)
+	b.calculateStaleWarning(page)
 
 	return nil
 }
@@ -384,6 +428,64 @@ func (b *Builder) getBasePath() string {
 	}
 
 	return path
+}
+
+// calculateStaleWarning calculates whether a page is stale and sets the relevant fields
+func (b *Builder) calculateStaleWarning(page *core.Page) {
+	config := b.site.Config.StaleWarning
+
+	// Check if stale warning is enabled at site level
+	if !config.Enabled {
+		return
+	}
+
+	// Check per-page override to disable
+	if page.Metadata.StaleWarning != nil && !*page.Metadata.StaleWarning {
+		return
+	}
+
+	// Determine threshold (per-page override or site default)
+	threshold := config.ThresholdDays
+	if page.Metadata.StaleThresholdDays != nil && *page.Metadata.StaleThresholdDays > 0 {
+		threshold = *page.Metadata.StaleThresholdDays
+	}
+
+	// Calculate days since last update
+	now := time.Now()
+	daysSince := int(now.Sub(page.ModTime).Hours() / 24)
+	page.DaysSinceUpdate = daysSince
+
+	// Check if content is stale
+	if daysSince >= threshold {
+		page.IsStale = true
+		page.StaleAge = formatAge(daysSince)
+	}
+}
+
+// formatAge formats the number of days into a human-readable string
+func formatAge(days int) string {
+	switch {
+	case days < 30:
+		if days == 1 {
+			return "1 day"
+		}
+		return fmt.Sprintf("%d days", days)
+	case days < 60:
+		return "about a month"
+	case days < 365:
+		months := days / 30
+		if months == 1 {
+			return "about a month"
+		}
+		return fmt.Sprintf("%d months", months)
+	case days < 730:
+		return "over a year"
+	case days < 1095:
+		return "about 2 years"
+	default:
+		years := days / 365
+		return fmt.Sprintf("over %d years", years)
+	}
 }
 
 // extractOrder extracts a numeric order prefix from a filename

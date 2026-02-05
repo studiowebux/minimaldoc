@@ -21,7 +21,7 @@ func NewLLMSGenerator(site *core.Site) *LLMSGenerator {
 	return &LLMSGenerator{site: site}
 }
 
-// Generate creates llms.txt for LLM consumption
+// Generate creates llms.txt (index), llms-full.txt (content), and companion .md files
 func (g *LLMSGenerator) Generate() error {
 	if !g.site.Config.EnableLLMS {
 		return nil
@@ -29,35 +29,37 @@ func (g *LLMSGenerator) Generate() error {
 
 	fmt.Println("Generating llms.txt...")
 
-	// Generate full concatenated version only
-	if err := g.generateFullVersion(); err != nil {
+	// Generate index file (llms.txt)
+	if err := g.generateIndex(); err != nil {
 		return fmt.Errorf("failed to generate llms.txt: %w", err)
 	}
 
-	fmt.Println("Generated llms.txt")
+	// Generate full content file (llms-full.txt)
+	if err := g.generateFullVersion(); err != nil {
+		return fmt.Errorf("failed to generate llms-full.txt: %w", err)
+	}
+
+	// Generate companion .md files for each page
+	if err := g.generateMarkdownFiles(); err != nil {
+		return fmt.Errorf("failed to generate companion .md files: %w", err)
+	}
+
+	fmt.Println("Generated llms.txt, llms-full.txt, and companion .md files")
 	return nil
 }
 
-// generateIndex creates the main llms.txt index file
+// generateIndex creates the main llms.txt index file following the spec
+// Format: H1 title, blockquote summary, H2 sections with file lists
 func (g *LLMSGenerator) generateIndex() error {
 	var buf bytes.Buffer
 
-	// Header
+	// H1: Project name (required)
 	buf.WriteString(fmt.Sprintf("# %s\n\n", g.site.Config.Title))
 
+	// Blockquote: Summary (optional but recommended)
 	if g.site.Config.Description != "" {
-		buf.WriteString(fmt.Sprintf("%s\n\n", g.site.Config.Description))
+		buf.WriteString(fmt.Sprintf("> %s\n\n", g.site.Config.Description))
 	}
-
-	// Metadata
-	buf.WriteString("## About\n\n")
-	buf.WriteString("This is an LLM-friendly index of the documentation.\n\n")
-	if g.site.Config.BaseURL != "" {
-		buf.WriteString(fmt.Sprintf("Website: %s\n\n", g.site.Config.BaseURL))
-	}
-
-	// Navigation structure
-	buf.WriteString("## Documentation Structure\n\n")
 
 	// Sort pages by order
 	sortedPages := make([]*core.Page, len(g.site.Pages))
@@ -69,25 +71,47 @@ func (g *LLMSGenerator) generateIndex() error {
 		return sortedPages[i].Slug < sortedPages[j].Slug
 	})
 
-	// List all pages with links to their .md versions
+	// Group pages by section (first directory)
+	sections := make(map[string][]*core.Page)
+	var sectionOrder []string
+
 	for _, page := range sortedPages {
 		if page.IsHidden() {
 			continue
 		}
 
-		// Create relative path to .md file
-		mdPath := fmt.Sprintf("%s.md", page.Slug)
-
-		buf.WriteString(fmt.Sprintf("- [%s](%s)\n", page.Title(), mdPath))
-
-		if page.Metadata.Description != "" {
-			buf.WriteString(fmt.Sprintf("  %s\n", page.Metadata.Description))
+		section := "Documentation"
+		if idx := strings.Index(page.Slug, "/"); idx > 0 {
+			section = titleCase(strings.ReplaceAll(page.Slug[:idx], "-", " "))
 		}
+
+		if _, exists := sections[section]; !exists {
+			sectionOrder = append(sectionOrder, section)
+		}
+		sections[section] = append(sections[section], page)
 	}
 
-	buf.WriteString("\n")
-	buf.WriteString("## Full Documentation\n\n")
-	buf.WriteString("For a single-file version with all content, see [llms-full.txt](llms-full.txt)\n")
+	// H2 sections with file lists
+	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+
+	for _, section := range sectionOrder {
+		pages := sections[section]
+		buf.WriteString(fmt.Sprintf("## %s\n\n", section))
+
+		for _, page := range pages {
+			url := fmt.Sprintf("%s/%s.html", baseURL, page.Slug)
+			if page.Metadata.Description != "" {
+				buf.WriteString(fmt.Sprintf("- [%s](%s): %s\n", page.Title(), url, page.Metadata.Description))
+			} else {
+				buf.WriteString(fmt.Sprintf("- [%s](%s)\n", page.Title(), url))
+			}
+		}
+		buf.WriteString("\n")
+	}
+
+	// Optional section for full content
+	buf.WriteString("## Optional\n\n")
+	buf.WriteString(fmt.Sprintf("- [Complete Documentation](%s/llms-full.txt): All documentation in a single file\n", baseURL))
 
 	// Write file
 	outputPath := filepath.Join(g.site.OutputRoot, "llms.txt")
@@ -125,8 +149,8 @@ func (g *LLMSGenerator) generatePageMarkdown(page *core.Page) error {
 	// Content (raw markdown)
 	buf.Write(page.RawMD)
 
-	// Create output path
-	mdPath := filepath.Join(g.site.OutputRoot, page.Slug+".md")
+	// Create output path (page.html.md for LLM consumption)
+	mdPath := filepath.Join(g.site.OutputRoot, page.Slug+".html.md")
 	mdDir := filepath.Dir(mdPath)
 
 	// Create directory
@@ -138,20 +162,18 @@ func (g *LLMSGenerator) generatePageMarkdown(page *core.Page) error {
 	return os.WriteFile(mdPath, buf.Bytes(), 0644)
 }
 
-// generateFullVersion creates a single file with all documentation
+// generateFullVersion creates llms-full.txt with all documentation content
 func (g *LLMSGenerator) generateFullVersion() error {
 	var buf bytes.Buffer
 
-	// Header
-	buf.WriteString(fmt.Sprintf("# %s - Complete Documentation\n\n", g.site.Config.Title))
+	// H1: Project name
+	buf.WriteString(fmt.Sprintf("# %s\n\n", g.site.Config.Title))
 
+	// Blockquote: Summary
 	if g.site.Config.Description != "" {
-		buf.WriteString(fmt.Sprintf("%s\n\n", g.site.Config.Description))
+		buf.WriteString(fmt.Sprintf("> %s\n>\n", g.site.Config.Description))
+		buf.WriteString("> This file contains the complete documentation.\n\n")
 	}
-
-	buf.WriteString("---\n\n")
-	buf.WriteString("This file contains all documentation in a single file for LLM consumption.\n\n")
-	buf.WriteString("---\n\n")
 
 	// Sort pages by order
 	sortedPages := make([]*core.Page, len(g.site.Pages))
@@ -163,32 +185,66 @@ func (g *LLMSGenerator) generateFullVersion() error {
 		return sortedPages[i].Slug < sortedPages[j].Slug
 	})
 
-	// Concatenate all pages
-	for i, page := range sortedPages {
+	// Concatenate all pages as H2 sections
+	for _, page := range sortedPages {
 		if page.IsHidden() {
 			continue
 		}
 
-		// Add page marker
-		buf.WriteString(fmt.Sprintf("\n\n<!-- PAGE: %s -->\n\n", page.Slug))
-
-		// Add title
-		buf.WriteString(fmt.Sprintf("# %s\n\n", page.Title()))
+		// H2: Page title
+		buf.WriteString(fmt.Sprintf("## %s\n\n", page.Title()))
 
 		if page.Metadata.Description != "" {
-			buf.WriteString(fmt.Sprintf("%s\n\n", page.Metadata.Description))
+			buf.WriteString(fmt.Sprintf("*%s*\n\n", page.Metadata.Description))
 		}
 
-		// Add content
-		buf.Write(page.RawMD)
+		// Content (shift headings down: # -> ###, ## -> ####, etc.)
+		content := shiftHeadings(string(page.RawMD), 2)
+		buf.WriteString(content)
+		buf.WriteString("\n\n")
+	}
 
-		// Add separator between pages (except for last page)
-		if i < len(sortedPages)-1 {
-			buf.WriteString("\n\n---\n\n")
+	// Write file
+	outputPath := filepath.Join(g.site.OutputRoot, "llms-full.txt")
+	return os.WriteFile(outputPath, buf.Bytes(), 0644)
+}
+
+// shiftHeadings shifts markdown heading levels down by n levels
+func shiftHeadings(content string, levels int) string {
+	lines := strings.Split(content, "\n")
+
+	for i, line := range lines {
+		if strings.HasPrefix(line, "#") {
+			// Count existing hashes
+			hashes := 0
+			for _, c := range line {
+				if c == '#' {
+					hashes++
+				} else {
+					break
+				}
+			}
+			if hashes > 0 && hashes <= 6 {
+				// Shift heading (cap at h6)
+				newLevel := hashes + levels
+				if newLevel > 6 {
+					newLevel = 6
+				}
+				lines[i] = strings.Repeat("#", newLevel) + line[hashes:]
+			}
 		}
 	}
 
-	// Write file (using llms.txt as the filename)
-	outputPath := filepath.Join(g.site.OutputRoot, "llms.txt")
-	return os.WriteFile(outputPath, buf.Bytes(), 0644)
+	return strings.Join(lines, "\n")
+}
+
+// titleCase converts string to title case (first letter of each word uppercase)
+func titleCase(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		if len(word) > 0 {
+			words[i] = strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+		}
+	}
+	return strings.Join(words, " ")
 }

@@ -30,7 +30,6 @@ type APISpec struct {
 
 	// Output paths
 	OutputPath string // Generated HTML file path
-	ChunkFiles []string // Lazy-load chunk file paths
 }
 
 // APIServer represents an OpenAPI server definition
@@ -201,6 +200,15 @@ type APIPathGroup struct {
 	Path      string          // Path segment (e.g., /users)
 	Endpoints []*APIEndpoint  // Endpoints at this path
 	Children  []*APIPathGroup // Sub-paths
+}
+
+// TotalEndpoints returns the total count of endpoints including all children
+func (g *APIPathGroup) TotalEndpoints() int {
+	count := len(g.Endpoints)
+	for _, child := range g.Children {
+		count += child.TotalEndpoints()
+	}
+	return count
 }
 
 // APITagGroup represents endpoints grouped by tag

@@ -1,0 +1,904 @@
+/* ========================================
+   Status Page Styles
+   ======================================== */
+
+.status-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.status-header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 2rem;
+}
+
+.status-header-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.status-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.status-header p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.back-link {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* Main Content */
+.status-main {
+    flex: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.status-main section {
+    margin-bottom: 3rem;
+}
+
+.status-main h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+/* Overall Status Banner */
+.overall-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.overall-status-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.overall-status-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+/* Status Colors */
+.status-green {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+.status-green .overall-status-indicator { background: #22c55e; }
+
+.status-yellow {
+    background: rgba(234, 179, 8, 0.1);
+    color: #ca8a04;
+}
+.status-yellow .overall-status-indicator { background: #eab308; }
+
+.status-orange {
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
+}
+.status-orange .overall-status-indicator { background: #f97316; }
+
+.status-red {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+.status-red .overall-status-indicator { background: #ef4444; }
+
+.status-blue {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+.status-blue .overall-status-indicator { background: #3b82f6; }
+
+.status-gray {
+    background: rgba(107, 114, 128, 0.1);
+    color: #6b7280;
+}
+.status-gray .overall-status-indicator { background: #6b7280; }
+
+/* Component List */
+.component-group {
+    margin-bottom: 1.5rem;
+}
+
+.component-group-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.component-list {
+    list-style: none;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.component-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.component-item:last-child {
+    border-bottom: none;
+}
+
+.component-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Health Check Indicator */
+.health-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    padding-left: 1rem;
+}
+
+.health-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    transition: background 0.2s ease;
+}
+
+.health-pulse.checking {
+    animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+}
+
+[data-live-status="operational"] .health-pulse {
+    background: #22c55e;
+}
+
+[data-live-status="degraded"] .health-pulse {
+    background: #eab308;
+}
+
+[data-live-status="partial_outage"] .health-pulse {
+    background: #f97316;
+}
+
+[data-live-status="major_outage"] .health-pulse {
+    background: #ef4444;
+}
+
+.health-info {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    color: var(--text-tertiary);
+    font-family: monospace;
+}
+
+.health-latency,
+.health-next {
+    min-width: 35px;
+    text-align: right;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.status-green {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.status-yellow {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.status-badge.status-orange {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.status-badge.status-red {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-badge.status-blue {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Incident Cards */
+.incident-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.incident-card.severity-yellow {
+    border-left: 4px solid #eab308;
+}
+
+.incident-card.severity-orange {
+    border-left: 4px solid #f97316;
+}
+
+.incident-card.severity-red {
+    border-left: 4px solid #ef4444;
+}
+
+.incident-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.incident-severity,
+.incident-status {
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.incident-severity {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.incident-status {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.incident-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.incident-card h3 a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.incident-card h3 a:hover {
+    color: var(--accent-primary);
+}
+
+.incident-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.incident-latest-update {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-primary);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Maintenance Cards */
+.maintenance-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.maintenance-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.maintenance-card h3 a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.maintenance-card h3 a:hover {
+    color: var(--accent-primary);
+}
+
+.maintenance-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.maintenance-affected {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+    margin-top: 0.5rem;
+}
+
+/* Incident List */
+.incident-list {
+    list-style: none;
+}
+
+.incident-list-item {
+    margin-bottom: 0.75rem;
+}
+
+.incident-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.incident-link {
+    display: block;
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.incident-link:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.incident-link:hover .incident-view-link {
+    color: var(--accent-primary);
+}
+
+.incident-link-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.incident-severity-badge,
+.incident-status-badge {
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.incident-severity-badge {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.incident-status-badge {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.incident-link .incident-title {
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.incident-link-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.incident-view-link {
+    color: var(--text-tertiary);
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+/* History page incident list (simpler style) */
+.history-month .incident-list-item a {
+    display: block;
+    padding: 1rem 0;
+    text-decoration: none;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.history-month .incident-list-item:last-child a {
+    border-bottom: none;
+}
+
+.history-month .incident-list-item a:hover {
+    color: var(--accent-primary);
+}
+
+.history-month .incident-list-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.history-month .incident-list-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.view-history-link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.view-history-link:hover {
+    text-decoration: underline;
+}
+
+/* Incident Detail Page */
+.incident-detail {
+    background: var(--bg-primary);
+}
+
+.incident-detail-header {
+    margin-bottom: 2rem;
+}
+
+.incident-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.incident-badges .incident-severity,
+.incident-badges .incident-status {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.incident-badges .status-active {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.incident-badges .status-resolved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.severity-yellow {
+    background: #fef9c3 !important;
+    color: #854d0e !important;
+}
+
+.severity-orange {
+    background: #ffedd5 !important;
+    color: #9a3412 !important;
+}
+
+.severity-red {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+}
+
+.incident-detail-header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.incident-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.meta-item strong {
+    color: var(--text-primary);
+}
+
+/* Timeline */
+.incident-timeline {
+    margin-top: 2rem;
+}
+
+.timeline {
+    list-style: none;
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-primary);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    border: 3px solid var(--accent-primary);
+}
+
+.timeline-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.timeline-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.timeline-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
+
+.timeline-body {
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+}
+
+/* History Page */
+.history-month {
+    margin-bottom: 2rem;
+}
+
+.history-month h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-primary);
+    margin-bottom: 0.5rem;
+}
+
+.no-incidents,
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+}
+
+/* Footer */
+.status-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-primary);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.status-footer a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.status-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .status-badge.status-green {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+[data-theme="dark"] .status-badge.status-yellow {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+}
+
+[data-theme="dark"] .status-badge.status-orange {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fb923c;
+}
+
+[data-theme="dark"] .status-badge.status-red {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+[data-theme="dark"] .status-badge.status-blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .severity-yellow {
+    background: rgba(234, 179, 8, 0.2) !important;
+    color: #facc15 !important;
+}
+
+[data-theme="dark"] .severity-orange {
+    background: rgba(249, 115, 22, 0.2) !important;
+    color: #fb923c !important;
+}
+
+[data-theme="dark"] .severity-red {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+}
+
+[data-theme="dark"] .incident-badges .status-active {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+[data-theme="dark"] .incident-badges .status-resolved,
+[data-theme="dark"] .incident-status-badge {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+/* Uptime Section */
+.uptime-section {
+    margin-top: 2rem;
+}
+
+.uptime-components {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.uptime-component {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1.25rem;
+}
+
+.uptime-component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.uptime-component-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.uptime-percent {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.uptime-percent.sla-met {
+    color: #16a34a;
+}
+
+.uptime-percent.sla-missed {
+    color: #dc2626;
+}
+
+.uptime-sla-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.sla-period {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.sla-target {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+/* Uptime Grid (Calendar) */
+.uptime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 10px);
+    gap: 2px;
+    justify-content: start;
+}
+
+.uptime-day {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.uptime-day:hover {
+    transform: scale(1.5);
+    z-index: 1;
+}
+
+/* Uptime Status Colors */
+.uptime-operational {
+    background: #22c55e;
+}
+
+.uptime-degraded {
+    background: #eab308;
+}
+
+.uptime-partial_outage {
+    background: #f97316;
+}
+
+.uptime-major_outage {
+    background: #ef4444;
+}
+
+.uptime-maintenance {
+    background: #3b82f6;
+}
+
+.uptime-unknown {
+    background: #6b7280;
+}
+
+/* Uptime Grid Placeholder */
+.uptime-grid-placeholder {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.loading-uptime {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
+
+/* Uptime Tooltip */
+.uptime-tooltip {
+    position: absolute;
+    z-index: 1000;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.uptime-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border-primary);
+}
+
+/* Dark Mode Uptime */
+[data-theme="dark"] .uptime-percent.sla-met {
+    color: #4ade80;
+}
+
+[data-theme="dark"] .uptime-percent.sla-missed {
+    color: #f87171;
+}
+
+[data-theme="dark"] .uptime-tooltip {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .status-header {
+        padding: 1.5rem 1rem;
+    }
+
+    .status-main {
+        padding: 1.5rem 1rem;
+    }
+
+    .incident-detail-meta {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .timeline {
+        padding-left: 1.5rem;
+    }
+}

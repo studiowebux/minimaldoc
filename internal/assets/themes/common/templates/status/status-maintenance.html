@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.Maintenance.Title}} - {{.StatusPage.Config.Title}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/status.css?v={{.Version}}">
+</head>
+<body>
+<div class="status-page">
+<header class="status-header">
+<div class="status-header-content">
+<h1>{{.StatusPage.Config.Title}}</h1>
+<a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/" class="back-link">Back to Status</a>
+</div>
+</header>
+<main class="status-main">
+<article class="maintenance-detail">
+<header class="maintenance-detail-header">
+<div class="maintenance-badges">
+<span class="maintenance-status-badge status-{{.Maintenance.Status | lower}}">{{.Maintenance.Status | maintenanceStatusLabel}}</span>
+</div>
+<h1>{{.Maintenance.Title}}</h1>
+<div class="maintenance-detail-meta">
+<div class="meta-item">
+<strong>Scheduled Start:</strong> {{.Maintenance.ScheduledStart | formatTime}}
+</div>
+<div class="meta-item">
+<strong>Scheduled End:</strong> {{.Maintenance.ScheduledEnd | formatTime}}
+</div>
+{{if .Maintenance.AffectedComponents}}
+<div class="meta-item">
+<strong>Affected Components:</strong>
+{{range $i, $c := .Maintenance.AffectedComponents}}{{if $i}}, {{end}}{{$c}}{{end}}
+</div>
+{{end}}
+</div>
+</header>
+{{if .Maintenance.Description}}
+<section class="maintenance-description">
+<h2>Description</h2>
+<p>{{.Maintenance.Description}}</p>
+</section>
+{{end}}
+{{if .Maintenance.HTML}}
+<section class="maintenance-content">
+<h2>Details</h2>
+<div class="markdown-body">
+{{.Maintenance.HTML | safeHTML}}
+</div>
+</section>
+{{end}}
+</article>
+</main>
+<footer class="status-footer">
+<p><a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/">Return to Status Page</a></p>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

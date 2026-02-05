@@ -6,14 +6,23 @@ type Site struct {
 	Config SiteConfig
 
 	// Content
-	Pages      []*Page      // All pages
-	RootPages  []*Page      // Top-level pages (for navigation)
-	Navigation *Navigation  // Site navigation tree
-	APISpecs   []*APISpec   // OpenAPI specifications
+	Pages         []*Page        // All pages
+	RootPages     []*Page        // Top-level pages (for navigation)
+	Navigation    *Navigation    // Site navigation tree
+	APISpecs      []*APISpec     // OpenAPI specifications
+	StatusPage    *StatusPage    // Status page data (if enabled)
+	ChangelogPage *ChangelogPage // Changelog data (if enabled)
 
 	// Paths
 	DocsRoot   string // Root directory of markdown files
 	OutputRoot string // Output directory for generated site
+}
+
+// SocialLink represents a social media or external link
+type SocialLink struct {
+	Name string `yaml:"name"` // Display name (e.g., "GitHub", "Twitter")
+	URL  string `yaml:"url"`  // Link URL
+	Icon string `yaml:"icon"` // Icon identifier (github, twitter, linkedin, etc.)
 }
 
 // SiteConfig holds the site-wide configuration
@@ -41,8 +50,38 @@ type SiteConfig struct {
 	// OpenAPI
 	OpenAPI OpenAPIConfig `yaml:"openapi"` // OpenAPI/Swagger configuration
 
+	// Status
+	Status StatusConfig `yaml:"status"` // Status page configuration
+
+	// Changelog
+	Changelog ChangelogConfig `yaml:"changelog"` // Changelog configuration
+
+	// Stale Warning
+	StaleWarning StaleWarningConfig `yaml:"stale_warning"` // Stale content warning configuration
+
+	// Social Links
+	SocialLinks []SocialLink `yaml:"social_links"` // Social media links in sidebar
+
 	// Custom
 	Custom map[string]interface{} `yaml:"custom"`
+}
+
+// StaleWarningConfig holds configuration for stale content warnings
+type StaleWarningConfig struct {
+	Enabled        bool   `yaml:"enabled"`
+	ThresholdDays  int    `yaml:"threshold_days"`   // Days before content is considered stale
+	Message        string `yaml:"message"`          // Custom message (optional)
+	ShowUpdateDate bool   `yaml:"show_update_date"` // Show the actual last update date
+}
+
+// DefaultStaleWarningConfig returns a StaleWarningConfig with sensible defaults
+func DefaultStaleWarningConfig() StaleWarningConfig {
+	return StaleWarningConfig{
+		Enabled:        false,
+		ThresholdDays:  365,
+		Message:        "",
+		ShowUpdateDate: true,
+	}
 }
 
 // DefaultSiteConfig returns a SiteConfig with sensible defaults
@@ -57,6 +96,9 @@ func DefaultSiteConfig() SiteConfig {
 		NavDepth:     0,
 		CleanURLs:    false,
 		OpenAPI:      DefaultOpenAPIConfig(),
+		Status:       DefaultStatusConfig(),
+		Changelog:    DefaultChangelogConfig(),
+		StaleWarning: DefaultStaleWarningConfig(),
 		Custom:       make(map[string]interface{}),
 	}
 }

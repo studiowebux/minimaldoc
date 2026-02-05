@@ -271,15 +271,15 @@ func (p *OpenAPIParser) convertOAuthFlow(flow *openapi3.OAuthFlow) *core.APIOAut
 func (p *OpenAPIParser) convertPathItem(path string, pathItem *openapi3.PathItem, specName string) []*core.APIEndpoint {
 	endpoints := []*core.APIEndpoint{}
 
-	operations := map[string]*openapi3.Operation{
-		"GET":     pathItem.Get,
-		"POST":    pathItem.Post,
-		"PUT":     pathItem.Put,
-		"PATCH":   pathItem.Patch,
-		"DELETE":  pathItem.Delete,
-		"HEAD":    pathItem.Head,
-		"OPTIONS": pathItem.Options,
-		"TRACE":   pathItem.Trace,
+	operations := map[core.HTTPMethod]*openapi3.Operation{
+		core.HTTPGet:     pathItem.Get,
+		core.HTTPPost:    pathItem.Post,
+		core.HTTPPut:     pathItem.Put,
+		core.HTTPPatch:   pathItem.Patch,
+		core.HTTPDelete:  pathItem.Delete,
+		core.HTTPHead:    pathItem.Head,
+		core.HTTPOptions: pathItem.Options,
+		core.HTTPTrace:   pathItem.Trace,
 	}
 
 	for method, operation := range operations {
@@ -290,7 +290,7 @@ func (p *OpenAPIParser) convertPathItem(path string, pathItem *openapi3.PathItem
 		endpoint := &core.APIEndpoint{
 			OperationID: operation.OperationID,
 			Path:        path,
-			Method:      method,
+			Method:      string(method),
 			Summary:     p.renderMarkdown(operation.Summary),
 			Description: p.renderMarkdown(operation.Description),
 			Tags:        operation.Tags,
@@ -393,7 +393,7 @@ func (p *OpenAPIParser) convertResponses(responses *openapi3.Responses) map[stri
 			if headerRef != nil && headerRef.Value != nil {
 				r.Headers[name] = &core.APIParameter{
 					Name:        name,
-					In:          "header",
+					In:          string(core.ParamInHeader),
 					Description: p.renderMarkdown(headerRef.Value.Description),
 					Required:    headerRef.Value.Required,
 					Schema:      p.convertSchema(headerRef.Value.Schema),
@@ -446,22 +446,16 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 		return nil
 	}
 
-	// If there's a $ref, try to resolve it
+	// If there's a $ref, keep the reference instead of inlining
+	// This prevents massive duplication in the output JSON
 	if schemaRef.Ref != "" {
-		resolved := p.resolveSchemaRef(schemaRef.Ref)
-		if resolved != nil && resolved.Value != nil {
-			// Use the resolved schema but keep track of the original ref
-			schemaRef = resolved
+		return &core.APISchema{
+			Ref: schemaRef.Ref,
 		}
 	}
 
-	// If Value is still nil after resolution attempt, return just the reference
+	// If Value is nil and no ref, return nil
 	if schemaRef.Value == nil {
-		if schemaRef.Ref != "" {
-			return &core.APISchema{
-				Ref: schemaRef.Ref,
-			}
-		}
 		return nil
 	}
 	schema := schemaRef.Value

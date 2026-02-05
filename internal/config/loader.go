@@ -9,6 +9,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// SocialLinkConfig represents a social link in config.yaml
+type SocialLinkConfig struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+	Icon string `yaml:"icon"`
+}
+
 // FileConfig represents the structure of config.yaml
 type FileConfig struct {
 	Title       string `yaml:"title"`
@@ -33,6 +40,34 @@ type FileConfig struct {
 		EnableCodeSamples  bool     `yaml:"enable_code_samples"`
 		LazyLoadChunkSize  int      `yaml:"lazy_load_chunk_size"`
 	} `yaml:"openapi"`
+
+	Status struct {
+		Enabled       bool   `yaml:"enabled"`
+		Title         string `yaml:"title"`
+		Description   string `yaml:"description"`
+		Path          string `yaml:"path"`
+		ShowHistory   bool   `yaml:"show_history"`
+		HistoryMonths int    `yaml:"history_months"`
+		RSSEnabled    bool   `yaml:"rss_enabled"`
+	} `yaml:"status"`
+
+	Changelog struct {
+		Enabled     bool   `yaml:"enabled"`
+		Title       string `yaml:"title"`
+		Description string `yaml:"description"`
+		Path        string `yaml:"path"`
+		RSSEnabled  bool   `yaml:"rss_enabled"`
+		Repository  string `yaml:"repository"`
+	} `yaml:"changelog"`
+
+	StaleWarning struct {
+		Enabled        bool   `yaml:"enabled"`
+		ThresholdDays  int    `yaml:"threshold_days"`
+		Message        string `yaml:"message"`
+		ShowUpdateDate bool   `yaml:"show_update_date"`
+	} `yaml:"stale_warning"`
+
+	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
 
 // LoadConfig loads config.yaml from the docs directory if it exists
@@ -119,6 +154,87 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		}
 		if cfg.OpenAPI.LazyLoadChunkSize > 0 {
 			result.OpenAPI.LazyLoadChunkSize = cfg.OpenAPI.LazyLoadChunkSize
+		}
+	}
+
+	// Merge Status config
+	if !cliFlags["status"] {
+		result.Status.Enabled = cfg.Status.Enabled
+	}
+
+	// If Status is enabled (either via CLI or config), merge Status settings
+	if result.Status.Enabled {
+		if !cliFlags["status-title"] && cfg.Status.Title != "" {
+			result.Status.Title = cfg.Status.Title
+		}
+		if !cliFlags["status-description"] && cfg.Status.Description != "" {
+			result.Status.Description = cfg.Status.Description
+		}
+		if !cliFlags["status-path"] && cfg.Status.Path != "" {
+			result.Status.Path = cfg.Status.Path
+		}
+		if cfg.Status.ShowHistory {
+			result.Status.ShowHistory = cfg.Status.ShowHistory
+		}
+		if cfg.Status.HistoryMonths > 0 {
+			result.Status.HistoryMonths = cfg.Status.HistoryMonths
+		}
+		if cfg.Status.RSSEnabled {
+			result.Status.RSSEnabled = cfg.Status.RSSEnabled
+		}
+	}
+
+	// Merge Changelog config
+	if !cliFlags["changelog"] {
+		result.Changelog.Enabled = cfg.Changelog.Enabled
+	}
+
+	// If Changelog is enabled (either via CLI or config), merge Changelog settings
+	if result.Changelog.Enabled {
+		if !cliFlags["changelog-title"] && cfg.Changelog.Title != "" {
+			result.Changelog.Title = cfg.Changelog.Title
+		}
+		if !cliFlags["changelog-path"] && cfg.Changelog.Path != "" {
+			result.Changelog.Path = cfg.Changelog.Path
+		}
+		if cfg.Changelog.Description != "" {
+			result.Changelog.Description = cfg.Changelog.Description
+		}
+		if cfg.Changelog.Repository != "" {
+			result.Changelog.Repository = cfg.Changelog.Repository
+		}
+		if cfg.Changelog.RSSEnabled {
+			result.Changelog.RSSEnabled = cfg.Changelog.RSSEnabled
+		}
+	}
+
+	// Merge Stale Warning config
+	if !cliFlags["stale-warning"] {
+		result.StaleWarning.Enabled = cfg.StaleWarning.Enabled
+	}
+
+	// If Stale Warning is enabled, merge settings
+	if result.StaleWarning.Enabled {
+		if !cliFlags["stale-threshold"] && cfg.StaleWarning.ThresholdDays > 0 {
+			result.StaleWarning.ThresholdDays = cfg.StaleWarning.ThresholdDays
+		}
+		if cfg.StaleWarning.Message != "" {
+			result.StaleWarning.Message = cfg.StaleWarning.Message
+		}
+		if cfg.StaleWarning.ShowUpdateDate {
+			result.StaleWarning.ShowUpdateDate = cfg.StaleWarning.ShowUpdateDate
+		}
+	}
+
+	// Merge Social Links
+	if len(cfg.SocialLinks) > 0 {
+		result.SocialLinks = make([]core.SocialLink, len(cfg.SocialLinks))
+		for i, link := range cfg.SocialLinks {
+			result.SocialLinks[i] = core.SocialLink{
+				Name: link.Name,
+				URL:  link.URL,
+				Icon: link.Icon,
+			}
 		}
 	}
 

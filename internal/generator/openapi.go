@@ -222,164 +222,41 @@ func (g *OpenAPIGenerator) generateFallbackHTML(spec *core.APISpec) string {
 
 // generateSpecJSON generates JSON data files for an OpenAPI spec
 func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) error {
-	// Generate main spec data file (metadata only, not full endpoints)
-	metadata := map[string]interface{}{
-		"name":           spec.Name,
-		"title":          spec.Title,
-		"description":    spec.Description,
-		"version":        spec.Version,
-		"openapi":        spec.OpenAPIVersion,
-		"servers":        spec.Servers,
-		"tags":           spec.Tags,
+	// Generate main spec data file with metadata and schemas (schemas stored once)
+	specData := map[string]interface{}{
+		"name":            spec.Name,
+		"title":           spec.Title,
+		"description":     spec.Description,
+		"version":         spec.Version,
+		"openapi":         spec.OpenAPIVersion,
+		"servers":         spec.Servers,
+		"tags":            spec.Tags,
 		"securitySchemes": spec.SecuritySchemes,
-		"schemas":        spec.Schemas,
-		"endpointCount":  len(spec.Endpoints),
-		"schemaCount":    len(spec.Schemas),
+		"schemas":         spec.Schemas,
+		"endpointCount":   len(spec.Endpoints),
+		"schemaCount":     len(spec.Schemas),
 	}
 
-	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
+	specDataJSON, err := json.Marshal(specData)
 	if err != nil {
-		return fmt.Errorf("failed to marshal metadata: %w", err)
+		return fmt.Errorf("failed to marshal spec data: %w", err)
 	}
 
-	if err := os.WriteFile(filepath.Join(specDir, "spec-data.json"), metadataJSON, 0644); err != nil {
-		return fmt.Errorf("failed to write metadata JSON: %w", err)
+	if err := os.WriteFile(filepath.Join(specDir, "spec-data.json"), specDataJSON, 0644); err != nil {
+		return fmt.Errorf("failed to write spec data JSON: %w", err)
 	}
 
-	// Generate organized endpoint data files
-	if err := g.generateEndpointsByPath(spec, specDir); err != nil {
-		return fmt.Errorf("failed to generate path data: %w", err)
+	// Generate endpoints file (single file, JS handles organization)
+	endpointsJSON, err := json.Marshal(spec.Endpoints)
+	if err != nil {
+		return fmt.Errorf("failed to marshal endpoints: %w", err)
 	}
 
-	if err := g.generateEndpointsByTag(spec, specDir); err != nil {
-		return fmt.Errorf("failed to generate tag data: %w", err)
-	}
-
-	if err := g.generateFlatEndpoints(spec, specDir); err != nil {
-		return fmt.Errorf("failed to generate flat data: %w", err)
+	if err := os.WriteFile(filepath.Join(specDir, "endpoints.json"), endpointsJSON, 0644); err != nil {
+		return fmt.Errorf("failed to write endpoints JSON: %w", err)
 	}
 
 	return nil
-}
-
-// generateEndpointsByPath generates JSON data organized by path hierarchy
-func (g *OpenAPIGenerator) generateEndpointsByPath(spec *core.APISpec, specDir string) error {
-	// Split into chunks if necessary
-	chunks := g.chunkPathGroups(spec.OrganizedByPath)
-
-	for i, chunk := range chunks {
-		filename := fmt.Sprintf("endpoints-by-path-%d.json", i)
-		data, err := json.MarshalIndent(chunk, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(filepath.Join(specDir, filename), data, 0644); err != nil {
-			return err
-		}
-
-		spec.ChunkFiles = append(spec.ChunkFiles, filename)
-	}
-
-	return nil
-}
-
-// generateEndpointsByTag generates JSON data organized by tags
-func (g *OpenAPIGenerator) generateEndpointsByTag(spec *core.APISpec, specDir string) error {
-	// Split into chunks if necessary
-	chunks := g.chunkTagGroups(spec.OrganizedByTag)
-
-	for i, chunk := range chunks {
-		filename := fmt.Sprintf("endpoints-by-tag-%d.json", i)
-		data, err := json.MarshalIndent(chunk, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(filepath.Join(specDir, filename), data, 0644); err != nil {
-			return err
-		}
-
-		spec.ChunkFiles = append(spec.ChunkFiles, filename)
-	}
-
-	return nil
-}
-
-// generateFlatEndpoints generates a flat JSON array of all endpoints
-func (g *OpenAPIGenerator) generateFlatEndpoints(spec *core.APISpec, specDir string) error {
-	// Split into chunks if necessary
-	chunks := g.chunkEndpoints(spec.FlatEndpoints)
-
-	for i, chunk := range chunks {
-		filename := fmt.Sprintf("endpoints-flat-%d.json", i)
-		data, err := json.MarshalIndent(chunk, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(filepath.Join(specDir, filename), data, 0644); err != nil {
-			return err
-		}
-
-		spec.ChunkFiles = append(spec.ChunkFiles, filename)
-	}
-
-	return nil
-}
-
-// chunkPathGroups splits path groups into chunks based on configured chunk size
-func (g *OpenAPIGenerator) chunkPathGroups(groups []*core.APIPathGroup) [][]*core.APIPathGroup {
-	// For now, return all in one chunk
-	// TODO: Implement actual chunking based on size
-	return [][]*core.APIPathGroup{groups}
-}
-
-// chunkTagGroups splits tag groups into chunks based on configured chunk size
-func (g *OpenAPIGenerator) chunkTagGroups(groups []*core.APITagGroup) [][]*core.APITagGroup {
-	// For now, return all in one chunk
-	// TODO: Implement actual chunking based on size
-	return [][]*core.APITagGroup{groups}
-}
-
-// chunkEndpoints splits endpoints into chunks based on configured chunk size
-func (g *OpenAPIGenerator) chunkEndpoints(endpoints []*core.APIEndpoint) [][]*core.APIEndpoint {
-	chunkSize := g.site.Config.OpenAPI.LazyLoadChunkSize
-	if chunkSize <= 0 {
-		chunkSize = 51200 // 50KB default
-	}
-
-	var chunks [][]*core.APIEndpoint
-	var currentChunk []*core.APIEndpoint
-	var currentSize int
-
-	for _, endpoint := range endpoints {
-		// Estimate size (rough approximation)
-		// In reality, we'd marshal to JSON and check size
-		estimatedSize := len(endpoint.Path) + len(endpoint.Method) + len(endpoint.Summary) + 500
-
-		if currentSize+estimatedSize > chunkSize && len(currentChunk) > 0 {
-			// Current chunk is full, start a new one
-			chunks = append(chunks, currentChunk)
-			currentChunk = []*core.APIEndpoint{}
-			currentSize = 0
-		}
-
-		currentChunk = append(currentChunk, endpoint)
-		currentSize += estimatedSize
-	}
-
-	// Add remaining chunk
-	if len(currentChunk) > 0 {
-		chunks = append(chunks, currentChunk)
-	}
-
-	// If no chunks, return one empty chunk
-	if len(chunks) == 0 {
-		chunks = [][]*core.APIEndpoint{{}}
-	}
-
-	return chunks
 }
 
 // generateAPIIndex generates an index page listing all OpenAPI specifications

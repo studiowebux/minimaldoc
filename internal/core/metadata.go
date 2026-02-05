@@ -22,6 +22,10 @@ type Metadata struct {
 	OpenAPIPath   string `yaml:"openapi_path"`    // Specific endpoint path to embed
 	OpenAPIMethod string `yaml:"openapi_method"`  // Specific HTTP method to embed
 
+	// Stale warning overrides
+	StaleWarning       *bool `yaml:"stale_warning"`        // Override site setting (nil = use site default)
+	StaleThresholdDays *int  `yaml:"stale_threshold_days"` // Override threshold (nil = use site default)
+
 	// Custom fields (for extensibility)
 	Custom map[string]interface{} `yaml:"custom"`
 }

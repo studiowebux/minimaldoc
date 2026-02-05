@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}" class="no-js">
+<head>
+<script>
+document.documentElement.classList.remove('no-js');
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+.toc-link,.nav-link{color:var(--text-secondary);text-decoration:none}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{if .Page.Metadata.Title}}{{.Page.Metadata.Title}} | {{end}}{{.Site.Config.Title}}</title>
+<meta name="title" content="{{if .Page.Metadata.SEO.Title}}{{.Page.Metadata.SEO.Title}}{{else if .Page.Metadata.Title}}{{.Page.Metadata.Title}}{{else}}{{.Site.Config.Title}}{{end}}">
+<meta name="description" content="{{if .Page.Metadata.SEO.Description}}{{.Page.Metadata.SEO.Description}}{{else if .Page.Metadata.Description}}{{.Page.Metadata.Description}}{{else}}{{.Site.Config.Description}}{{end}}">
+<meta name="author" content="{{if .Page.Metadata.SEO.Author}}{{.Page.Metadata.SEO.Author}}{{else if .Page.Metadata.Author}}{{.Page.Metadata.Author}}{{else}}{{.Site.Config.Author}}{{end}}">
+{{if .Page.Metadata.SEO.Keywords}}<meta name="keywords" content="{{range $i, $k := .Page.Metadata.SEO.Keywords}}{{if $i}}, {{end}}{{$k}}{{end}}">{{end}}
+{{if .Page.Metadata.SEO.NoIndex}}<meta name="robots" content="noindex{{if .Page.Metadata.SEO.NoFollow}}, nofollow{{end}}">{{end}}
+{{if .Page.Metadata.SEO.Canonical}}<link rel="canonical" href="{{.Page.Metadata.SEO.Canonical}}">{{end}}
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{if .Page.Metadata.SEO.Title}}{{.Page.Metadata.SEO.Title}}{{else}}{{.Page.Metadata.Title}}{{end}}">
+<meta property="og:description" content="{{if .Page.Metadata.SEO.Description}}{{.Page.Metadata.SEO.Description}}{{else}}{{.Page.Metadata.Description}}{{end}}">
+{{if .Page.Metadata.SEO.Image}}<meta property="og:image" content="{{.Page.Metadata.SEO.Image}}">{{end}}
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:title" content="{{if .Page.Metadata.SEO.Title}}{{.Page.Metadata.SEO.Title}}{{else}}{{.Page.Metadata.Title}}{{end}}">
+<meta property="twitter:description" content="{{if .Page.Metadata.SEO.Description}}{{.Page.Metadata.SEO.Description}}{{else}}{{.Page.Metadata.Description}}{{end}}">
+{{if .Page.Metadata.SEO.Image}}<meta property="twitter:image" content="{{.Page.Metadata.SEO.Image}}">{{end}}
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="sidebar-left">
+<span></span>
+</button>
+<div class="mobile-menu-backdrop" id="mobile-menu-backdrop" aria-hidden="true"></div>
+<div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-label="Search documentation" aria-hidden="true">
+<div class="search-modal-content">
+<div class="search-header">
+<label for="search-input" class="sr-only">Search documentation</label>
+<input type="text" class="search-input" id="search-input" placeholder="Search documentation..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="search-results" aria-expanded="false">
+<button class="search-close" id="search-close" aria-label="Close search">×</button>
+</div>
+<div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
+</div>
+</div>
+<div class="container">
+<aside class="sidebar sidebar-left" id="sidebar-left" aria-label="Site navigation">
+<div class="sidebar-header">
+<p class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></p>
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon"></span>
+</button>
+</div>
+<button class="search-button" id="search-button" aria-label="Search documentation">
+<span class="search-icon">⌕</span>
+<span class="search-text">Search</span>
+<kbd class="search-kbd-hint">⌘K</kbd>
+</button>
+{{template "nav" .}}
+{{if .Site.Config.OpenAPI.Enabled}}{{if .Site.APISpecs}}
+<div class="api-link-separator"></div>
+<nav class="api-navigation">
+<div class="api-nav-header">API Documentation</div>
+<ul class="nav-list">
+{{range .Site.APISpecs}}
+<li class="nav-item">
+<a href="{{$.BasePath}}/api/{{.Name | stripSpecExt}}" class="nav-link api-link">
+{{.Title}}
+</a>
+</li>
+{{end}}
+</ul>
+</nav>
+{{end}}{{end}}
+{{if .Site.Config.Status.Enabled}}
+<div class="status-link-separator"></div>
+<a href="{{.BasePath}}/{{.Site.Config.Status.Path}}/" class="status-page-link">
+<span class="status-indicator"></span>
+<span class="status-text">System Status</span>
+</a>
+{{end}}
+{{if .Site.Config.Changelog.Enabled}}
+<div class="changelog-link-separator"></div>
+<a href="{{.BasePath}}/{{.Site.Config.Changelog.Path}}/" class="changelog-page-link">
+<span class="changelog-icon">&#9998;</span>
+<span class="changelog-text">Changelog</span>
+</a>
+{{end}}
+{{if .Site.Config.SocialLinks}}
+<div class="social-links" role="list" aria-label="Social links">
+{{range .Site.Config.SocialLinks}}
+<a href="{{.URL}}" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="{{.Name}} (opens in new tab)" role="listitem">
+<svg class="social-icon social-icon-{{.Icon}}" aria-hidden="true" focusable="false"><use href="{{$.BasePath}}/icons.svg#icon-{{.Icon}}"></use></svg>
+</a>
+{{end}}
+</div>
+{{end}}
+<div class="sidebar-footer">
+<a href="https://minimaldoc.com" target="_blank" rel="noopener noreferrer">Powered by MinimalDoc</a>
+</div>
+</aside>
+<script>
+(function(){
+var s=document.getElementById('sidebar-left');
+if(!s)return;
+// Restore collapsed state first (affects height)
+try{
+var c=JSON.parse(localStorage.getItem('navCollapsedSections')||'[]');
+s.querySelectorAll('.nav-item-with-children').forEach(function(el){
+var t=el.querySelector('.nav-section,.nav-link-parent');
+var n=el.closest('.nav-item');
+var b=el.querySelector('.nav-toggle-btn');
+if(t&&n){
+if(n.classList.contains('active')){n.classList.remove('collapsed');if(b)b.setAttribute('aria-expanded','true');}
+else if(c.includes(t.textContent.trim())){n.classList.add('collapsed');if(b)b.setAttribute('aria-expanded','false');}
+else{n.classList.remove('collapsed');if(b)b.setAttribute('aria-expanded','true');}
+}
+});
+}catch(e){}
+// Then restore scroll position
+var v=sessionStorage.getItem('sidebarScroll');
+if(v)s.scrollTop=parseInt(v,10);
+// Save scroll on navigation
+document.addEventListener('click',function(e){if(e.target.closest('a'))sessionStorage.setItem('sidebarScroll',s.scrollTop)},true);
+})();
+</script>
+<main class="main-content" id="main-content">
+<article class="page-content">
+{{if .Page.Metadata.Title}}<header class="page-header">
+<h1>{{.Page.Metadata.Title}}</h1>
+{{if .Page.Metadata.Description}}<p class="page-description">{{.Page.Metadata.Description}}</p>{{end}}
+<p class="page-updated">Last updated: {{if .Page.ModTime.IsZero}}Never{{else}}{{.Page.ModTime.Format "January 2, 2006"}}{{end}}</p>
+{{if .Page.Metadata.Tags}}<div class="page-tags">
+{{range .Page.Metadata.Tags}}<span class="tag">{{.}}</span>{{end}}
+</div>{{end}}
+</header>{{end}}
+<div class="markdown-body">
+{{.Content}}
+</div>
+{{if .Page.IsStale}}
+<div class="stale-warning">
+<span class="stale-warning-icon">&#9888;</span>
+<div class="stale-warning-content">
+<strong>This article may be outdated</strong>
+<p>Last updated {{.Page.StaleAge}} ago{{if .Site.Config.StaleWarning.ShowUpdateDate}} on {{.Page.ModTime.Format "January 2, 2006"}}{{end}}. Some information may no longer be accurate.</p>
+</div>
+</div>
+{{end}}
+{{if or .Page.Prev .Page.Next}}<nav class="page-nav">
+{{if .Page.Prev}}<a href="{{$.BasePath}}/{{.Page.Prev.Slug}}.html" class="page-nav-link page-nav-prev">
+<span class="page-nav-label">Previous</span>
+<span class="page-nav-title">{{.Page.Prev.Title}}</span>
+</a>{{end}}
+{{if .Page.Next}}<a href="{{$.BasePath}}/{{.Page.Next.Slug}}.html" class="page-nav-link page-nav-next">
+<span class="page-nav-label">Next</span>
+<span class="page-nav-title">{{.Page.Next.Title}}</span>
+</a>{{end}}
+</nav>{{end}}
+</article>
+</main>
+{{if .Page.TOC.Items}}<aside class="sidebar sidebar-right" aria-label="Page table of contents">
+<div class="toc-header" id="toc-heading">On this page</div>
+{{template "toc" .Page.TOC}}
+</aside>{{end}}
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/scrollspy.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/mobile-menu.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/nav-collapse.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/anchor-links.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/external-links.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/search.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/code-copy.js?v={{.Version}}"></script>
+</body>
+</html>

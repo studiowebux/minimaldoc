@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.ChangelogPage.Config.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/changelog.css?v={{.Version}}">
+{{if .ChangelogPage.Config.RSSEnabled}}<link rel="alternate" type="application/rss+xml" title="{{.ChangelogPage.Config.Title}}" href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/feed.xml">{{end}}
+</head>
+<body>
+<div class="changelog-page">
+<header class="changelog-header">
+<div class="changelog-header-content">
+<h1>{{.ChangelogPage.Config.Title}}</h1>
+<p>{{.ChangelogPage.Config.Description}}</p>
+<a href="{{.BasePath}}/" class="back-link">Back to Documentation</a>
+</div>
+</header>
+<main class="changelog-main">
+{{if .ChangelogPage.Releases}}
+<div class="releases-list">
+{{range .ChangelogPage.Releases}}
+<article class="release-card{{if .Prerelease}} prerelease{{end}}" id="{{.Slug}}">
+<header class="release-header">
+<div class="release-title-row">
+<h2 class="release-version">
+<a href="{{$.BasePath}}/{{$.ChangelogPage.Config.Path}}/{{.Slug}}.html">{{.Version}}</a>
+</h2>
+{{if .Prerelease}}<span class="prerelease-badge">Prerelease</span>{{end}}
+</div>
+<div class="release-meta">
+<time class="release-date" datetime="{{.Date | formatDateShort}}">{{.Date | formatDate}}</time>
+{{if .CompareURL}}<a href="{{.CompareURL}}" target="_blank" rel="noopener noreferrer" class="compare-link">View changes</a>{{end}}
+</div>
+{{if .Title}}<p class="release-title-text">{{.Title}}</p>{{end}}
+</header>
+<div class="release-content">
+{{range .Categories}}
+<div class="change-category">
+<h3 class="category-header">
+<span class="category-badge category-{{.Type | changeColor}}">{{.Type}}</span>
+</h3>
+<ul class="change-list">
+{{range .Entries}}
+<li class="change-entry">{{.HTML | safeHTML}}</li>
+{{end}}
+</ul>
+</div>
+{{end}}
+</div>
+</article>
+{{end}}
+</div>
+{{else}}
+<p class="empty-state">No releases yet</p>
+{{end}}
+</main>
+<footer class="changelog-footer">
+<p>Last updated: {{.ChangelogPage.LastUpdated | formatDate}}</p>
+{{if .ChangelogPage.Config.RSSEnabled}}<p><a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/feed.xml">RSS Feed</a> | <a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/changelog.json">API</a></p>{{end}}
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

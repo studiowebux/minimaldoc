@@ -1,0 +1,19 @@
+{{define "toc" -}}
+<nav class="toc" aria-labelledby="toc-heading"><ul class="toc-list" role="list">
+{{- range .Items -}}
+{{template "toc-item" . -}}
+{{end -}}
+</ul></nav>
+{{- end -}}
+
+{{define "toc-item" -}}
+<li class="toc-item toc-level-{{.Level}}"><a href="#{{.ID}}" class="toc-link">{{.Title}}</a>
+{{- if .Children -}}
+<ul class="toc-list toc-list-nested">
+{{- range .Children -}}
+{{template "toc-item" . -}}
+{{end -}}
+</ul>
+{{- end -}}
+</li>
+{{- end}}

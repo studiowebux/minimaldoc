@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}" data-status-path="{{.StatusPage.Config.Path}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.StatusPage.Config.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/status.css?v={{.Version}}">
+<link rel="alternate" type="application/rss+xml" title="{{.StatusPage.Config.Title}}" href="{{.BasePath}}/{{.StatusPage.Config.Path}}/feed.xml">
+</head>
+<body>
+<a href="#status-main" class="skip-link">Skip to status information</a>
+<div class="status-page">
+<header class="status-header">
+<div class="status-header-content">
+<h1>{{.StatusPage.Config.Title}}</h1>
+<p>{{.StatusPage.Config.Description}}</p>
+<a href="{{.BasePath}}/" class="back-link">Back to Documentation</a>
+</div>
+</header>
+<main class="status-main" id="status-main">
+<section class="overall-status status-{{.StatusPage.OverallStatus | statusColor}}" aria-label="Overall system status">
+<div class="overall-status-indicator" aria-hidden="true"></div>
+<div class="overall-status-text" role="status" aria-live="polite">
+{{if eq (print .StatusPage.OverallStatus) "operational"}}All Systems Operational
+{{else if eq (print .StatusPage.OverallStatus) "degraded"}}Degraded Performance
+{{else if eq (print .StatusPage.OverallStatus) "partial_outage"}}Partial System Outage
+{{else if eq (print .StatusPage.OverallStatus) "major_outage"}}Major System Outage
+{{else if eq (print .StatusPage.OverallStatus) "maintenance"}}Under Maintenance
+{{else}}Unknown Status{{end}}
+</div>
+</section>
+<section class="active-incidents">
+<h2>Active Incidents</h2>
+{{if .StatusPage.ActiveIncidents}}
+{{range .StatusPage.ActiveIncidents}}
+<article class="incident-card severity-{{.Severity | severityColor}}">
+<div class="incident-header">
+<span class="incident-severity">{{.Severity | upper}}</span>
+<span class="incident-status">{{.Status | incidentStatusLabel}}</span>
+</div>
+<h3><a href="{{$.BasePath}}/{{$.StatusPage.Config.Path}}/incident/{{.Slug}}.html">{{.Title}}</a></h3>
+<div class="incident-meta">
+<span class="incident-time">Started {{.CreatedAt | formatTime}}</span>
+{{if .AffectedComponents}}
+<span class="incident-affected">Affecting: {{range $i, $c := .AffectedComponents}}{{if $i}}, {{end}}{{$c}}{{end}}</span>
+{{end}}
+</div>
+{{if .Updates}}
+<div class="incident-latest-update">
+<strong>Latest:</strong> {{(index .Updates 0).Message | safeHTML}}
+</div>
+{{end}}
+</article>
+{{end}}
+{{else}}
+<p class="empty-state">No active incidents</p>
+{{end}}
+</section>
+<section class="scheduled-maintenance">
+<h2>Scheduled Maintenance</h2>
+{{if .StatusPage.ScheduledMaintenance}}
+{{range .StatusPage.ScheduledMaintenance}}
+<article class="maintenance-card">
+<h3><a href="{{$.BasePath}}/{{$.StatusPage.Config.Path}}/maintenance/{{.Slug}}.html">{{.Title}}</a></h3>
+<div class="maintenance-time">
+<span>{{.ScheduledStart | formatTime}} - {{.ScheduledEnd | formatTime}}</span>
+</div>
+{{if .Description}}<p>{{.Description}}</p>{{end}}
+{{if .AffectedComponents}}
+<div class="maintenance-affected">Affecting: {{range $i, $c := .AffectedComponents}}{{if $i}}, {{end}}{{$c}}{{end}}</div>
+{{end}}
+</article>
+{{end}}
+{{else}}
+<p class="empty-state">No scheduled maintenance</p>
+{{end}}
+</section>
+<section class="components" aria-labelledby="components-heading">
+<h2 id="components-heading">Components</h2>
+{{range $group, $components := .StatusPage.ComponentGroups}}
+<div class="component-group" role="group" aria-label="{{$group}} components">
+<h3 class="component-group-title">{{$group}}</h3>
+<ul class="component-list" role="list">
+{{range $components}}
+<li class="component-item" data-component-id="{{.ID}}" role="listitem">
+<span class="component-name">{{.Name}}</span>
+<span class="component-status status-badge status-{{.Status | statusColor}}" role="status">
+{{if eq (print .Status) "operational"}}Operational
+{{else if eq (print .Status) "degraded"}}Degraded
+{{else if eq (print .Status) "partial_outage"}}Partial Outage
+{{else if eq (print .Status) "major_outage"}}Major Outage
+{{else if eq (print .Status) "maintenance"}}Maintenance
+{{else}}{{.Status}}{{end}}
+</span>
+</li>
+{{end}}
+</ul>
+</div>
+{{end}}
+</section>
+<section class="uptime-section" id="uptime" aria-labelledby="uptime-heading">
+<h2 id="uptime-heading">Uptime</h2>
+<div class="uptime-components">
+{{range .StatusPage.Components}}
+{{if .Uptime.Mode}}
+<div class="uptime-component" data-component-id="{{.ID}}" data-uptime-mode="{{.Uptime.Mode}}" data-uptime-endpoint="{{.Uptime.Endpoint}}">
+<div class="uptime-component-header">
+<span class="uptime-component-name">{{.Name}}</span>
+{{if .UptimeData}}
+<span class="uptime-percent {{if ge .UptimeData.UptimePercent .Uptime.SLATarget}}sla-met{{else}}sla-missed{{end}}">
+{{printf "%.2f" .UptimeData.UptimePercent}}%
+</span>
+{{end}}
+</div>
+{{if .UptimeData}}
+<div class="uptime-sla-stats">
+<span class="sla-period" title="Last 7 days">7d: {{printf "%.2f" .UptimeData.SLA.Current7d}}%</span>
+<span class="sla-period" title="Last 30 days">30d: {{printf "%.2f" .UptimeData.SLA.Current30d}}%</span>
+<span class="sla-period" title="Last 90 days">90d: {{printf "%.2f" .UptimeData.SLA.Current90d}}%</span>
+<span class="sla-target" title="SLA Target">Target: {{printf "%.1f" .UptimeData.SLA.Target}}%</span>
+</div>
+<div class="uptime-grid" data-component-id="{{.ID}}" role="img" aria-label="Uptime history for the last 90 days">
+{{range .UptimeData.History}}
+<div class="uptime-day uptime-{{.Status}}" data-date="{{.Date}}" data-status="{{.Status}}" data-downtime="{{.DowntimeMinutes}}" title="{{.Date}}: {{.Status}}{{if gt .DowntimeMinutes 0}} ({{.DowntimeMinutes}}m downtime){{end}}" aria-hidden="true"></div>
+{{end}}
+</div>
+{{else}}
+<div class="uptime-grid-placeholder" data-component-id="{{.ID}}">
+<p class="loading-uptime">Loading uptime data...</p>
+</div>
+{{end}}
+</div>
+{{end}}
+{{end}}
+</div>
+</section>
+{{if .StatusPage.ResolvedIncidents}}
+<section class="recent-incidents">
+<h2>Recent Incidents</h2>
+<ul class="incident-list">
+{{range .StatusPage.ResolvedIncidents}}
+<li class="incident-list-item">
+<a href="{{$.BasePath}}/{{$.StatusPage.Config.Path}}/incident/{{.Slug}}.html" class="incident-link">
+<div class="incident-link-header">
+<span class="incident-severity-badge severity-{{.Severity | severityColor}}">{{.Severity | upper}}</span>
+<span class="incident-status-badge">{{.Status | incidentStatusLabel}}</span>
+</div>
+<span class="incident-title">{{.Title}}</span>
+<div class="incident-link-meta">
+<span class="incident-date">{{.CreatedAt | formatDate}}</span>
+<span class="incident-view-link">View details →</span>
+</div>
+</a>
+</li>
+{{end}}
+</ul>
+{{if .Site.Config.Status.ShowHistory}}
+<a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/history.html" class="view-history-link">View Incident History</a>
+{{end}}
+</section>
+{{end}}
+</main>
+<footer class="status-footer">
+<p>Last updated: {{.StatusPage.LastUpdated | formatTime}}</p>
+<p><a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/feed.xml">RSS Feed</a> | <a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/status.json">API</a></p>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/status-health.js?v={{.Version}}"></script>
+<script defer src="{{.BasePath}}/js/status-uptime.js?v={{.Version}}"></script>
+</body>
+</html>

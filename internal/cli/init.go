@@ -4,8 +4,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	withTOC       bool
+	withStatus    bool
+	withChangelog bool
+	withOpenAPI   bool
+	fullInit      bool
 )
 
 // InitCmd represents the init command
@@ -15,28 +24,68 @@ var InitCmd = &cobra.Command{
 	Long: `Initialize creates a new documentation site with example files.
 
 This will create:
+- config.yaml with site configuration
 - Sample markdown files with frontmatter
 - A basic directory structure
-- Configuration file (optional)`,
+
+Optional features (use flags to enable):
+- --with-toc: Custom navigation (TOC.md)
+- --with-status: Status page structure
+- --with-changelog: Changelog structure
+- --with-openapi: OpenAPI specification example
+- --full: Include all optional features`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runInit,
 }
 
+func init() {
+	InitCmd.Flags().BoolVar(&withTOC, "with-toc", false, "Create TOC.md for custom navigation")
+	InitCmd.Flags().BoolVar(&withStatus, "with-status", false, "Create status page structure")
+	InitCmd.Flags().BoolVar(&withChangelog, "with-changelog", false, "Create changelog structure")
+	InitCmd.Flags().BoolVar(&withOpenAPI, "with-openapi", false, "Create OpenAPI specification example")
+	InitCmd.Flags().BoolVar(&fullInit, "full", false, "Create all optional features")
+}
+
 func runInit(cmd *cobra.Command, args []string) error {
+	// Handle --full flag
+	if fullInit {
+		withTOC = true
+		withStatus = true
+		withChangelog = true
+		withOpenAPI = true
+	}
+
 	// Determine target directory
-	targetDir := "."
+	targetDir := "docs"
 	if len(args) > 0 {
 		targetDir = args[0]
 	}
 
 	fmt.Println("Initializing new documentation site...")
 
-	// Create directory structure
+	// Create base directory structure
 	dirs := []string{
 		targetDir,
-		filepath.Join(targetDir, "01-getting-started"),
-		filepath.Join(targetDir, "02-guides"),
-		filepath.Join(targetDir, "03-api"),
+		filepath.Join(targetDir, "getting-started"),
+		filepath.Join(targetDir, "guides"),
+	}
+
+	// Add optional directories
+	if withOpenAPI {
+		dirs = append(dirs, filepath.Join(targetDir, "api"))
+	}
+	if withStatus {
+		dirs = append(dirs,
+			filepath.Join(targetDir, "__status__"),
+			filepath.Join(targetDir, "__status__", "incidents"),
+			filepath.Join(targetDir, "__status__", "maintenance"),
+		)
+	}
+	if withChangelog {
+		dirs = append(dirs,
+			filepath.Join(targetDir, "__changelog__"),
+			filepath.Join(targetDir, "__changelog__", "releases"),
+		)
 	}
 
 	for _, dir := range dirs {
@@ -45,13 +94,43 @@ func runInit(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Create example files
+	// Build config content based on flags
+	finalConfig := configContent
+	if withOpenAPI {
+		finalConfig += openAPIConfigSection
+	}
+	if withStatus {
+		finalConfig += statusConfigSection
+	}
+	if withChangelog {
+		finalConfig += changelogConfigSection
+	}
+
+	// Create core files
 	files := map[string]string{
-		filepath.Join(targetDir, "index.md"):                                indexContent,
-		filepath.Join(targetDir, "01-getting-started", "01-introduction.md"): introContent,
-		filepath.Join(targetDir, "01-getting-started", "02-installation.md"): installContent,
-		filepath.Join(targetDir, "02-guides", "01-quickstart.md"):            quickstartContent,
-		filepath.Join(targetDir, "03-api", "01-reference.md"):                apiContent,
+		filepath.Join(targetDir, "config.yaml"):                       finalConfig,
+		filepath.Join(targetDir, "index.md"):                          indexContent,
+		filepath.Join(targetDir, "getting-started", "installation.md"): installContent,
+		filepath.Join(targetDir, "getting-started", "quick-start.md"): quickstartContent,
+		filepath.Join(targetDir, "guides", "deployment.md"):           deploymentContent,
+	}
+
+	// Add optional files
+	if withTOC {
+		files[filepath.Join(targetDir, "TOC.md")] = tocContent
+	}
+
+	if withOpenAPI {
+		files[filepath.Join(targetDir, "api", "openapi.yaml")] = openapiContent
+	}
+
+	if withStatus {
+		files[filepath.Join(targetDir, "__status__", "components.yaml")] = componentsContent
+		files[filepath.Join(targetDir, "__status__", "incidents", incidentFilename())] = incidentContent
+	}
+
+	if withChangelog {
+		files[filepath.Join(targetDir, "__changelog__", "releases", "0.1.0.md")] = releaseContent
 	}
 
 	for path, content := range files {
@@ -61,95 +140,444 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	fmt.Println("✓ Documentation site initialized!")
-	fmt.Printf("✓ Location: %s\n", targetDir)
+	fmt.Println("Documentation site initialized!")
+	fmt.Printf("Location: %s\n", targetDir)
+	fmt.Println()
+	fmt.Println("Created files:")
+	fmt.Println("  - config.yaml (site configuration)")
+	fmt.Println("  - index.md (homepage)")
+	fmt.Println("  - getting-started/ (starter pages)")
+	fmt.Println("  - guides/ (guide pages)")
+	if withTOC {
+		fmt.Println("  - TOC.md (custom navigation)")
+	}
+	if withOpenAPI {
+		fmt.Println("  - api/openapi.yaml (OpenAPI specification)")
+	}
+	if withStatus {
+		fmt.Println("  - __status__/ (status page)")
+	}
+	if withChangelog {
+		fmt.Println("  - __changelog__/ (changelog)")
+	}
 	fmt.Println()
 	fmt.Println("Next steps:")
-	fmt.Println("  1. Edit the markdown files in the created directories")
-	fmt.Println("  2. Run 'minimaldoc build' to generate your site")
-	fmt.Println("  3. Open public/index.html in your browser")
+	fmt.Println("  1. Edit config.yaml to customize your site")
+	fmt.Println("  2. Edit the markdown files")
+	fmt.Println("  3. Run 'minimaldoc build " + targetDir + "' to generate your site")
+	fmt.Println("  4. Open public/index.html in your browser")
 	fmt.Println()
 
 	return nil
 }
 
-// Example content for generated files
+func incidentFilename() string {
+	return time.Now().AddDate(0, 0, -7).Format("2006-01-02") + "-example-incident.md"
+}
 
-var indexContent = "---\n" +
-	"title: Welcome\n" +
-	"description: Welcome to the documentation\n" +
-	"tags: [home, welcome]\n" +
-	"menu_order: 0\n" +
-	"---\n\n" +
-	"# Welcome to Your Documentation\n\n" +
-	"This is the home page of your documentation site built with **Minimal Doc**.\n\n" +
-	"## Features\n\n" +
-	"- 📝 Write documentation in Markdown\n" +
-	"- 🎨 Beautiful, minimal theme\n" +
-	"- 🌓 Light and dark mode\n" +
-	"- 📱 Responsive design\n" +
-	"- 🔍 Easy navigation\n" +
-	"- 🤖 LLM-friendly output\n\n" +
-	"## Getting Started\n\n" +
-	"Check out the [Introduction](01-getting-started/01-introduction.html) to learn more.\n"
+// Config template (base)
+var configContent = `# MinimalDoc Configuration
+# Full reference: https://minimaldoc.dev/getting-started/configuration.html
 
-var introContent = "---\n" +
-	"title: Introduction\n" +
-	"description: Introduction to Minimal Doc\n" +
-	"tags: [intro, getting-started]\n" +
-	"---\n\n" +
-	"# Introduction\n\n" +
-	"Welcome to **Minimal Doc**, a simple and elegant static site generator for documentation.\n\n" +
-	"## What is Minimal Doc?\n\n" +
-	"Minimal Doc converts your Markdown files into a beautiful documentation website.\n\n" +
-	"## Next Steps\n\n" +
-	"Continue to [Installation](02-installation.html) to get started.\n"
+# Site Information
+title: My Documentation
+description: Documentation for my project
+base_url: ""                    # Set for production (e.g., https://docs.example.com)
+author: Your Name
 
-var installContent = "---\n" +
-	"title: Installation\n" +
-	"description: How to install Minimal Doc\n" +
-	"tags: [installation, setup]\n" +
-	"---\n\n" +
-	"# Installation\n\n" +
-	"Installing Minimal Doc is quick and easy.\n\n" +
-	"## Build from Source\n\n" +
-	"Requires Go 1.21 or higher:\n\n" +
-	"```bash\n" +
-	"go build -o minimaldoc cmd/minimaldoc/main.go\n" +
-	"```\n\n" +
-	"## Next Steps\n\n" +
-	"Check out the [Quick Start Guide](../02-guides/01-quickstart.html).\n"
+# Theme & Appearance
+theme: default                  # default | minimal | dark
+dark_mode: false                # Start in dark mode
 
-var quickstartContent = "---\n" +
-	"title: Quick Start Guide\n" +
-	"description: Build your first documentation site in minutes\n" +
-	"tags: [quickstart, guide, tutorial]\n" +
-	"---\n\n" +
-	"# Quick Start Guide\n\n" +
-	"Let's build your first documentation site in 5 minutes!\n\n" +
-	"## Step 1: Initialize\n\n" +
-	"```bash\n" +
-	"minimaldoc init my-docs\n" +
-	"cd my-docs\n" +
-	"```\n\n" +
-	"## Step 2: Build\n\n" +
-	"```bash\n" +
-	"minimaldoc build\n" +
-	"```\n\n" +
-	"## Step 3: Preview\n\n" +
-	"Open `public/index.html` in your browser!\n"
+# Features
+enable_llms: true               # Generate llms.txt for AI tools
+enable_search: true             # Enable client-side search (Cmd+K)
+clean_urls: false               # Use /page/ instead of /page.html
 
-var apiContent = "---\n" +
-	"title: API Reference\n" +
-	"description: Complete API documentation\n" +
-	"tags: [api, reference]\n" +
-	"---\n\n" +
-	"# API Reference\n\n" +
-	"## Build Command\n\n" +
-	"```bash\n" +
-	"minimaldoc build [flags]\n" +
-	"```\n\n" +
-	"### Flags\n\n" +
-	"- `--output, -o` - Output directory (default: public)\n" +
-	"- `--theme, -t` - Theme name (default: default)\n" +
-	"- `--llms, -l` - Generate llms.txt (default: true)\n"
+# Stale Content Warnings
+stale_warning:
+  enabled: false
+  threshold_days: 365
+  show_update_date: true
+
+# Social Links (shown in sidebar)
+social_links:
+  - name: GitHub
+    url: https://github.com/your-org/your-project
+    icon: github
+
+# Available icons: github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
+`
+
+// OpenAPI config section (appended when --with-openapi is used)
+var openAPIConfigSection = `
+# OpenAPI Documentation
+openapi:
+  enabled: true
+  spec_files:
+    - "api/openapi.yaml"
+  default_view: "path"            # path | tag | flat
+  enable_testing: true            # Show "Try It" interface
+  enable_code_samples: true       # Show code samples panel
+`
+
+// Status config section (appended when --with-status is used)
+var statusConfigSection = `
+# Status Page
+status:
+  enabled: true
+  title: "Service Status"
+  description: "Current operational status"
+  path: "status"
+  show_history: true
+  history_months: 12
+  rss_enabled: true
+`
+
+// Changelog config section (appended when --with-changelog is used)
+var changelogConfigSection = `
+# Changelog
+changelog:
+  enabled: true
+  title: "Changelog"
+  path: "changelog"
+  rss_enabled: true
+`
+
+// Index page
+var indexContent = `---
+title: Welcome
+description: Welcome to the documentation
+---
+
+# Welcome
+
+Welcome to your documentation site built with MinimalDoc.
+
+## Getting Started
+
+- [Installation](getting-started/installation.html) - Install and set up
+- [Quick Start](getting-started/quick-start.html) - Build your first site
+
+## Guides
+
+- [Deployment](guides/deployment.html) - Deploy to production
+
+## Features
+
+- Markdown documentation with frontmatter
+- Automatic navigation from folder structure
+- Dark mode support
+- Full-text search
+- LLM-friendly output (llms.txt)
+`
+
+// Installation page
+var installContent = `---
+title: Installation
+description: How to install MinimalDoc
+---
+
+# Installation
+
+## Prerequisites
+
+- Go 1.21 or higher
+
+## Install from Source
+
+` + "```bash" + `
+git clone https://github.com/studiowebux/minimaldoc.git
+cd minimaldoc
+go build -o minimaldoc ./cmd/minimaldoc
+` + "```" + `
+
+## Verify Installation
+
+` + "```bash" + `
+minimaldoc --version
+` + "```" + `
+
+## Next Steps
+
+Continue to [Quick Start](quick-start.html) to create your first site.
+`
+
+// Quick start page
+var quickstartContent = `---
+title: Quick Start
+description: Create your first documentation site
+---
+
+# Quick Start
+
+Create a documentation site in minutes.
+
+## Initialize
+
+` + "```bash" + `
+minimaldoc init docs
+` + "```" + `
+
+## Build
+
+` + "```bash" + `
+minimaldoc build docs
+` + "```" + `
+
+## Preview
+
+Open ` + "`public/index.html`" + ` in your browser.
+
+## Directory Structure
+
+` + "```" + `
+docs/
+├── config.yaml      # Site configuration
+├── index.md         # Homepage
+├── getting-started/
+│   ├── installation.md
+│   └── quick-start.md
+└── guides/
+    └── deployment.md
+` + "```" + `
+
+## Configuration
+
+Edit ` + "`config.yaml`" + ` to customize:
+
+` + "```yaml" + `
+title: My Documentation
+description: Documentation for my project
+theme: default
+` + "```" + `
+`
+
+// Deployment guide
+var deploymentContent = `---
+title: Deployment
+description: Deploy your documentation site
+---
+
+# Deployment
+
+MinimalDoc generates static HTML files that can be hosted anywhere.
+
+## Build for Production
+
+` + "```bash" + `
+minimaldoc build docs -o public
+` + "```" + `
+
+## GitHub Pages
+
+1. Push the ` + "`public/`" + ` directory to ` + "`gh-pages`" + ` branch
+2. Enable GitHub Pages in repository settings
+
+## Netlify
+
+1. Connect your repository
+2. Set build command: ` + "`minimaldoc build docs`" + `
+3. Set publish directory: ` + "`public`" + `
+
+## Vercel
+
+1. Import your repository
+2. Override build command: ` + "`minimaldoc build docs`" + `
+3. Set output directory: ` + "`public`" + `
+`
+
+// TOC template
+var tocContent = `# Table of Contents
+
+Custom navigation structure for your documentation.
+
+- [Home](index.md)
+- Getting Started
+  - [Installation](getting-started/installation.md)
+  - [Quick Start](getting-started/quick-start.md)
+- Guides
+  - [Deployment](guides/deployment.md)
+
+<!--
+TOC.md overrides automatic navigation.
+Use indentation (2 spaces) for nested items.
+Plain text creates section headers.
+-->
+`
+
+// OpenAPI template
+var openapiContent = `openapi: 3.0.3
+info:
+  title: Example API
+  description: Example API specification
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: https://staging-api.example.com/v1
+    description: Staging
+paths:
+  /users:
+    get:
+      summary: List users
+      operationId: listUsers
+      tags:
+        - Users
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      summary: Create user
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      operationId: getUser
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "usr_123"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        created_at:
+          type: string
+          format: date-time
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+`
+
+// Components template
+var componentsContent = `# Status Page Components
+
+- id: api
+  name: API
+  description: Core REST API
+  status: operational
+  group: Core Services
+  order: 1
+
+- id: web-app
+  name: Web Application
+  description: Main web interface
+  status: operational
+  group: Core Services
+  order: 2
+
+- id: database
+  name: Database
+  description: Primary database
+  status: operational
+  group: Infrastructure
+  order: 1
+
+# STATUS VALUES:
+# operational, degraded, partial_outage, major_outage, maintenance
+`
+
+// Incident template
+var incidentContent = `---
+title: Example Incident
+status: resolved
+severity: minor
+affected_components:
+  - api
+created_at: ` + time.Now().AddDate(0, 0, -7).Format("2006-01-02T15:04:05Z07:00") + `
+resolved_at: ` + time.Now().AddDate(0, 0, -7).Add(2*time.Hour).Format("2006-01-02T15:04:05Z07:00") + `
+---
+
+## Resolved
+
+Issue has been resolved. All services operating normally.
+
+## Investigating
+
+We are investigating reports of degraded API performance.
+`
+
+// Release template
+var releaseContent = `---
+version: 0.1.0
+date: ` + time.Now().Format("2006-01-02") + `
+---
+
+# 0.1.0
+
+Initial release.
+
+## Added
+
+- Basic documentation structure
+- Markdown support
+- Navigation generation
+
+## Changed
+
+- N/A
+
+## Fixed
+
+- N/A
+`
