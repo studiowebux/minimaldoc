@@ -122,6 +122,48 @@ func (g *SearchGenerator) Generate() error {
 		pageID++
 	}
 
+	// Index FAQ items (if enabled)
+	if g.site.FaqPage != nil && g.site.Config.Faq.Enabled {
+		faqPath := g.site.Config.Faq.Path
+		if faqPath == "" {
+			faqPath = "faq"
+		}
+
+		for _, cat := range g.site.FaqPage.Categories {
+			for _, item := range cat.Items {
+				// Add FAQ item as a page
+				index.Pages = append(index.Pages, SearchPage{
+					Title: item.Question,
+					Desc:  cat.Name,
+					URL:   basePath + "/" + faqPath + "/#" + item.Slug,
+				})
+
+				// Index question (high weight)
+				g.indexText(index.Index, item.Question, pageID, 3)
+
+				// Index category (medium weight)
+				g.indexText(index.Index, cat.Name, pageID, 2)
+
+				// Index tags (medium weight)
+				for _, tag := range item.Tags {
+					g.indexText(index.Index, tag, pageID, 2)
+				}
+
+				// Index answer content (low weight)
+				answerText := item.Answer
+				if item.AnswerHTML != "" {
+					answerText = extractPlainText([]byte(item.AnswerHTML))
+				}
+				if len(answerText) > 1000 {
+					answerText = answerText[:1000]
+				}
+				g.indexText(index.Index, answerText, pageID, 1)
+
+				pageID++
+			}
+		}
+	}
+
 	// Sort posting lists by score (descending) for better results
 	for word := range index.Index {
 		list := index.Index[word]

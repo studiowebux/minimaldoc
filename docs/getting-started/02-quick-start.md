@@ -34,19 +34,17 @@ For a full-featured site with status page, changelog, and OpenAPI:
 minimaldoc init my-docs --full
 ```
 
-This creates additional directories:
+This adds:
 
 ```
 my-docs/
-├── config.yaml
+├── config.yaml               # All config here
 ├── TOC.md                    # Custom navigation
 ├── api/openapi.yaml          # OpenAPI spec
 ├── __status__/               # Status page
-│   ├── config.yaml
 │   ├── components.yaml
 │   └── incidents/
 └── __changelog__/            # Changelog
-    ├── config.yaml
     └── releases/
 ```
 

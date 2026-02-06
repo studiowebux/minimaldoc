@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}}</title>
+<meta name="description" content="{{.LegalPage.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/legal.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
+<nav class="landing-nav">
+{{range .Site.Config.Landing.Nav}}
+<a href="{{.URL}}">{{.Text}}</a>
+{{end}}
+{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
+{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/">Portfolio</a>{{end}}
+{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/">FAQ</a>{{end}}
+{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
+</div>
+</header>
+
+<main id="main" class="landing-main">
+<article class="legal-section">
+<div class="legal-content">
+<h1>{{.LegalPage.Title}}</h1>
+{{if .LegalPage.Description}}<p class="legal-description">{{.LegalPage.Description}}</p>{{end}}
+<div class="legal-body">
+{{.LegalPage.HTML | safeHTML}}
+</div>
+</div>
+</article>
+</main>
+
+<footer class="landing-footer">
+<div class="footer-content">
+{{if .Footer.Links}}
+<div class="footer-links">
+{{range .Footer.Links}}
+<div class="footer-link-group">
+<h4 class="footer-group-title">{{.Title}}</h4>
+<ul class="footer-group-list">
+{{range .Items}}
+<li><a href="{{.URL}}">{{.Text}}</a></li>
+{{end}}
+</ul>
+</div>
+{{end}}
+</div>
+{{end}}
+{{if .Footer.Copyright}}
+<p class="footer-copyright">{{.Footer.Copyright}}</p>
+{{end}}
+</div>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

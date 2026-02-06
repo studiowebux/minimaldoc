@@ -1,4 +1,4 @@
 package version
 
 // Version is the current version of MinimalDoc
-const Version = "0.0.14"
+const Version = "1.0.0"

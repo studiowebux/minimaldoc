@@ -66,7 +66,74 @@ stale_warning:
   threshold_days: integer        # Days before stale (default: 365)
   show_update_date: boolean      # Show last update (default: true)
 
-# Social Links
+# Landing Page Configuration
+landing:
+  enabled: boolean               # Enable landing page (default: false)
+  nav: [{text, url}]             # Navigation links
+  hero:
+    title: string                # Hero title
+    subtitle: string             # Hero subtitle
+    buttons: [{text, url, primary}]
+  features:
+    title: string
+    items: [{emoji, title, description}]
+  steps:
+    title: string
+    items: [{title, description, code}]
+  links:
+    title: string
+    items: [{icon, title, description, url}]
+  opensource:
+    title: string
+    description: string
+    links: [{text, url}]
+
+# Portfolio Configuration
+portfolio:
+  enabled: boolean               # Enable portfolio (default: false)
+  title: string                  # Portfolio page title
+  description: string            # Portfolio description
+  path: string                   # Output path (default: "projects")
+
+# Contact Configuration
+contact:
+  enabled: boolean               # Enable contact page (default: false)
+  title: string                  # Contact page title
+  description: string            # Contact description
+  path: string                   # Output path (default: "contact")
+  email: string                  # Contact email
+  info: [{icon, text}]           # Info items (mail, location, phone)
+
+# FAQ Configuration
+faq:
+  enabled: boolean               # Enable FAQ page (default: false)
+  title: string                  # FAQ page title (default: "FAQ")
+  description: string            # FAQ description
+  path: string                   # Output path (default: "faq")
+  categories:                    # FAQ categories with items
+    - name: string               # Category name
+      order: integer             # Sort order
+      items:                     # Questions in category
+        - question: string       # Question text
+          answer: string         # Answer text (plain or markdown)
+          order: integer         # Sort order within category
+          tags: [string]         # Tags for search
+
+# Legal Configuration
+legal:
+  enabled: boolean               # Enable legal pages (default: false)
+  path: string                   # Output path prefix (default: "legal")
+  footer_group: string           # Footer section title (default: "Legal")
+
+# Footer Configuration
+footer:
+  copyright: string              # Copyright text
+  links:
+    - title: string              # Section title
+      items: [{text, url}]       # Links in section
+  social: [{name, url, icon}]    # Social links
+
+# Social Links (sidebar)
 social_links:
   - name: string                 # Display name
     url: string                  # Link URL
@@ -533,3 +600,421 @@ Default: `[]`
 | `rss` | RSS Feed |
 | `email` | Email |
 | `website` | Generic Website |
+
+## Landing Page Settings
+
+### landing.enabled
+
+Enable landing page generation.
+
+```yaml
+landing:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### landing.nav
+
+Navigation links in the landing header.
+
+```yaml
+landing:
+  nav:
+    - text: "Docs"
+      url: "/getting-started/installation.html"
+    - text: "Features"
+      url: "/features/overview.html"
+```
+
+Type: `array of object`
+
+### landing.hero
+
+Hero section content.
+
+```yaml
+landing:
+  hero:
+    title: "Documentation Made Simple"
+    subtitle: "A minimal static site generator"
+    buttons:
+      - text: "Get Started"
+        url: "/getting-started/installation.html"
+        primary: true
+      - text: "View on GitHub"
+        url: "https://github.com/org/repo"
+        primary: false
+```
+
+### landing.features
+
+Feature grid section.
+
+```yaml
+landing:
+  features:
+    title: "Features"
+    items:
+      - emoji: "~"
+        title: "Fast"
+        description: "Sub-second builds"
+      - emoji: "@"
+        title: "Dark Mode"
+        description: "Built-in theme switching"
+```
+
+### landing.steps
+
+Quick start steps section.
+
+```yaml
+landing:
+  steps:
+    title: "Quick Start"
+    items:
+      - title: "Install"
+        description: "Download the binary"
+        code: "curl -sSL https://..."
+      - title: "Build"
+        description: "Generate your site"
+        code: "minimaldoc build"
+```
+
+### landing.links
+
+Resource links section.
+
+```yaml
+landing:
+  links:
+    title: "Resources"
+    items:
+      - icon: "github"
+        title: "GitHub"
+        description: "Source code"
+        url: "https://github.com/org/repo"
+```
+
+### landing.opensource
+
+Open source section.
+
+```yaml
+landing:
+  opensource:
+    title: "Open Source"
+    description: "MIT Licensed. Self-host with full control."
+    links:
+      - text: "GitHub Repository"
+        url: "https://github.com/org/repo"
+```
+
+## Portfolio Settings
+
+### portfolio.enabled
+
+Enable portfolio page generation.
+
+```yaml
+portfolio:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### portfolio.title
+
+Portfolio page title.
+
+```yaml
+portfolio:
+  title: "Projects"
+```
+
+Type: `string`
+Default: `"Portfolio"`
+
+### portfolio.description
+
+Portfolio page description.
+
+```yaml
+portfolio:
+  description: "Sites built with MinimalDoc"
+```
+
+Type: `string`
+Default: `""`
+
+### portfolio.path
+
+Output path for portfolio.
+
+```yaml
+portfolio:
+  path: "projects"
+```
+
+Type: `string`
+Default: `"projects"`
+
+## Contact Settings
+
+### contact.enabled
+
+Enable contact page generation.
+
+```yaml
+contact:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### contact.title
+
+Contact page title.
+
+```yaml
+contact:
+  title: "Contact Us"
+```
+
+Type: `string`
+Default: `"Contact"`
+
+### contact.description
+
+Contact page description.
+
+```yaml
+contact:
+  description: "Get in touch with our team"
+```
+
+Type: `string`
+Default: `""`
+
+### contact.path
+
+Output path for contact page.
+
+```yaml
+contact:
+  path: "contact"
+```
+
+Type: `string`
+Default: `"contact"`
+
+### contact.email
+
+Contact email address (used by form).
+
+```yaml
+contact:
+  email: "hello@example.com"
+```
+
+Type: `string`
+Default: `""`
+
+### contact.info
+
+Contact information items.
+
+```yaml
+contact:
+  info:
+    - icon: "mail"
+      text: "hello@example.com"
+    - icon: "location"
+      text: "Remote, Worldwide"
+    - icon: "phone"
+      text: "+1 555 123 4567"
+```
+
+Type: `array of object`
+
+### Contact Info Icons
+
+| Icon | Purpose |
+|------|---------|
+| `mail` | Email address |
+| `location` | Physical location |
+| `phone` | Phone number |
+
+## FAQ Settings
+
+### faq.enabled
+
+Enable FAQ page generation.
+
+```yaml
+faq:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### faq.title
+
+FAQ page title.
+
+```yaml
+faq:
+  title: "FAQ"
+```
+
+Type: `string`
+Default: `"FAQ"`
+
+### faq.description
+
+FAQ page description.
+
+```yaml
+faq:
+  description: "Frequently asked questions"
+```
+
+Type: `string`
+Default: `"Frequently asked questions"`
+
+### faq.path
+
+Output path for FAQ page.
+
+```yaml
+faq:
+  path: "faq"
+```
+
+Type: `string`
+Default: `"faq"`
+
+### faq.categories
+
+FAQ categories with questions and answers.
+
+```yaml
+faq:
+  categories:
+    - name: "General"
+      order: 1
+      items:
+        - question: "What is this?"
+          answer: "A documentation generator."
+          tags:
+            - general
+        - question: "Is it free?"
+          answer: "Yes, open source under GPL-3.0."
+    - name: "Technical"
+      order: 2
+      items:
+        - question: "What languages are supported?"
+          answer: "100+ via Chroma syntax highlighting."
+```
+
+Type: `array of object`
+
+Categories can also be defined via markdown files in `__faq__/` directory.
+
+## Legal Settings
+
+### legal.enabled
+
+Enable legal pages generation.
+
+```yaml
+legal:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### legal.path
+
+Output path prefix for legal pages.
+
+```yaml
+legal:
+  path: "legal"
+```
+
+Type: `string`
+Default: `"legal"`
+
+### legal.footer_group
+
+Footer section title for auto-generated legal links.
+
+```yaml
+legal:
+  footer_group: "Legal"
+```
+
+Type: `string`
+Default: `"Legal"`
+
+Legal pages are defined via markdown files in `__legal__/` directory.
+
+## Footer Settings
+
+### footer.copyright
+
+Copyright text displayed in footer.
+
+```yaml
+footer:
+  copyright: "2025 Your Company. MIT License."
+```
+
+Type: `string`
+Default: `""`
+
+### footer.links
+
+Footer link sections.
+
+```yaml
+footer:
+  links:
+    - title: "Documentation"
+      items:
+        - text: "Getting Started"
+          url: "/getting-started/installation.html"
+        - text: "Features"
+          url: "/features/overview.html"
+    - title: "Resources"
+      items:
+        - text: "Status"
+          url: "/status/"
+        - text: "GitHub"
+          url: "https://github.com/org/repo"
+```
+
+Type: `array of object`
+
+### footer.social
+
+Social links in footer.
+
+```yaml
+footer:
+  social:
+    - name: GitHub
+      url: https://github.com/org/repo
+      icon: github
+    - name: Twitter
+      url: https://twitter.com/handle
+      icon: twitter
+```
+
+Type: `array of object`

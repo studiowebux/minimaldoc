@@ -31,6 +31,10 @@ type Metadata struct {
 	Links    []MetadataLink `yaml:"links"`    // Project links
 	Featured bool           `yaml:"featured"` // Featured project
 
+	// FAQ-specific fields
+	Question string `yaml:"question"` // FAQ question text
+	Category string `yaml:"category"` // FAQ category name
+
 	// Custom fields (for extensibility)
 	Custom map[string]interface{} `yaml:"custom"`
 }

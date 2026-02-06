@@ -12,17 +12,17 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
 
-// LandingGenerator generates landing page HTML
-type LandingGenerator struct {
+// LegalGenerator generates legal page HTML
+type LegalGenerator struct {
 	site      *core.Site
 	templates *template.Template
 	themeFS   embed.FS
 	version   string
 }
 
-// NewLandingGenerator creates a new landing generator
-func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*LandingGenerator, error) {
-	if !site.Config.Landing.Enabled {
+// NewLegalGenerator creates a new legal generator
+func NewLegalGenerator(site *core.Site, themeFS embed.FS, version string) (*LegalGenerator, error) {
+	if !site.Config.Legal.Enabled {
 		return nil, nil
 	}
 
@@ -45,22 +45,18 @@ func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*La
 			return template.HTML(s)
 		},
 		"lower": strings.ToLower,
-		"upper": strings.ToUpper,
-		"add": func(a, b int) int {
-			return a + b
-		},
 	})
 
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
-		"themes/common/templates/landing/*.html",
+		"themes/common/templates/legal/*.html",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse landing templates: %w", err)
+		return nil, fmt.Errorf("failed to parse legal templates: %w", err)
 	}
 
-	return &LandingGenerator{
+	return &LegalGenerator{
 		site:      site,
 		templates: tmpl,
 		themeFS:   themeFS,
@@ -68,52 +64,68 @@ func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*La
 	}, nil
 }
 
-// Generate generates the landing page
-func (g *LandingGenerator) Generate() error {
-	if g.site.LandingPage == nil || !g.site.Config.Landing.Enabled {
+// Generate generates all legal pages
+func (g *LegalGenerator) Generate() error {
+	if len(g.site.LegalPages) == 0 || !g.site.Config.Legal.Enabled {
 		return nil
 	}
 
-	fmt.Println("Generating landing page...")
+	fmt.Println("Generating legal pages...")
 
-	// Generate main landing page as index.html
-	if err := g.generateMainPage(); err != nil {
-		return fmt.Errorf("failed to generate landing page: %w", err)
+	legalPath := g.site.Config.Legal.Path
+	if legalPath == "" {
+		legalPath = "legal"
 	}
 
-	fmt.Println("Generated landing page")
+	outputDir := filepath.Join(g.site.OutputRoot, legalPath)
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create legal output directory: %w", err)
+	}
+
+	// Generate each legal page
+	for _, page := range g.site.LegalPages {
+		if err := g.generatePage(outputDir, page); err != nil {
+			return fmt.Errorf("failed to generate legal page %s: %w", page.Slug, err)
+		}
+	}
+
+	fmt.Printf("Generated %d legal pages\n", len(g.site.LegalPages))
 	return nil
 }
 
-// generateMainPage generates the main landing page
-func (g *LandingGenerator) generateMainPage() error {
-	// Build footer with auto-generated legal links
-	footer := g.buildFooterWithLegal()
-
+// generatePage generates a single legal page
+func (g *LegalGenerator) generatePage(outputDir string, page *core.LegalPage) error {
 	data := map[string]any{
-		"Site":        g.site,
-		"LandingPage": g.site.LandingPage,
-		"Footer":      footer,
-		"BasePath":    g.getBasePath(),
-		"Version":     g.version,
-		"PageTitle":   g.site.Config.Title,
+		"Site":      g.site,
+		"LegalPage": page,
+		"Footer":    g.buildFooterWithLegal(),
+		"BasePath":  g.getBasePath(),
+		"Version":   g.version,
+		"PageTitle": page.Title + " | " + g.site.Config.Title,
 	}
 
 	var buf bytes.Buffer
-	if err := g.templates.ExecuteTemplate(&buf, "landing.html", data); err != nil {
+	if err := g.templates.ExecuteTemplate(&buf, "legal.html", data); err != nil {
 		return fmt.Errorf("template execution failed: %w", err)
 	}
 
-	outputPath := filepath.Join(g.site.OutputRoot, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
-		return fmt.Errorf("failed to write landing page: %w", err)
+	// Create page directory
+	pageDir := filepath.Join(outputDir, page.Slug)
+	if err := os.MkdirAll(pageDir, 0755); err != nil {
+		return fmt.Errorf("failed to create page directory: %w", err)
 	}
 
+	outputPath := filepath.Join(pageDir, "index.html")
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to write legal page: %w", err)
+	}
+
+	page.OutputPath = outputPath
 	return nil
 }
 
 // getBasePath extracts the path component from BaseURL
-func (g *LandingGenerator) getBasePath() string {
+func (g *LegalGenerator) getBasePath() string {
 	baseURL := g.site.Config.BaseURL
 	if baseURL == "" {
 		return ""
@@ -141,10 +153,9 @@ func (g *LandingGenerator) getBasePath() string {
 }
 
 // buildFooterWithLegal creates a footer config with auto-generated legal links
-func (g *LandingGenerator) buildFooterWithLegal() core.FooterConfig {
+func (g *LegalGenerator) buildFooterWithLegal() core.FooterConfig {
 	footer := g.site.Config.Footer
 
-	// If legal pages are enabled, auto-generate a "Legal" footer group
 	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
 		legalPath := g.site.Config.Legal.Path
 		if legalPath == "" {
@@ -158,7 +169,6 @@ func (g *LandingGenerator) buildFooterWithLegal() core.FooterConfig {
 
 		basePath := g.getBasePath()
 
-		// Build legal links
 		var legalLinks []core.FooterLink
 		for _, page := range g.site.LegalPages {
 			legalLinks = append(legalLinks, core.FooterLink{
@@ -167,7 +177,6 @@ func (g *LandingGenerator) buildFooterWithLegal() core.FooterConfig {
 			})
 		}
 
-		// Add legal group to footer
 		legalGroup := core.FooterLinkGroup{
 			Title: groupTitle,
 			Items: legalLinks,

@@ -72,14 +72,14 @@ User (object)
 
 ## Type Indicators
 
-| Type | Display |
-|------|---------|
-| `object` | Object icon, expandable |
-| `array` | Array icon, shows item type |
-| `string` | String icon |
-| `integer` | Number icon |
-| `boolean` | Boolean icon |
-| `$ref` | Reference link |
+| Type      | Display                     |
+| --------- | --------------------------- |
+| `object`  | Object icon, expandable     |
+| `array`   | Array icon, shows item type |
+| `string`  | String icon                 |
+| `integer` | Number icon                 |
+| `boolean` | Boolean icon                |
+| `$ref`    | Reference link              |
 
 ## Property Information
 
@@ -221,7 +221,7 @@ Results:
 ```yaml
 AdminUser:
   allOf:
-    - $ref: '#/components/schemas/User'
+    - $ref: "#/components/schemas/User"
     - type: object
       properties:
         permissions:
@@ -244,8 +244,8 @@ AdminUser (object)
 ```yaml
 Response:
   oneOf:
-    - $ref: '#/components/schemas/SuccessResponse'
-    - $ref: '#/components/schemas/ErrorResponse'
+    - $ref: "#/components/schemas/SuccessResponse"
+    - $ref: "#/components/schemas/ErrorResponse"
 ```
 
 Displayed as:
@@ -282,8 +282,8 @@ Pet:
   discriminator:
     propertyName: petType
     mapping:
-      dog: '#/components/schemas/Dog'
-      cat: '#/components/schemas/Cat'
+      dog: "#/components/schemas/Dog"
+      cat: "#/components/schemas/Cat"
 ```
 
 Displayed with discriminator indicator:
@@ -295,54 +295,3 @@ Pet (object)
   └── Cat (petType: "cat")
 ```
 
-## Best Practices
-
-### Use Descriptions
-
-```yaml
-User:
-  type: object
-  description: Represents a registered user in the system
-  properties:
-    id:
-      type: integer
-      description: Unique user identifier
-```
-
-### Provide Examples
-
-```yaml
-email:
-  type: string
-  format: email
-  example: "user@example.com"
-```
-
-### Mark Required Fields
-
-```yaml
-User:
-  type: object
-  required:
-    - name
-    - email
-  properties:
-    name:
-      type: string
-    email:
-      type: string
-```
-
-### Use Meaningful Names
-
-```yaml
-# Good
-CreateUserRequest
-UpdateUserRequest
-UserResponse
-
-# Avoid
-User1
-UserDTO
-UserObj
-```

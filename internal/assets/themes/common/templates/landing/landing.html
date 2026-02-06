@@ -30,6 +30,7 @@ a{color:var(--link-color)}
 {{end}}
 {{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
 {{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/">Portfolio</a>{{end}}
+{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/">FAQ</a>{{end}}
 {{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
 <span class="theme-icon" aria-hidden="true"></span>

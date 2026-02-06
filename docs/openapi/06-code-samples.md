@@ -12,13 +12,13 @@ MinimalDoc generates code samples for every endpoint.
 
 ## Supported Languages
 
-| Language | Library |
-|----------|---------|
-| cURL | Native |
-| JavaScript | Fetch API |
-| Python | requests |
-| Go | net/http |
-| Swift | URLSession |
+| Language   | Library    |
+| ---------- | ---------- |
+| cURL       | Native     |
+| JavaScript | Fetch API  |
+| Python     | requests   |
+| Go         | net/http   |
+| Swift      | URLSession |
 
 ## Configuration
 
@@ -53,16 +53,16 @@ curl -X POST 'https://api.example.com/v1/users' \
 ### JavaScript
 
 ```javascript
-const response = await fetch('https://api.example.com/v1/users', {
-  method: 'POST',
+const response = await fetch("https://api.example.com/v1/users", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_TOKEN",
   },
   body: JSON.stringify({
-    name: 'John Doe',
-    email: 'john@example.com'
-  })
+    name: "John Doe",
+    email: "john@example.com",
+  }),
 });
 
 const data = await response.json();
@@ -278,10 +278,10 @@ Based on request body:
 ```yaml
 requestBody:
   content:
-    application/json:  # Uses JSON
+    application/json: # Uses JSON
       schema:
-        $ref: '#/components/schemas/User'
-    multipart/form-data:  # Uses form data
+        $ref: "#/components/schemas/User"
+    multipart/form-data: # Uses form data
       schema:
         type: object
         properties:

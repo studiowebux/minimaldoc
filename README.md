@@ -1,26 +1,45 @@
-# Minimal Doc
+# MinimalDoc
 
-A modern, minimal static site generator for documentation written in Go.
+A minimal static site generator for documentation. Fast, clean, and easy to use.
 
 ## Features
 
-- **Markdown-based** - Write documentation in Markdown with YAML frontmatter
-- **Beautiful Theme** - Clean, minimal design with soft white/black color scheme
-- **Dark Mode** - Automatic light/dark theme with localStorage persistence
-- **Responsive** - Mobile-friendly, responsive design
-- **Auto Navigation** - Automatic navigation tree from folder structure
-- **Table of Contents** - Auto-generated TOC with active scrollspy
-- **Search** - Client-side search with Cmd+K/Ctrl+K and fuzzy matching
-- **Admonitions** - Callout blocks for info, warning, danger, success, note, question
-- **Syntax Highlighting** - Code blocks with syntax highlighting
-- **GFM Support** - Tables, strikethrough, task lists, and more
-- **Sitemap** - Automatic sitemap.xml generation for SEO
-- **OpenAPI/Swagger** - Interactive API documentation with live testing
-- **Status Page** - Service health dashboard with incidents, maintenance, uptime tracking
-- **Social Links** - Configurable social media links in sidebar
-- **LLM-Friendly** - Generates `llms.txt` for AI tools
-- **Fast Builds** - Lightning-fast site generation
-- **GitHub Pages Ready** - Deploy anywhere static sites are supported
+### Content
+- **Markdown-based** - Write in Markdown with YAML frontmatter
+- **GFM Support** - Tables, task lists, strikethrough
+- **Admonitions** - Callout blocks (info, warning, danger, success, note, question)
+- **Syntax Highlighting** - 100+ languages via Chroma with copy button
+- **Stale Warnings** - Configurable warnings for outdated content
+
+### Navigation
+- **Auto Navigation** - Generated from folder structure
+- **Custom TOC** - Via TOC.md file
+- **Page TOC** - Auto-generated with scrollspy
+- **Search** - Client-side full-text search with Cmd+K/Ctrl+K
+
+### Design
+- **Dark Mode** - Toggle with localStorage persistence
+- **Themes** - CSS-only customization (default, yellow)
+- **Responsive** - Mobile, tablet, desktop
+
+### Pages
+- **Landing Pages** - Marketing homepage with hero, features, steps
+- **Portfolio** - Project showcase with tags and filtering
+- **Contact** - Contact page with email and info
+- **FAQ** - Collapsible Q&A with categories, search integration, deep linking
+- **Legal** - Privacy policy, terms of service with auto footer links
+- **Status Page** - Service health with incidents, maintenance, uptime
+- **Changelog** - Version history with RSS feed
+
+### API Documentation
+- **OpenAPI Support** - Interactive docs with testing UI
+- **Code Samples** - curl, JavaScript, Go, Python, Swift
+- **Schema Viewer** - Request/response visualization
+
+### SEO
+- **Sitemap** - Automatic sitemap.xml generation
+- **Meta Tags** - Open Graph, Twitter Cards
+- **LLM Output** - llms.txt and llms-full.txt generation
 
 ## Installation
 
@@ -107,12 +126,31 @@ minimaldoc build [docs-directory] [flags]
 minimaldoc build ./docs --output dist --title "My Project" --description "Project documentation"
 ```
 
+#### Single File Build
+
+Build a single markdown file as a standalone page:
+
+```bash
+minimaldoc build README.md
+```
+
+This generates `index.html` from the specified file, useful for quick one-pagers.
+
 #### `init`
 
 Initialize a new documentation site with example files.
 
 ```bash
 minimaldoc init [directory]
+```
+
+#### `version`
+
+Display version information and check for updates:
+
+```bash
+minimaldoc version           # Show current version
+minimaldoc version --check   # Check GitHub for newer releases
 ```
 
 ## Configuration
@@ -130,6 +168,7 @@ base_url: https://example.com/docs
 theme: default
 enable_llms: true
 clean_urls: false
+entrypoint: README.md  # Optional: use a custom file as homepage instead of index.md
 
 openapi:
   enabled: true
@@ -442,13 +481,8 @@ The default theme uses soft, eye-friendly colors:
 **Dark Mode:**
 
 - Background: `#1a1a1a` (soft black)
-- Text: `#f5f5f5` (soft white)
-
-**OpenAPI Dark Mode:**
-
-- Background: `#0d1117` (GitHub dark)
-- Text: `#e6edf3` (high contrast)
-- Cards: `#161b22` (elevated surfaces)
+- Text: `#ffffff` (white)
+- Secondary: `#2a2a2a` (cards, sidebars)
 
 ### Customization
 

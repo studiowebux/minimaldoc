@@ -1,6 +1,6 @@
 ---
 title: Health Checks
-description: Live endpoint polling with status indicators
+description: Static and real-time approaches to service monitoring
 tags:
   - status-page
   - health-checks
@@ -9,17 +9,108 @@ tags:
 
 # Health Checks
 
-Browser-based health polling for real-time status display.
+Two approaches for monitoring service health in MinimalDoc.
 
-## Overview
+## Approach Comparison
 
-Health checks provide:
-- Live endpoint polling
-- Response latency display
-- Visual status indicators
-- Countdown to next check
+| Aspect | Static (CI/CD) | Real-Time (Client) |
+|--------|----------------|-------------------|
+| Updates | On pipeline trigger | Every page load |
+| Server load | Zero | Every visitor polls endpoints |
+| Latency display | No | Yes |
+| External dependency | Prometheus, Datadog, etc. | CORS-enabled endpoints |
+| Cost | Build/deploy only | None |
+| Accuracy | Delayed (pipeline latency) | Live |
 
-## Configuration
+## Approach 1: Static (CI/CD Driven)
+
+Status updates only when your CI/CD pipeline runs. External monitoring triggers the update.
+
+### How It Works
+
+```
+Prometheus detects issue → Webhook triggers pipeline →
+Pipeline edits incident file → Site rebuilds → Static files uploaded
+```
+
+### Configuration
+
+No `health_endpoint` needed. Set status manually or via automation:
+
+```yaml
+# components.yaml
+- id: api
+  name: API
+  status: operational  # Updated by CI/CD
+```
+
+### Automation Example
+
+GitHub Actions workflow triggered by external monitoring:
+
+```yaml
+name: Update Status
+on:
+  repository_dispatch:
+    types: [status-change]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update component status
+        run: |
+          yq -i '.[] | select(.id == "${{ github.event.client_payload.component }}") .status = "${{ github.event.client_payload.status }}"' \
+            docs/__status__/components.yaml
+      - name: Create incident if needed
+        if: github.event.client_payload.status != 'operational'
+        run: |
+          cat > docs/__status__/incidents/$(date +%Y-%m-%d)-${{ github.event.client_payload.component }}.md << EOF
+          ---
+          title: ${{ github.event.client_payload.title }}
+          status: investigating
+          severity: ${{ github.event.client_payload.severity }}
+          affected_components:
+            - ${{ github.event.client_payload.component }}
+          created_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          ---
+          Investigating issue detected by monitoring.
+          EOF
+      - name: Build and deploy
+        run: |
+          minimaldoc build
+          # deploy to hosting...
+```
+
+### Benefits
+
+- No client-side requests to your services
+- Works with any monitoring stack (Prometheus, Datadog, Pingdom, etc.)
+- Zero runtime cost after build
+- Full control over when status changes
+
+### Trade-offs
+
+- Status updates have pipeline latency (seconds to minutes)
+- Requires external monitoring infrastructure
+- No real-time latency display
+
+---
+
+## Approach 2: Real-Time (Client Polling)
+
+Browser polls endpoints directly for live status and latency.
+
+### How It Works
+
+1. Browser loads status page
+2. JavaScript polls each configured endpoint
+3. Status and latency displayed
+4. Countdown shows time to next check
+5. Repeat at configured interval
+
+### Configuration
 
 ```yaml
 # components.yaml
@@ -35,6 +126,53 @@ Health checks provide:
 | `url` | string | Base service URL |
 | `health_endpoint` | string | Health check path |
 | `health_interval` | int | Seconds between checks |
+
+### Benefits
+
+- Live latency display
+- Immediate status updates
+- No external monitoring needed
+- Simple setup
+
+### Trade-offs
+
+- Every visitor polls your endpoints
+- Requires CORS headers on health endpoints
+- Can increase load on services
+- Browser must be open to see updates
+
+---
+
+## Real-Time Details
+
+### Display
+
+```
+┌─────────────────────────────────────────────────┐
+│  API                                             │
+│  https://api.example.com                        │
+│                                                  │
+│  Status: ● Healthy         Latency: 24ms        │
+│  Last check: 10s ago       Next: 20s            │
+└─────────────────────────────────────────────────┘
+```
+
+## Configuration
+
+```yaml
+# components.yaml
+- id: api
+  name: API
+  url: https://api.example.com
+  health_endpoint: /health
+  health_interval: 30
+```
+
+| Field             | Type   | Description            |
+| ----------------- | ------ | ---------------------- |
+| `url`             | string | Base service URL       |
+| `health_endpoint` | string | Health check path      |
+| `health_interval` | int    | Seconds between checks |
 
 ## How It Works
 
@@ -58,21 +196,21 @@ Health checks provide:
 
 ### Status Indicators
 
-| Status | Indicator | Condition |
-|--------|-----------|-----------|
-| Healthy | Green dot | 2xx response |
-| Degraded | Yellow dot | Slow response (>1s) |
-| Unhealthy | Red dot | Non-2xx or timeout |
-| Checking | Pulse animation | Request in progress |
+| Status    | Indicator       | Condition           |
+| --------- | --------------- | ------------------- |
+| Healthy   | Green dot       | 2xx response        |
+| Degraded  | Yellow dot      | Slow response (>1s) |
+| Unhealthy | Red dot         | Non-2xx or timeout  |
+| Checking  | Pulse animation | Request in progress |
 
 ### Latency Display
 
-| Range | Display |
-|-------|---------|
-| < 100ms | Green |
-| 100-500ms | Yellow |
-| 500ms-1s | Orange |
-| > 1s | Red |
+| Range     | Display |
+| --------- | ------- |
+| < 100ms   | Green   |
+| 100-500ms | Yellow  |
+| 500ms-1s  | Orange  |
+| > 1s      | Red     |
 
 ## Health Endpoint
 
@@ -124,14 +262,14 @@ GET /health
 
 ## Status Determination
 
-| Response | Status |
-|----------|--------|
-| 200-299 | Healthy |
-| 300-399 | Healthy (redirect) |
-| 400-499 | Unhealthy |
-| 500-599 | Unhealthy |
-| Timeout | Unhealthy |
-| Network error | Unhealthy |
+| Response      | Status             |
+| ------------- | ------------------ |
+| 200-299       | Healthy            |
+| 300-399       | Healthy (redirect) |
+| 400-499       | Unhealthy          |
+| 500-599       | Unhealthy          |
+| Timeout       | Unhealthy          |
+| Network error | Unhealthy          |
 
 ## Configuration Examples
 
@@ -152,7 +290,7 @@ GET /health
   name: Critical Service
   url: https://critical.example.com
   health_endpoint: /health
-  health_interval: 10    # Every 10 seconds
+  health_interval: 10 # Every 10 seconds
 ```
 
 ### Custom Endpoint
@@ -196,51 +334,32 @@ Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: GET, HEAD, OPTIONS
 ```
 
-### Server Configuration
+## Choosing an Approach
 
-**Nginx:**
+| Use Case | Recommended |
+|----------|-------------|
+| High traffic status page | Static (CI/CD) |
+| Internal tools, low traffic | Real-Time (Client) |
+| External services you don't control | Static (CI/CD) |
+| Services with CORS-enabled health endpoints | Either |
+| No monitoring infrastructure | Real-Time (Client) |
 
-```nginx
-location /health {
-    add_header Access-Control-Allow-Origin *;
-    return 200 '{"status":"ok"}';
-}
-```
+## Static-Only Components
 
-**Express:**
-
-```javascript
-app.get('/health', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.json({ status: 'ok' });
-});
-```
-
-**Go:**
-
-```go
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-```
-
-## Without Health Checks
-
-Components without health configuration show static status:
+Components without health configuration use the static approach:
 
 ```yaml
 - id: external-service
   name: External Service
-  status: operational    # Manual status only
+  status: operational  # Updated by CI/CD only
 ```
 
-No live polling, no latency display.
+No live polling, no latency display. Status changes via pipeline.
 
 ## Fallback Behavior
 
 If health check fails:
+
 1. Component shows configured static status
 2. Error indicator displayed
 3. Retry at next interval
@@ -264,52 +383,3 @@ Health configuration included in `status.json`:
 ```
 
 External tools can use this for their own monitoring.
-
-## Best Practices
-
-### Lightweight Endpoints
-
-```go
-// Good - Fast, minimal work
-func health(w http.ResponseWriter, r *http.Request) {
-    w.WriteHeader(200)
-}
-
-// Avoid - Slow, resource-intensive
-func health(w http.ResponseWriter, r *http.Request) {
-    db.Query("SELECT 1")  // Adds latency
-    cache.Ping()
-    json.NewEncoder(w).Encode(fullStatusReport)
-}
-```
-
-### Appropriate Intervals
-
-| Service Type | Interval |
-|--------------|----------|
-| Critical | 10-15 seconds |
-| Standard | 30 seconds |
-| Non-critical | 60 seconds |
-
-### Handle Timeouts
-
-Set reasonable timeout (5-10 seconds):
-
-```javascript
-// Status page JS uses 10s timeout
-const response = await fetch(url, {
-  signal: AbortSignal.timeout(10000)
-});
-```
-
-### Dedicated Endpoint
-
-Use a dedicated `/health` endpoint, not your main page:
-
-```yaml
-# Good
-health_endpoint: /health
-
-# Avoid
-health_endpoint: /
-```

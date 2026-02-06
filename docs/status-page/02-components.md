@@ -48,28 +48,28 @@ Create `__status__/components.yaml`:
 
 ## Field Reference
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | Yes | Unique identifier |
-| `name` | string | Yes | Display name |
-| `description` | string | No | Component description |
-| `status` | string | No | Current status (default: `operational`) |
-| `group` | string | No | Group for organization |
-| `order` | int | No | Sort order within group |
-| `url` | string | No | Service URL |
-| `health_endpoint` | string | No | Health check path |
-| `health_interval` | int | No | Check interval (seconds) |
-| `uptime` | object | No | Uptime tracking config |
+| Field             | Type   | Required | Description                             |
+| ----------------- | ------ | -------- | --------------------------------------- |
+| `id`              | string | Yes      | Unique identifier                       |
+| `name`            | string | Yes      | Display name                            |
+| `description`     | string | No       | Component description                   |
+| `status`          | string | No       | Current status (default: `operational`) |
+| `group`           | string | No       | Group for organization                  |
+| `order`           | int    | No       | Sort order within group                 |
+| `url`             | string | No       | Service URL                             |
+| `health_endpoint` | string | No       | Health check path                       |
+| `health_interval` | int    | No       | Check interval (seconds)                |
+| `uptime`          | object | No       | Uptime tracking config                  |
 
 ## Status Values
 
-| Status | Display |
-|--------|---------|
-| `operational` | Green checkmark |
-| `degraded` | Yellow warning |
-| `partial_outage` | Orange alert |
-| `major_outage` | Red X |
-| `maintenance` | Blue wrench |
+| Status           | Display         |
+| ---------------- | --------------- |
+| `operational`    | Green checkmark |
+| `degraded`       | Yellow warning  |
+| `partial_outage` | Orange alert    |
+| `major_outage`   | Red X           |
+| `maintenance`    | Blue wrench     |
 
 ## Grouping
 
@@ -122,17 +122,17 @@ Components sorted by:
 - id: api
   name: API
   group: Core
-  order: 1    # First
+  order: 1 # First
 
 - id: web
   name: Web
   group: Core
-  order: 2    # Second
+  order: 2 # Second
 
 - id: admin
   name: Admin
   group: Core
-  order: 3    # Third
+  order: 3 # Third
 ```
 
 ## Health Checks
@@ -147,13 +147,14 @@ Configure browser-based health polling:
   health_interval: 30
 ```
 
-| Field | Description |
-|-------|-------------|
-| `url` | Base URL of service |
+| Field             | Description             |
+| ----------------- | ----------------------- |
+| `url`             | Base URL of service     |
 | `health_endpoint` | Path to health endpoint |
-| `health_interval` | Seconds between checks |
+| `health_interval` | Seconds between checks  |
 
 The status page polls endpoints and shows:
+
 - Current status indicator
 - Response latency
 - Last check time
@@ -168,16 +169,16 @@ Track uptime per component:
 - id: api
   name: API
   uptime:
-    mode: incidents      # or "api"
+    mode: incidents # or "api"
     sla_target: 99.9
     period_days: 90
 ```
 
-| Field | Description |
-|-------|-------------|
-| `mode` | Data source: `incidents` or `api` |
-| `sla_target` | Target uptime percentage |
-| `period_days` | Tracking period |
+| Field         | Description                       |
+| ------------- | --------------------------------- |
+| `mode`        | Data source: `incidents` or `api` |
+| `sla_target`  | Target uptime percentage          |
+| `period_days` | Tracking period                   |
 
 See [Uptime Tracking](05-uptime-tracking.md) for details.
 

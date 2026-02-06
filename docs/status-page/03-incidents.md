@@ -52,32 +52,32 @@ Investigating reports of API unavailability.
 
 ## Frontmatter Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | Yes | Incident title |
-| `status` | string | Yes | Current status |
-| `severity` | string | Yes | Severity level |
-| `affected_components` | []string | No | Component IDs |
-| `created_at` | datetime | Yes | Start time (ISO 8601) |
-| `updated_at` | datetime | No | Last update time |
-| `resolved_at` | datetime | No | Resolution time |
+| Field                 | Type     | Required | Description           |
+| --------------------- | -------- | -------- | --------------------- |
+| `title`               | string   | Yes      | Incident title        |
+| `status`              | string   | Yes      | Current status        |
+| `severity`            | string   | Yes      | Severity level        |
+| `affected_components` | []string | No       | Component IDs         |
+| `created_at`          | datetime | Yes      | Start time (ISO 8601) |
+| `updated_at`          | datetime | No       | Last update time      |
+| `resolved_at`         | datetime | No       | Resolution time       |
 
 ## Status Values
 
-| Status | Description | Display |
-|--------|-------------|---------|
-| `investigating` | Initial investigation | Yellow |
-| `identified` | Root cause found | Orange |
-| `monitoring` | Fix applied, monitoring | Blue |
-| `resolved` | Fully resolved | Green |
+| Status          | Description             | Display |
+| --------------- | ----------------------- | ------- |
+| `investigating` | Initial investigation   | Yellow  |
+| `identified`    | Root cause found        | Orange  |
+| `monitoring`    | Fix applied, monitoring | Blue    |
+| `resolved`      | Fully resolved          | Green   |
 
 ## Severity Levels
 
-| Severity | Description | Impact |
-|----------|-------------|--------|
-| `minor` | Low impact | Some users affected |
-| `major` | Significant impact | Most users affected |
-| `critical` | Service down | All users affected |
+| Severity   | Description        | Impact              |
+| ---------- | ------------------ | ------------------- |
+| `minor`    | Low impact         | Some users affected |
+| `major`    | Significant impact | Most users affected |
+| `critical` | Service down       | All users affected  |
 
 ## Update Timeline
 
@@ -107,8 +107,11 @@ Updates display newest first on the status page.
 
 ```markdown
 ## Update - 14:30 UTC
+
 ## Update - 2:30 PM UTC
+
 ## Update - January 28, 14:30 UTC
+
 ## Update - 2025-01-28 14:30 UTC
 ```
 
@@ -126,6 +129,7 @@ affected_components:
 Component IDs must match those in `components.yaml`.
 
 Effects:
+
 - Components show incident indicator
 - Uptime calculations include downtime
 - Filtering by component
@@ -251,12 +255,14 @@ resolved_at: 2025-01-28T14:00:00Z
 **Impact:** API was unavailable for all users during the incident.
 
 **Timeline:**
+
 - 10:00 - Deployment completed
 - 10:15 - First alerts triggered
 - 10:30 - Rollback initiated
 - 14:00 - Service restored
 
 **Action Items:**
+
 - Add memory usage monitoring
 - Improve deployment canary process
 - Update runbook for similar incidents

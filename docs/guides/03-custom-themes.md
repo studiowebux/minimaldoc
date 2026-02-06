@@ -311,25 +311,6 @@ Toggle dark mode in browser to verify both color schemes.
 - [ ] Borders appropriate
 - [ ] Search input styled
 
-## Distributing Themes
+## Contributing Themes
 
-### Share Theme
-
-Package as a directory:
-
-```
-my-theme/
-└── static/css/main.css
-```
-
-### Install Theme
-
-Copy to project's `themes/` directory:
-
-```bash
-cp -r my-theme ./themes/
-```
-
-### Community Themes
-
-Share on GitHub with tag `minimaldoc-theme`.
+To add a theme to MinimalDoc, open a PR on the [GitHub repository](https://github.com/studiowebux/minimaldoc).

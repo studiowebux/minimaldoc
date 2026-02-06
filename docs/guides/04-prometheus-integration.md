@@ -35,12 +35,12 @@ Automate status page updates using Prometheus AlertManager and GitHub Actions.
 
 ## Components
 
-| Component | Purpose |
-|-----------|---------|
-| Prometheus | Monitor services, evaluate alert rules |
-| AlertManager | Route alerts, send webhooks |
-| GitHub Actions | Process alerts, update incident files |
-| MinimalDoc | Rebuild status page |
+| Component      | Purpose                                |
+| -------------- | -------------------------------------- |
+| Prometheus     | Monitor services, evaluate alert rules |
+| AlertManager   | Route alerts, send webhooks            |
+| GitHub Actions | Process alerts, update incident files  |
+| MinimalDoc     | Rebuild status page                    |
 
 ## Prometheus Alert Rules
 
@@ -110,8 +110,8 @@ global:
   resolve_timeout: 5m
 
 route:
-  receiver: 'github-status'
-  group_by: ['alertname', 'component_id']
+  receiver: "github-status"
+  group_by: ["alertname", "component_id"]
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
@@ -120,19 +120,19 @@ route:
     # Critical alerts - immediate
     - match:
         severity: critical
-      receiver: 'github-status'
+      receiver: "github-status"
       group_wait: 10s
 
     # Warning alerts - batched
     - match:
         severity: warning
-      receiver: 'github-status'
+      receiver: "github-status"
       group_wait: 2m
 
 receivers:
-  - name: 'github-status'
+  - name: "github-status"
     webhook_configs:
-      - url: 'https://api.github.com/repos/YOUR_ORG/YOUR_REPO/dispatches'
+      - url: "https://api.github.com/repos/YOUR_ORG/YOUR_REPO/dispatches"
         http_config:
           authorization:
             type: Bearer
@@ -144,6 +144,7 @@ receivers:
 ### GitHub Token
 
 Create a fine-grained Personal Access Token with:
+
 - Repository access: Your docs repository
 - Permissions: Contents (read/write), Actions (write)
 
@@ -279,7 +280,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: "1.24"
 
       - name: Install MinimalDoc
         run: go install github.com/studiowebux/minimaldoc/cmd/minimaldoc@latest
@@ -299,11 +300,13 @@ jobs:
           git diff --staged --quiet || git commit -m "Update incident: ${{ steps.process.outputs.incident_id }}"
           git push
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
 ```
 
 ## Component ID Mapping
@@ -313,23 +316,23 @@ Map Prometheus job labels to MinimalDoc component IDs:
 ```yaml
 # prometheus/prometheus.yml
 scrape_configs:
-  - job_name: 'api'
+  - job_name: "api"
     static_configs:
-      - targets: ['api.example.com:9090']
+      - targets: ["api.example.com:9090"]
         labels:
-          component: 'api'  # Maps to components.yaml id
+          component: "api" # Maps to components.yaml id
 
-  - job_name: 'web'
+  - job_name: "web"
     static_configs:
-      - targets: ['web.example.com:9090']
+      - targets: ["web.example.com:9090"]
         labels:
-          component: 'web'
+          component: "web"
 
-  - job_name: 'database'
+  - job_name: "database"
     static_configs:
-      - targets: ['db.example.com:9187']
+      - targets: ["db.example.com:9187"]
         labels:
-          component: 'database'
+          component: "database"
 ```
 
 ## Severity Mapping
@@ -337,10 +340,10 @@ scrape_configs:
 Map Prometheus severities to MinimalDoc:
 
 | Prometheus | MinimalDoc | Component Status |
-|------------|------------|------------------|
-| `critical` | `critical` | `major_outage` |
-| `major` | `major` | `partial_outage` |
-| `warning` | `minor` | `degraded` |
+| ---------- | ---------- | ---------------- |
+| `critical` | `critical` | `major_outage`   |
+| `major`    | `major`    | `partial_outage` |
+| `warning`  | `minor`    | `degraded`       |
 
 ## Testing the Integration
 
@@ -377,64 +380,3 @@ curl -X POST \
 2. Verify incident file created
 3. Check status page updated
 
-## Security Considerations
-
-### Token Security
-
-- Use fine-grained PATs with minimal permissions
-- Store tokens in encrypted secrets
-- Rotate tokens regularly
-- Audit token usage
-
-### Webhook Validation
-
-For production, validate webhook source:
-
-```yaml
-- name: Validate Source
-  run: |
-    # Verify request comes from expected AlertManager IP
-    ALLOWED_IPS="10.0.0.0/8,192.168.0.0/16"
-    # Add validation logic
-```
-
-### Rate Limiting
-
-Prevent alert storms:
-
-```yaml
-# alertmanager/config.yml
-route:
-  group_wait: 30s      # Wait before sending
-  group_interval: 5m   # Min time between groups
-  repeat_interval: 4h  # Don't repeat for 4h
-```
-
-## Troubleshooting
-
-### Alerts Not Triggering
-
-```bash
-# Check Prometheus alerts
-curl http://prometheus:9090/api/v1/alerts
-
-# Check AlertManager status
-curl http://alertmanager:9093/api/v1/alerts
-```
-
-### Webhook Failures
-
-```bash
-# Check AlertManager logs
-docker logs alertmanager 2>&1 | grep webhook
-```
-
-### GitHub Actions Failures
-
-- Check Actions tab for error logs
-- Verify token permissions
-- Check payload format
-
-## Complete Example
-
-See the [minimaldoc-prometheus-example](https://github.com/studiowebux/minimaldoc-prometheus-example) repository for a complete working setup.

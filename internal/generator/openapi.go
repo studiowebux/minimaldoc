@@ -261,8 +261,30 @@ func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) 
 
 // generateAPIIndex generates an index page listing all OpenAPI specifications
 func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
-	var buf bytes.Buffer
 	basePath := g.getBasePath()
+
+	// If only one API spec, redirect directly to it
+	if len(g.site.APISpecs) == 1 {
+		spec := g.site.APISpecs[0]
+		redirectHTML := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="0; url=%s/api/%s/">
+<link rel="canonical" href="%s/api/%s/">
+</head>
+<body>
+<p>Redirecting to <a href="%s/api/%s/">API Documentation</a>...</p>
+</body>
+</html>`, basePath, spec.Name, basePath, spec.Name, basePath, spec.Name)
+
+		indexPath := filepath.Join(apiDir, "index.html")
+		if err := os.WriteFile(indexPath, []byte(redirectHTML), 0644); err != nil {
+			return fmt.Errorf("failed to write API redirect: %w", err)
+		}
+		return nil
+	}
+
+	var buf bytes.Buffer
 
 	// Build navigation links
 	var navLinks strings.Builder
@@ -275,15 +297,19 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 	if g.site.Config.Portfolio.Enabled {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Portfolio</a>`, basePath, g.site.Config.Portfolio.Path))
 	}
+	if g.site.Config.Faq.Enabled {
+		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">FAQ</a>`, basePath, g.site.Config.Faq.Path))
+	}
 	if g.site.Config.Contact.Enabled {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Contact</a>`, basePath, g.site.Config.Contact.Path))
 	}
 
-	// Build footer links
+	// Build footer links with legal pages
+	footer := g.buildFooterWithLegal()
 	var footerLinks strings.Builder
-	if len(g.site.Config.Footer.Links) > 0 {
+	if len(footer.Links) > 0 {
 		footerLinks.WriteString(`<div class="footer-links">`)
-		for _, group := range g.site.Config.Footer.Links {
+		for _, group := range footer.Links {
 			footerLinks.WriteString(fmt.Sprintf(`<div class="footer-link-group"><h4 class="footer-group-title">%s</h4><ul class="footer-group-list">`, group.Title))
 			for _, item := range group.Items {
 				footerLinks.WriteString(fmt.Sprintf(`<li><a href="%s">%s</a></li>`, item.URL, item.Text))
@@ -363,7 +389,7 @@ a{color:var(--link-color)}
 <footer class="landing-footer">
 <div class="footer-content">
 ` + footerLinks.String() + `
-<p class="footer-copyright">` + g.site.Config.Footer.Copyright + `</p>
+<p class="footer-copyright">` + footer.Copyright + `</p>
 </div>
 </footer>
 </div>
@@ -409,4 +435,39 @@ func (g *OpenAPIGenerator) getBasePath() string {
 	}
 
 	return path
+}
+
+// buildFooterWithLegal creates a footer config with auto-generated legal links
+func (g *OpenAPIGenerator) buildFooterWithLegal() core.FooterConfig {
+	footer := g.site.Config.Footer
+
+	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
+		legalPath := g.site.Config.Legal.Path
+		if legalPath == "" {
+			legalPath = "legal"
+		}
+
+		groupTitle := g.site.Config.Legal.FooterGroup
+		if groupTitle == "" {
+			groupTitle = "Legal"
+		}
+
+		basePath := g.getBasePath()
+
+		var legalLinks []core.FooterLink
+		for _, page := range g.site.LegalPages {
+			legalLinks = append(legalLinks, core.FooterLink{
+				Text: page.Title,
+				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+			})
+		}
+
+		legalGroup := core.FooterLinkGroup{
+			Title: groupTitle,
+			Items: legalLinks,
+		}
+		footer.Links = append(footer.Links, legalGroup)
+	}
+
+	return footer
 }

@@ -15,6 +15,8 @@ type Site struct {
 	LandingPage   *LandingPage   // Landing page data (if enabled)
 	PortfolioPage *PortfolioPage // Portfolio page data (if enabled)
 	ContactPage   *ContactPage   // Contact page data (if enabled)
+	FaqPage       *FaqPage       // FAQ page data (if enabled)
+	LegalPages    []*LegalPage   // Legal pages (if enabled)
 
 	// Paths
 	DocsRoot   string // Root directory of markdown files
@@ -44,6 +46,10 @@ type SiteConfig struct {
 	EnableLLMS  bool `yaml:"enable_llms"`  // Generate llms.txt
 	EnableSearch bool `yaml:"enable_search"` // Enable search (future)
 
+	// Entrypoint
+	Entrypoint     string `yaml:"entrypoint"`      // Custom homepage file (default: index.md)
+	SingleFileMode bool   `yaml:"-"`               // Only process the entrypoint file
+
 	// Navigation
 	NavDepth int `yaml:"nav_depth"` // Max depth for navigation tree (0 = unlimited)
 
@@ -70,6 +76,12 @@ type SiteConfig struct {
 
 	// Contact
 	Contact ContactConfig `yaml:"contact"` // Contact page configuration
+
+	// FAQ
+	Faq FaqConfig `yaml:"faq"` // FAQ page configuration
+
+	// Legal
+	Legal LegalConfig `yaml:"legal"` // Legal pages configuration
 
 	// Footer (for landing pages)
 	Footer FooterConfig `yaml:"footer"` // Footer configuration
@@ -117,6 +129,8 @@ func DefaultSiteConfig() SiteConfig {
 		Landing:      DefaultLandingConfig(),
 		Portfolio:    DefaultPortfolioConfig(),
 		Contact:      DefaultContactConfig(),
+		Faq:          DefaultFaqConfig(),
+		Legal:        DefaultLegalConfig(),
 		Footer:       DefaultFooterConfig(),
 		Custom:       make(map[string]interface{}),
 	}

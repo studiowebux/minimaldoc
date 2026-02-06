@@ -12,7 +12,7 @@ tags:
 
 ```
 docs/
-├── config.yaml              # Site configuration
+├── config.yaml              # All site configuration
 ├── TOC.md                   # Custom navigation (optional)
 ├── index.md                 # Homepage
 ├── getting-started/         # Section directory
@@ -23,21 +23,32 @@ docs/
 ├── api/                     # OpenAPI specs (if enabled)
 │   └── openapi.yaml
 ├── __status__/              # Status page content
-│   ├── config.yaml
 │   ├── components.yaml
 │   ├── incidents/
 │   └── maintenance/
-└── __changelog__/           # Changelog content
-    ├── config.yaml
-    └── releases/
+├── __changelog__/           # Changelog content
+│   └── releases/
+├── __portfolio__/           # Portfolio projects
+│   └── project-name.md
+├── __faq__/                 # FAQ markdown files (optional)
+│   ├── general/
+│   │   └── what-is-this.md
+│   └── technical/
+│       └── supported-languages.md
+└── __legal__/               # Legal pages
+    ├── privacy.md
+    └── terms.md
 ```
 
 ## Reserved Directories
 
 | Directory | Purpose |
 |-----------|---------|
-| `__status__` | Status page content (incidents, components) |
+| `__status__` | Status page (components, incidents, maintenance) |
 | `__changelog__` | Changelog releases |
+| `__portfolio__` | Portfolio project pages |
+| `__faq__` | FAQ questions as markdown files |
+| `__legal__` | Legal pages (privacy, terms, etc.) |
 | `api/` | OpenAPI specification files (configurable) |
 
 These directories are processed specially and don't appear in regular navigation.
@@ -54,28 +65,38 @@ These directories are processed specially and don't appear in regular navigation
 
 ```
 public/
-├── index.html               # Generated HTML pages
+├── index.html               # Landing or docs homepage
 ├── getting-started/
 │   ├── installation.html
 │   └── quick-start.html
-├── guides/
-│   └── deployment.html
-├── css/                     # Theme styles
+├── css/
 │   └── main.css
-├── js/                      # JavaScript assets
+├── js/
 │   ├── search.js
 │   └── theme-toggle.js
 ├── search-index.json        # Search index
 ├── sitemap.xml              # SEO sitemap
 ├── llms.txt                 # LLM-friendly content
+├── api/                     # OpenAPI docs (if enabled)
+│   └── index.html
 ├── status/                  # Status page (if enabled)
 │   ├── index.html
-│   ├── history.html
 │   ├── status.json
 │   └── feed.xml
-└── changelog/               # Changelog (if enabled)
-    ├── index.html
-    └── feed.xml
+├── changelog/               # Changelog (if enabled)
+│   ├── index.html
+│   └── feed.xml
+├── projects/                # Portfolio (if enabled)
+│   └── index.html
+├── contact/                 # Contact page (if enabled)
+│   └── index.html
+├── faq/                     # FAQ page (if enabled)
+│   └── index.html
+└── legal/                   # Legal pages (if enabled)
+    ├── privacy/
+    │   └── index.html
+    └── terms/
+        └── index.html
 ```
 
 ## Naming Conventions
@@ -142,4 +163,4 @@ docs/
     └── page.md
 ```
 
-Exception: `__status__` and `__changelog__` use double underscores intentionally.
+Exception: `__status__`, `__changelog__`, `__portfolio__`, `__faq__`, and `__legal__` use double underscores intentionally.

@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -67,15 +69,30 @@ func init() {
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
-	// Determine docs directory
+	// Determine docs directory or single file
 	docsDir := "."
+	singleFile := ""
 	if len(args) > 0 {
 		docsDir = args[0]
 	}
 
-	// Verify docs directory exists
-	if _, err := os.Stat(docsDir); os.IsNotExist(err) {
-		return fmt.Errorf("docs directory does not exist: %s", docsDir)
+	// Check if argument is a single markdown file
+	info, err := os.Stat(docsDir)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("path does not exist: %s", docsDir)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to stat path: %w", err)
+	}
+
+	// If it's a file (not directory) and ends with .md, use single-file mode
+	if !info.IsDir() && strings.HasSuffix(strings.ToLower(docsDir), ".md") {
+		singleFile = filepath.Base(docsDir)
+		docsDir = filepath.Dir(docsDir)
+		if docsDir == "" {
+			docsDir = "."
+		}
+		fmt.Printf("Single-file mode: %s\n", singleFile)
 	}
 
 	fmt.Println("╔══════════════════════════════════════╗")
@@ -148,6 +165,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	if fileConfig != nil {
 		siteConfig = fileConfig.MergeWithCLI(siteConfig, flagsSet)
 		fmt.Println("Loaded configuration from config.yaml")
+	}
+
+	// In single-file mode, set the entrypoint to the file
+	if singleFile != "" {
+		siteConfig.Entrypoint = singleFile
+		siteConfig.SingleFileMode = true
 	}
 
 	// Create site
@@ -252,6 +275,28 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	if contactGen != nil {
 		if err := contactGen.Generate(); err != nil {
 			return fmt.Errorf("contact page generation failed: %w", err)
+		}
+	}
+
+	// Generate FAQ page (if enabled)
+	faqGen, err := generator.NewFaqGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create FAQ generator: %w", err)
+	}
+	if faqGen != nil {
+		if err := faqGen.Generate(); err != nil {
+			return fmt.Errorf("FAQ page generation failed: %w", err)
+		}
+	}
+
+	// Generate legal pages (if enabled)
+	legalGen, err := generator.NewLegalGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create legal generator: %w", err)
+	}
+	if legalGen != nil {
+		if err := legalGen.Generate(); err != nil {
+			return fmt.Errorf("legal pages generation failed: %w", err)
 		}
 	}
 

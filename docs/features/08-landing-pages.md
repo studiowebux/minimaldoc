@@ -28,7 +28,7 @@ landing:
       - text: "View on GitHub"
         url: "https://github.com/..."
         primary: false
-    image: "/assets/hero.png"  # optional
+    image: "/assets/hero.png" # optional
 
   features:
     title: "Features"
@@ -83,15 +83,15 @@ landing:
 
 ### Sections
 
-| Section | Description |
-|---------|-------------|
-| `hero` | Main header with title, subtitle, buttons, and optional image |
-| `features` | Grid of feature cards with icons/emojis |
-| `steps` | Numbered quick start steps with code blocks |
-| `links` | Grid of resource link cards |
-| `testimonials` | Customer quotes with avatars |
-| `cta` | Call-to-action section |
-| `opensource` | Open source info and links |
+| Section        | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `hero`         | Main header with title, subtitle, buttons, and optional image |
+| `features`     | Grid of feature cards with icons/emojis                       |
+| `steps`        | Numbered quick start steps with code blocks                   |
+| `links`        | Grid of resource link cards                                   |
+| `testimonials` | Customer quotes with avatars                                  |
+| `cta`          | Call-to-action section                                        |
+| `opensource`   | Open source info and links                                    |
 
 All sections are optional. Only configured sections are rendered.
 
@@ -136,16 +136,16 @@ Longer description here. Supports full markdown.
 
 ### Frontmatter Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Project title |
-| `description` | string | Short description for cards |
-| `image` | string | Project image URL |
-| `tags` | array | Tags for filtering |
-| `links` | array | Project links (text, url) |
-| `date` | string | Date (YYYY-MM-DD) |
-| `featured` | boolean | Show in featured section |
-| `menu_order` | number | Sort order |
+| Field         | Type    | Description                 |
+| ------------- | ------- | --------------------------- |
+| `title`       | string  | Project title               |
+| `description` | string  | Short description for cards |
+| `image`       | string  | Project image URL           |
+| `tags`        | array   | Tags for filtering          |
+| `links`       | array   | Project links (text, url)   |
+| `date`        | string  | Date (YYYY-MM-DD)           |
+| `featured`    | boolean | Show in featured section    |
+| `menu_order`  | number  | Sort order                  |
 
 ### Features
 

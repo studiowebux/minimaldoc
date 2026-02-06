@@ -228,10 +228,3 @@ Code blocks adapt to light/dark mode:
 |------|------------|------|
 | Light | `#f5f5f5` | Dark syntax colors |
 | Dark | `#0d1117` | Light syntax colors |
-
-## Performance
-
-Syntax highlighting happens at build time:
-- No JavaScript required for highlighting
-- Fast page loads
-- Works without JS enabled

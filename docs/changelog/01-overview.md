@@ -12,13 +12,13 @@ MinimalDoc includes a changelog system for documenting releases.
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| Versioned Releases | Semver-sorted release notes |
-| Categories | Added, Changed, Fixed, etc. |
-| Compare Links | Link to diffs between versions |
-| RSS Feed | Subscribe to releases |
-| JSON API | Machine-readable changelog |
+| Feature            | Description                    |
+| ------------------ | ------------------------------ |
+| Versioned Releases | Semver-sorted release notes    |
+| Categories         | Added, Changed, Fixed, etc.    |
+| Compare Links      | Link to diffs between versions |
+| RSS Feed           | Subscribe to releases          |
+| JSON API           | Machine-readable changelog     |
 
 ## Quick Start
 
@@ -26,8 +26,8 @@ MinimalDoc includes a changelog system for documenting releases.
 
 ```
 docs/
+├── config.yaml           # Changelog settings here
 └── __changelog__/
-    ├── config.yaml
     └── releases/
         ├── 1.0.0.md
         └── 0.1.0.md
@@ -53,8 +53,8 @@ minimaldoc build --changelog
 
 ```
 docs/
+├── config.yaml               # Changelog settings
 └── __changelog__/
-    ├── config.yaml           # Changelog settings
     └── releases/
         ├── 2.0.0.md          # Newest
         ├── 1.1.0.md
@@ -75,32 +75,6 @@ public/
     └── changelog.json       # JSON API
 ```
 
-## Changelog Display
-
-```
-┌─────────────────────────────────────────────────┐
-│  Changelog                                       │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  v1.1.0 - January 28, 2025              [diff]  │
-│  ─────────────────────────────                   │
-│  Added                                           │
-│  • New feature A                                 │
-│  • New feature B                                 │
-│                                                  │
-│  Fixed                                           │
-│  • Bug fix for issue #123                        │
-│                                                  │
-│  ───────────────────────────────────────────────│
-│                                                  │
-│  v1.0.0 - January 15, 2025              [diff]  │
-│  ─────────────────────────────                   │
-│  Added                                           │
-│  • Initial release                               │
-│                                                  │
-└─────────────────────────────────────────────────┘
-```
-
 ## Configuration
 
 ### Site Config
@@ -114,36 +88,13 @@ changelog:
   repository: "https://github.com/org/repo"
 ```
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `enabled` | `false` | Enable changelog |
-| `title` | `"Changelog"` | Page title |
-| `path` | `"changelog"` | Output path |
-| `rss_enabled` | `true` | Generate RSS feed |
-| `repository` | `""` | Repository URL for compare links |
-
-### Changelog Config
-
-Optional `__changelog__/config.yaml`:
-
-```yaml
-title: "Release Notes"
-description: "All notable changes to this project"
-```
-
-Overrides site-level settings.
-
-## Sidebar Link
-
-When enabled, changelog link appears in sidebar:
-
-```
-- Documentation
-  - Getting Started
-  - Features
-- Changelog             # Links to /changelog/
-- Status
-```
+| Option        | Default       | Description                      |
+| ------------- | ------------- | -------------------------------- |
+| `enabled`     | `false`       | Enable changelog                 |
+| `title`       | `"Changelog"` | Page title                       |
+| `path`        | `"changelog"` | Output path                      |
+| `rss_enabled` | `true`        | Generate RSS feed                |
+| `repository`  | `""`          | Repository URL for compare links |
 
 ## Compare Links
 
@@ -154,6 +105,7 @@ v1.1.0                              [Compare]
 ```
 
 Links to:
+
 ```
 https://github.com/org/repo/compare/v1.0.0...v1.1.0
 ```

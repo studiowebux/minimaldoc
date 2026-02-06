@@ -252,17 +252,4 @@ Authorization: Bearer eyJhbG...
 Accept: application/json
 ```
 
-Compatible with VS Code REST Client extension.
-
-## Request History
-
-Recent requests are saved in browser storage:
-
-```
-Recent Requests:
-  GET /users/123 (2 min ago)
-  POST /users (5 min ago)
-  GET /orders (10 min ago)
-```
-
-Click to replay with same parameters.
+Compatible with [restcli](https://restcli.com).

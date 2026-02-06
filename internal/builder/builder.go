@@ -28,6 +28,8 @@ type Builder struct {
 	landingBuilder    *LandingBuilder
 	portfolioBuilder  *PortfolioBuilder
 	contactBuilder    *ContactBuilder
+	faqBuilder        *FaqBuilder
+	legalBuilder      *LegalBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -45,6 +47,8 @@ func NewBuilder(site *core.Site) *Builder {
 		landingBuilder:    NewLandingBuilder(),
 		portfolioBuilder:  NewPortfolioBuilder(),
 		contactBuilder:    NewContactBuilder(),
+		faqBuilder:        NewFaqBuilder(),
+		legalBuilder:      NewLegalBuilder(),
 	}
 }
 
@@ -57,14 +61,17 @@ func (b *Builder) Build() error {
 		return fmt.Errorf("failed to discover pages: %w", err)
 	}
 
-	// 2. Parse each page
+	// 2. Handle custom entrypoint (if configured)
+	b.handleEntrypoint()
+
+	// 3. Parse each page
 	for _, page := range b.site.Pages {
 		if err := b.parsePage(page); err != nil {
 			return fmt.Errorf("failed to parse page %s: %w", page.SourcePath, err)
 		}
 	}
 
-	// 3. Discover and parse OpenAPI specs (if enabled)
+	// 4. Discover and parse OpenAPI specs (if enabled)
 	if b.site.Config.OpenAPI.Enabled {
 		if err := b.discoverAndParseOpenAPISpecs(); err != nil {
 			return fmt.Errorf("failed to parse OpenAPI specs: %w", err)
@@ -117,7 +124,27 @@ func (b *Builder) Build() error {
 		b.site.ContactPage = contactPage
 	}
 
-	// 10. Build navigation
+	// 9. Build FAQ page (if enabled)
+	if b.site.Config.Faq.Enabled {
+		basePath := b.getBasePath()
+		faqPage, err := b.faqBuilder.Build(b.site.DocsRoot, b.site.Config.Faq, basePath)
+		if err != nil {
+			return fmt.Errorf("failed to build FAQ page: %w", err)
+		}
+		b.site.FaqPage = faqPage
+	}
+
+	// 10. Build legal pages (if enabled)
+	if b.site.Config.Legal.Enabled {
+		basePath := b.getBasePath()
+		legalPages, err := b.legalBuilder.Build(b.site.DocsRoot, b.site.Config.Legal, basePath)
+		if err != nil {
+			return fmt.Errorf("failed to build legal pages: %w", err)
+		}
+		b.site.LegalPages = legalPages
+	}
+
+	// 11. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
 	// 11. Compute prev/next links
@@ -140,6 +167,19 @@ func (b *Builder) Build() error {
 
 // discoverPages walks the docs directory and discovers all markdown files
 func (b *Builder) discoverPages() error {
+	// Single-file mode: only process the entrypoint file
+	if b.site.Config.SingleFileMode && b.site.Config.Entrypoint != "" {
+		filePath := filepath.Join(b.site.DocsRoot, b.site.Config.Entrypoint)
+		if _, err := os.Stat(filePath); err != nil {
+			return fmt.Errorf("entrypoint file not found: %s", filePath)
+		}
+
+		page := core.NewPage(filePath, b.site.DocsRoot)
+		page.Order = 0
+		b.site.Pages = append(b.site.Pages, page)
+		return nil
+	}
+
 	return filepath.WalkDir(b.site.DocsRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -157,6 +197,16 @@ func (b *Builder) discoverPages() error {
 
 		// Skip the portfolio directory entirely (it has its own build process)
 		if d.IsDir() && d.Name() == "__portfolio__" {
+			return filepath.SkipDir
+		}
+
+		// Skip the faq directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == "__faq__" {
+			return filepath.SkipDir
+		}
+
+		// Skip the legal directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == "__legal__" {
 			return filepath.SkipDir
 		}
 
@@ -527,5 +577,27 @@ func formatAge(days int) string {
 	}
 }
 
-// extractOrder extracts a numeric order prefix from a filename
-// Examples: "01-intro.md" → 1, "02_guide.md" → 2
+// handleEntrypoint handles custom entrypoint configuration
+// When entrypoint is set, the specified file becomes the homepage (index.html)
+func (b *Builder) handleEntrypoint() {
+	entrypoint := b.site.Config.Entrypoint
+	if entrypoint == "" {
+		return
+	}
+
+	// Normalize the entrypoint path
+	entrypoint = strings.TrimPrefix(entrypoint, "./")
+
+	// Find the page matching the entrypoint
+	for _, page := range b.site.Pages {
+		if page.RelPath == entrypoint {
+			// Change the slug to "index" so it outputs as index.html
+			page.Slug = "index"
+			fmt.Printf("Using %s as homepage\n", entrypoint)
+			return
+		}
+	}
+
+	// Warn if entrypoint file not found
+	fmt.Printf("Warning: entrypoint file %s not found\n", entrypoint)
+}

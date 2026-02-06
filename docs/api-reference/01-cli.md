@@ -31,7 +31,17 @@ minimaldoc build [docs-directory] [flags]
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `docs-directory` | `.` | Path to documentation source |
+| `docs-directory` | `.` | Path to documentation source or a single .md file |
+
+### Single File Mode
+
+Build a single markdown file as a standalone page:
+
+```bash
+minimaldoc build README.md
+```
+
+When a `.md` file is passed instead of a directory, MinimalDoc generates only that file as `index.html`.
 
 ### Flags
 
@@ -159,12 +169,11 @@ docs/
 ├── api/
 │   └── openapi.yaml
 ├── __status__/
-│   ├── config.yaml
 │   ├── components.yaml
-│   └── incidents/
-│       └── YYYY-MM-DD-example-incident.md
+│   ├── incidents/
+│   │   └── YYYY-MM-DD-example-incident.md
+│   └── maintenance/
 └── __changelog__/
-    ├── config.yaml
     └── releases/
         └── 0.1.0.md
 ```
@@ -203,10 +212,10 @@ minimaldoc init api-docs --with-openapi --with-changelog
 
 ## version
 
-Show MinimalDoc version.
+Show MinimalDoc version and check for updates.
 
 ```bash
-minimaldoc version
+minimaldoc version [flags]
 ```
 
 Output:
@@ -219,7 +228,37 @@ minimaldoc version 1.0.0
 
 | Flag | Description |
 |------|-------------|
-| `--short` | Version number only |
+| `--check` | Check GitHub for newer releases |
+
+### Examples
+
+**Show version:**
+
+```bash
+minimaldoc version
+```
+
+**Check for updates:**
+
+```bash
+minimaldoc version --check
+```
+
+When an update is available:
+
+```
+minimaldoc version 1.0.0
+
+Checking for updates...
+
+Update available: 1.0.0 -> 1.1.0
+Release URL: https://github.com/studiowebux/minimaldoc/releases/tag/v1.1.0
+
+To update:
+  go install github.com/studiowebux/minimaldoc/cmd/minimaldoc@latest
+
+Or download from GitHub releases.
+```
 
 ## help
 

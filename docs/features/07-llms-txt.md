@@ -9,7 +9,15 @@ tags:
 
 # LLMs.txt
 
-MinimalDoc generates `llms.txt`, a single file containing all documentation for AI assistants.
+MinimalDoc generates LLM-friendly output for AI assistants.
+
+## Generated Files
+
+| File | Purpose |
+|------|---------|
+| `llms.txt` | Index with links to individual pages |
+| `llms-full.txt` | All documentation in a single file |
+| `*.md` | Companion markdown files alongside HTML |
 
 ## Purpose
 
@@ -18,34 +26,6 @@ LLM-friendly format enables:
 - IDE assistants (Copilot, Cursor) to understand your docs
 - Custom AI integrations
 - Documentation search tools
-
-## Output Format
-
-```
-# MinimalDoc Documentation
-
-## Table of Contents
-- Installation
-- Quick Start
-- Configuration
-...
-
----
-
-# Installation
-
-MinimalDoc is easy to install...
-
----
-
-# Quick Start
-
-Initialize a new site...
-
----
-```
-
-All pages concatenated with navigation structure.
 
 ## Configuration
 
@@ -74,54 +54,62 @@ Generated at output root:
 ```
 public/
 ├── index.html
-├── llms.txt          # LLM-friendly content
+├── llms.txt              # Index with page links
+├── llms-full.txt         # All content in one file
+├── getting-started/
+│   ├── installation.html
+│   └── installation.md   # Companion markdown
 ├── sitemap.xml
 └── ...
 ```
 
-## Content Structure
+## llms.txt Format
 
-### Header
+Index file with links to documentation:
 
-```
-# {Site Title}
+```markdown
+# Site Title
 
-{Site Description}
+> Site description
 
-Generated: {Build Date}
-Source: {Base URL}
-```
+## Documentation
 
-### Navigation
+- [Installation](/getting-started/installation.md): Install MinimalDoc
+- [Quick Start](/getting-started/quick-start.md): Create your first site
 
-```
-## Table of Contents
+## Optional
 
-### Getting Started
-- Installation
-- Quick Start
-- Configuration
-
-### Features
-- Search
-- Theming
-...
+- [Complete Documentation](/llms-full.txt): All documentation in a single file
 ```
 
-### Pages
+## llms-full.txt Format
 
-Each page includes:
+All content concatenated:
 
-```
+```markdown
+# Site Title
+
+> Site description
+
 ---
 
-# {Page Title}
+# Installation
 
-{Page Description}
+Full page content here...
 
-Tags: {comma-separated tags}
+---
 
-{Full page content in Markdown}
+# Quick Start
+
+Full page content here...
+```
+
+## Companion .md Files
+
+Each HTML page gets a markdown companion for direct LLM access:
+
+```
+/getting-started/installation.html  →  /getting-started/installation.md
 ```
 
 ## Use Cases
@@ -205,35 +193,14 @@ LLM context windows are limited. Keep documentation:
 
 ## File Size
 
-Typical sizes:
+`llms-full.txt` size depends on documentation volume. Most LLMs handle 100KB+ easily.
 
-| Pages | llms.txt Size |
-|-------|---------------|
-| 10 | ~20 KB |
-| 50 | ~100 KB |
-| 100 | ~200 KB |
-
-Most LLMs handle 100KB+ easily.
-
-## Comparison with Other Formats
+## Comparison
 
 | Format | Use Case |
 |--------|----------|
-| `llms.txt` | AI assistants, full context |
-| `sitemap.xml` | Search engines, URL discovery |
+| `llms.txt` | Index with links to pages |
+| `llms-full.txt` | All content for full context |
+| `*.md` companions | Individual page access |
+| `sitemap.xml` | Search engines |
 | `search-index.json` | Client-side search |
-| RSS/Atom | Feed readers, updates |
-
-## Validation
-
-Check output:
-
-```bash
-head -100 public/llms.txt
-wc -l public/llms.txt
-```
-
-Ensure:
-- All pages included
-- Navigation structure correct
-- Content readable

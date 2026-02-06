@@ -18,10 +18,10 @@ Starter templates for common documentation patterns.
 | `page.md` | Documentation page | `docs/*.md` |
 | `toc.md` | Custom navigation | `docs/TOC.md` |
 | `components.yaml` | Status components | `docs/__status__/components.yaml` |
-| `status-config.yaml` | Status config | `docs/__status__/config.yaml` |
 | `incident.md` | Incident report | `docs/__status__/incidents/*.md` |
 | `maintenance.md` | Maintenance notice | `docs/__status__/maintenance/*.md` |
-| `changelog.md` | Release notes | `docs/__changelog__/releases/*.md` |
+| `release.md` | Release notes | `docs/__changelog__/releases/*.md` |
+| `project.md` | Portfolio project | `docs/__portfolio__/*.md` |
 
 ## Page Template
 
@@ -107,6 +107,7 @@ openapi:
   enabled: false
   spec_files:
     - "api/openapi.yaml"
+  spec_urls: []
   default_view: "path"
   enable_testing: true
   enable_code_samples: true
@@ -132,7 +133,60 @@ stale_warning:
   threshold_days: 365
   show_update_date: true
 
-# Social Links
+# Landing Page (optional)
+landing:
+  enabled: false
+  nav:
+    - text: "Docs"
+      url: "/getting-started/installation.html"
+  hero:
+    title: "Documentation Made Simple"
+    subtitle: "A minimal static site generator"
+    buttons:
+      - text: "Get Started"
+        url: "/getting-started/installation.html"
+        primary: true
+  features:
+    title: "Features"
+    items:
+      - emoji: "~"
+        title: "Fast"
+        description: "Sub-second builds"
+
+# Portfolio (optional)
+portfolio:
+  enabled: false
+  title: "Projects"
+  description: "Showcase of projects"
+  path: "projects"
+
+# Contact (optional)
+contact:
+  enabled: false
+  title: "Contact"
+  description: "Get in touch"
+  path: "contact"
+  email: "hello@example.com"
+  info:
+    - icon: "mail"
+      text: "hello@example.com"
+    - icon: "location"
+      text: "Remote"
+
+# Footer
+footer:
+  copyright: "2025 Your Company"
+  links:
+    - title: "Documentation"
+      items:
+        - text: "Getting Started"
+          url: "/getting-started/installation.html"
+  social:
+    - name: GitHub
+      url: https://github.com/org/repo
+      icon: github
+
+# Social Links (sidebar)
 social_links:
   - name: GitHub
     url: https://github.com/org/repo
@@ -186,16 +240,6 @@ social_links:
   status: operational
   group: Infrastructure
   order: 2
-```
-
-## Status Config Template
-
-```yaml
-# docs/__status__/config.yaml
-
-enabled: true
-title: "System Status"
-description: "Current operational status of our services"
 ```
 
 ## Incident Template
@@ -270,6 +314,47 @@ Instructions for users, if any.
 | `in_progress` | Currently underway |
 | `completed` | Finished |
 
+## Portfolio Project Template
+
+```markdown
+---
+title: Project Name
+description: Brief project description
+tags:
+  - web
+  - documentation
+image: /images/project-screenshot.png
+url: https://project-url.com
+featured: true
+order: 1
+---
+
+Project description with details about the implementation,
+technologies used, and outcomes achieved.
+
+## Features
+
+- Feature one
+- Feature two
+
+## Technologies
+
+- Technology A
+- Technology B
+```
+
+### Portfolio Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Project name |
+| `description` | string | Yes | Brief description |
+| `tags` | array | No | Filterable tags |
+| `image` | string | No | Screenshot/preview image |
+| `url` | string | No | Live project URL |
+| `featured` | boolean | No | Show in featured section |
+| `order` | integer | No | Display order |
+
 ## Changelog Release Template
 
 ```markdown
@@ -316,46 +401,24 @@ Complete documentation structure:
 
 ```
 docs/
-├── config.yaml
+├── config.yaml               # All configuration
 ├── TOC.md
 ├── index.md
 ├── getting-started/
-│   ├── 01-installation.md
-│   ├── 02-quick-start.md
-│   └── 03-configuration.md
+│   └── *.md
 ├── features/
 │   └── *.md
-├── guides/
-│   └── *.md
 ├── api/
-│   ├── reference.md
 │   └── openapi.yaml
 ├── __status__/
-│   ├── config.yaml
 │   ├── components.yaml
 │   ├── incidents/
 │   │   └── YYYY-MM-DD-*.md
 │   └── maintenance/
 │       └── YYYY-MM-DD-*.md
-└── __changelog__/
-    ├── config.yaml
-    └── releases/
-        └── *.md
-```
-
-## Usage
-
-Copy templates to your docs directory:
-
-```bash
-# Copy config template
-cp templates/config.yaml docs/
-
-# Copy page template
-cp templates/page.md docs/my-new-page.md
-
-# Copy status templates
-mkdir -p docs/__status__/{incidents,maintenance}
-cp templates/components.yaml docs/__status__/
-cp templates/status-config.yaml docs/__status__/config.yaml
+├── __changelog__/
+│   └── releases/
+│       └── *.md
+└── __portfolio__/
+    └── *.md
 ```

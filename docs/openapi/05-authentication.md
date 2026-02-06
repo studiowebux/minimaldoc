@@ -219,30 +219,6 @@ Enable persistent tokens:
 
 Tokens persist across sessions.
 
-## Security Best Practices
-
-### In Documentation
-
-```yaml
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: |
-        Obtain token from POST /auth/login.
-        Include in Authorization header.
-        Tokens expire after 1 hour.
-```
-
-### For Users
-
-- Use test/sandbox credentials
-- Never commit real tokens
-- Revoke tokens after testing
-- Use short-lived tokens
-
 ## Configuration
 
 ### Disable Testing
@@ -264,20 +240,3 @@ openapi:
   enable_code_samples: true  # Shows auth in samples
 ```
 
-## Troubleshooting
-
-### 401 Unauthorized
-
-- Check token format
-- Verify token not expired
-- Confirm correct auth method
-
-### CORS Issues
-
-- Ensure server allows credentials
-- Check preflight response headers
-
-### OAuth Redirect
-
-- Verify callback URL allowed
-- Check scopes match requirements

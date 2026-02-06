@@ -100,8 +100,8 @@ landing:
         description: "Download the binary for your OS/architecture"
         code: |
           curl -sSL \
-            https://github.com/studiowebux/minimaldoc/releases/latest/download/minimaldoc-$(uname -s)-$(uname -m) \
-            -o minimaldoc
+           https://github.com/studiowebux/minimaldoc/releases/latest/download/minimaldoc-$(uname -s)-$(uname -m) \
+           -o minimaldoc
           chmod +x minimaldoc
       - title: "Initialize"
         description: "Create your docs folder with example content"
@@ -111,7 +111,7 @@ landing:
         code: "minimaldoc build"
       - title: "Deploy"
         description: "Upload the public directory to any static host"
-        code: "# GitHub Pages, Netlify, Vercel, S3..."
+        code: "# Any static web hosting"
 
   links:
     title: "Resources"
@@ -123,7 +123,7 @@ landing:
       - icon: "discord"
         title: "Community"
         description: "Join the discussion"
-        url: "https://discord.gg/studiowebux"
+        url: "https://discord.gg/bBt2mYNwnd"
 
   opensource:
     title: "Open Source"
@@ -152,23 +152,69 @@ contact:
     - icon: "location"
       text: "Canada"
 
+faq:
+  enabled: true
+  title: "FAQ"
+  description: "Frequently asked questions about MinimalDoc"
+  path: "faq"
+  categories:
+    - name: "General"
+      items:
+        - question: "What is MinimalDoc?"
+          answer: "MinimalDoc is a minimal static site generator for documentation. It converts Markdown files to a fast, clean HTML site."
+        - question: "Is MinimalDoc free?"
+          answer: "Yes, MinimalDoc is open source and released under the GPL-3.0 license."
+    - name: "Technical"
+      items:
+        - question: "What languages are supported for syntax highlighting?"
+          answer: "MinimalDoc supports 100+ programming languages via Chroma, including Go, JavaScript, Python, Rust, and many more."
+        - question: "Can I customize the theme?"
+          answer: "Yes, you can create custom CSS themes or modify the existing templates. See the custom themes documentation for details."
+
+legal:
+  enabled: true
+  path: "legal"
+  footer_group: "Legal"
+
 footer:
   copyright: "2026 Studio Webux. GPL-3.0 License."
   links:
     - title: "Documentation"
       items:
         - text: "Getting Started"
-          url: "/getting-started/installation.html"
-        - text: "Features"
+          url: "/getting-started/quick-start.html"
+        - text: "Configuration"
+          url: "/getting-started/configuration.html"
+        - text: "Project Structure"
+          url: "/core-concepts/project-structure.html"
+    - title: "Features"
+      items:
+        - text: "Overview"
           url: "/features/overview.html"
+        - text: "Search"
+          url: "/features/search.html"
+        - text: "Code Highlighting"
+          url: "/features/code-highlighting.html"
+        - text: "Admonitions"
+          url: "/features/admonitions.html"
+    - title: "API & Guides"
+      items:
         - text: "OpenAPI"
           url: "/openapi/overview.html"
+        - text: "CLI Reference"
+          url: "/api-reference/cli.html"
+        - text: "Config Schema"
+          url: "/api-reference/config-schema.html"
+        - text: "Deployment"
+          url: "/guides/deployment.html"
     - title: "Resources"
       items:
         - text: "Status"
           url: "/status/"
         - text: "Changelog"
           url: "/changelog/"
+        - text: "FAQ"
+          url: "/faq/"
         - text: "GitHub"
           url: "https://github.com/studiowebux/minimaldoc"
   social:

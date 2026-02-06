@@ -27,6 +27,7 @@ type FileConfig struct {
 	EnableLLMS  bool   `yaml:"enable_llms"`
 	EnableSearch bool  `yaml:"enable_search"`
 	CleanURLs   bool   `yaml:"clean_urls"`
+	Entrypoint  string `yaml:"entrypoint"`
 
 	OpenAPI struct {
 		Enabled            bool     `yaml:"enabled"`
@@ -70,6 +71,8 @@ type FileConfig struct {
 	Landing   core.LandingConfig   `yaml:"landing"`
 	Portfolio core.PortfolioConfig `yaml:"portfolio"`
 	Contact   core.ContactConfig   `yaml:"contact"`
+	Faq       core.FaqConfig       `yaml:"faq"`
+	Legal     core.LegalConfig     `yaml:"legal"`
 	Footer    core.FooterConfig    `yaml:"footer"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
@@ -124,6 +127,9 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	}
 	if !cliFlags["clean-urls"] && cfg.CleanURLs {
 		result.CleanURLs = cfg.CleanURLs
+	}
+	if cfg.Entrypoint != "" {
+		result.Entrypoint = cfg.Entrypoint
 	}
 
 	// Merge OpenAPI config
@@ -244,6 +250,16 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	// Merge Contact config
 	if cfg.Contact.Enabled {
 		result.Contact = cfg.Contact
+	}
+
+	// Merge FAQ config
+	if cfg.Faq.Enabled {
+		result.Faq = cfg.Faq
+	}
+
+	// Merge Legal config
+	if cfg.Legal.Enabled {
+		result.Legal = cfg.Legal
 	}
 
 	// Merge Footer config

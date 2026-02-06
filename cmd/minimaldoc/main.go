@@ -33,6 +33,7 @@ func init() {
 	// Add subcommands
 	rootCmd.AddCommand(cli.BuildCmd)
 	rootCmd.AddCommand(cli.InitCmd)
+	rootCmd.AddCommand(cli.VersionCmd)
 
 	// Set version template
 	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "version %s" .Version}}

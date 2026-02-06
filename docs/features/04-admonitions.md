@@ -129,7 +129,7 @@ This version changes the API format.
 
 Full Markdown is supported inside admonitions:
 
-```markdown
+````markdown
 :::info
 **Bold**, *italic*, and `code` work here.
 
@@ -140,17 +140,13 @@ Full Markdown is supported inside admonitions:
 echo "Code blocks too"
 ```
 :::
-```
+````
 
 :::info
 **Bold**, *italic*, and `code` work here.
 
 - List item 1
 - List item 2
-
-```bash
-echo "Code blocks too"
-```
 :::
 
 ## Color Reference

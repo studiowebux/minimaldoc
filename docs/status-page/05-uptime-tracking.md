@@ -1,6 +1,6 @@
 ---
 title: Uptime Tracking
-description: Track service availability with calendar grid and SLA display
+description: Track service availability with uptime grid and SLA display
 tags:
   - status-page
   - uptime
@@ -9,12 +9,13 @@ tags:
 
 # Uptime Tracking
 
-Track service availability with visual calendar and SLA metrics.
+Track service availability with uptime grid and SLA metrics.
 
 ## Overview
 
 Uptime tracking provides:
-- 90-day calendar grid (GitHub-style)
+
+- 90-day uptime grid (horizontal colored squares)
 - SLA percentage display
 - Period breakdowns (7d, 30d, 90d)
 - Per-component tracking
@@ -23,10 +24,10 @@ Uptime tracking provides:
 
 Two modes for uptime data:
 
-| Mode | Source | Use Case |
-|------|--------|----------|
-| `incidents` | Derived from incident files | Static sites, no backend |
-| `api` | External API endpoint | Real-time monitoring data |
+| Mode        | Source                      | Use Case                  |
+| ----------- | --------------------------- | ------------------------- |
+| `incidents` | Derived from incident files | Static sites, no backend  |
+| `api`       | External API endpoint       | Real-time monitoring data |
 
 ## Incidents Mode
 
@@ -63,13 +64,13 @@ Where 1440 = minutes in a day.
 
 ### Downtime Mapping
 
-| Incident Duration | Daily Status |
-|-------------------|--------------|
-| 0 minutes | Operational |
-| 1-30 minutes | Degraded |
-| 31-240 minutes | Partial Outage |
-| 241+ minutes | Major Outage |
-| Maintenance window | Maintenance |
+| Incident Duration  | Daily Status   |
+| ------------------ | -------------- |
+| 0 minutes          | Operational    |
+| 1-30 minutes       | Degraded       |
+| 31-240 minutes     | Partial Outage |
+| 241+ minutes       | Major Outage   |
+| Maintenance window | Maintenance    |
 
 ## API Mode
 
@@ -120,115 +121,72 @@ Your endpoint must return:
 
 ### Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `component_id` | string | Component identifier |
-| `period_days` | int | History period |
-| `uptime_percent` | float | Overall uptime |
-| `history` | array | Daily status entries |
-| `sla` | object | SLA metrics |
+| Field            | Type   | Description          |
+| ---------------- | ------ | -------------------- |
+| `component_id`   | string | Component identifier |
+| `period_days`    | int    | History period       |
+| `uptime_percent` | float  | Overall uptime       |
+| `history`        | array  | Daily status entries |
+| `sla`            | object | SLA metrics          |
 
 ### History Entry
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `date` | string | Date (YYYY-MM-DD) |
-| `status` | string | Daily status |
-| `downtime_minutes` | int | Minutes of downtime |
+| Field              | Type   | Description         |
+| ------------------ | ------ | ------------------- |
+| `date`             | string | Date (YYYY-MM-DD)   |
+| `status`           | string | Daily status        |
+| `downtime_minutes` | int    | Minutes of downtime |
 
 ### SLA Object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `target` | float | Target SLA percentage |
-| `current_7d` | float | Last 7 days uptime |
-| `current_30d` | float | Last 30 days uptime |
-| `current_90d` | float | Last 90 days uptime |
+| Field         | Type  | Description           |
+| ------------- | ----- | --------------------- |
+| `target`      | float | Target SLA percentage |
+| `current_7d`  | float | Last 7 days uptime    |
+| `current_30d` | float | Last 30 days uptime   |
+| `current_90d` | float | Last 90 days uptime   |
 
-## Calendar Grid
+## Uptime Grid
 
-Visual display of daily status:
-
-```
-     Jan 2025
-Mo Tu We Th Fr Sa Su
-       1  2  3  4  5
- 6  7  8  9 10 11 12
-13 14 15 16 17 18 19
-20 21 22 23 24 25 26
-27 28 29 30 31
-
-Legend:
-■ Operational
-■ Degraded
-■ Partial Outage
-■ Major Outage
-■ Maintenance
-□ No Data
-```
+A horizontal row of colored squares representing the last 90 days. Each square is 10x10px and shows the status for that day. Hover over any square to see the date, status, and downtime minutes.
 
 ### Colors
 
-| Status | Light Mode | Dark Mode |
-|--------|------------|-----------|
-| Operational | Green | Dark Green |
-| Degraded | Yellow | Dark Yellow |
-| Partial Outage | Orange | Dark Orange |
-| Major Outage | Red | Dark Red |
-| Maintenance | Blue | Dark Blue |
-
-### Hover Tooltip
-
-Hover over any day for details:
-
-```
-January 28, 2025
-Status: Partial Outage
-Downtime: 45 minutes
-Incidents: 1
-```
+| Status         | Light Mode | Dark Mode   |
+| -------------- | ---------- | ----------- |
+| Operational    | Green      | Dark Green  |
+| Degraded       | Yellow     | Dark Yellow |
+| Partial Outage | Orange     | Dark Orange |
+| Major Outage   | Red        | Dark Red    |
+| Maintenance    | Blue       | Dark Blue   |
 
 ## SLA Display
 
-Shows uptime metrics:
-
-```
-┌─────────────────────────────────┐
-│  API Uptime                     │
-│                                 │
-│       99.95%                    │
-│    Current Uptime               │
-│                                 │
-│  7 days   30 days   90 days    │
-│  100.0%   99.97%    99.95%     │
-│                                 │
-│  Target: 99.9% ✓ Met            │
-└─────────────────────────────────┘
-```
+Shows uptime percentage with period breakdowns (7d, 30d, 90d) and target comparison.
 
 ### Target Comparison
 
-| Condition | Display |
-|-----------|---------|
-| Current >= Target | Green "Met" |
-| Current < Target | Red "Below Target" |
+| Condition         | Display            |
+| ----------------- | ------------------ |
+| Current >= Target | Green "Met"        |
+| Current < Target  | Red "Below Target" |
 
 ## Configuration Options
 
 ```yaml
 uptime:
-  mode: incidents          # or "api"
-  endpoint: /uptime        # API mode only
-  sla_target: 99.9         # Target percentage
-  period_days: 90          # Tracking period
+  mode: incidents # or "api"
+  endpoint: /uptime # API mode only
+  sla_target: 99.9 # Target percentage
+  period_days: 90 # Tracking period
 ```
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `mode` | `incidents` | Data source mode |
-| `endpoint` | `/uptime` | API endpoint path |
-| `sla_target` | `99.9` | Target uptime % |
-| `period_days` | `90` | Days of history |
+| Option        | Default     | Description       |
+| ------------- | ----------- | ----------------- |
+| `mode`        | `incidents` | Data source mode  |
+| `endpoint`    | `/uptime`   | API endpoint path |
+| `sla_target`  | `99.9`      | Target uptime %   |
+| `period_days` | `90`        | Days of history   |
 
 ## Examples
 
@@ -262,7 +220,7 @@ uptime:
   name: Database
   uptime:
     mode: incidents
-    sla_target: 99.99    # Four nines
+    sla_target: 99.99 # Four nines
     period_days: 90
 ```
 
@@ -292,30 +250,3 @@ Uptime data included in `status.json`:
   ]
 }
 ```
-
-## Best Practices
-
-### Realistic Targets
-
-| Service Type | Typical SLA |
-|--------------|-------------|
-| Non-critical | 99.0% |
-| Standard | 99.9% |
-| High-availability | 99.99% |
-| Mission-critical | 99.999% |
-
-### Downtime Budget
-
-| SLA | Monthly Downtime |
-|-----|------------------|
-| 99.0% | 7.3 hours |
-| 99.9% | 43.8 minutes |
-| 99.99% | 4.4 minutes |
-| 99.999% | 26 seconds |
-
-### Incident Documentation
-
-For accurate incident-mode tracking:
-- Always set `created_at` and `resolved_at`
-- List all `affected_components`
-- Document all incidents, even minor ones

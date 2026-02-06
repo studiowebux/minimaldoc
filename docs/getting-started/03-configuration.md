@@ -35,8 +35,12 @@ openapi:
   enabled: false
   spec_files:
     - "api/openapi.yaml"
+  spec_urls: []
   default_view: "path"
+  sync_on_build: false
+  cache_dir: ".openapi-cache"
   enable_testing: true
+  enable_export: true
   enable_code_samples: true
 
 # Status Page
@@ -60,7 +64,83 @@ stale_warning:
   threshold_days: 365
   show_update_date: true
 
-# Social Links
+# Portfolio
+portfolio:
+  enabled: false
+  title: "Projects"
+  description: "Project showcase"
+  path: "projects"
+
+# Contact
+contact:
+  enabled: false
+  title: "Contact"
+  path: "contact"
+  email: "hello@example.com"
+  info:
+    - icon: "mail"
+      text: "hello@example.com"
+    - icon: "location"
+      text: "Location"
+
+# FAQ
+faq:
+  enabled: false
+  title: "FAQ"
+  description: "Frequently asked questions"
+  path: "faq"
+  categories:
+    - name: "General"
+      items:
+        - question: "What is this?"
+          answer: "A documentation generator."
+
+# Legal
+legal:
+  enabled: false
+  path: "legal"
+  footer_group: "Legal"
+
+# Landing Page
+landing:
+  enabled: false
+  nav:
+    - text: "Docs"
+      url: "/getting-started/installation.html"
+  hero:
+    title: "Hero Title"
+    subtitle: "Hero subtitle"
+    buttons:
+      - text: "Get Started"
+        url: "/getting-started/"
+        primary: true
+  features:
+    title: "Features"
+    items:
+      - emoji: "~"
+        title: "Feature"
+        description: "Description"
+  steps:
+    title: "Quick Start"
+    items:
+      - title: "Step"
+        description: "Description"
+        code: "command"
+
+# Footer
+footer:
+  copyright: "2026 Company"
+  links:
+    - title: "Documentation"
+      items:
+        - text: "Getting Started"
+          url: "/getting-started/"
+  social:
+    - name: GitHub
+      url: https://github.com/org/repo
+      icon: github
+
+# Social Links (sidebar)
 social_links:
   - name: GitHub
     url: https://github.com/org/repo
@@ -82,6 +162,7 @@ social_links:
 | `enable_llms` | bool | `true` | Generate llms.txt |
 | `enable_search` | bool | `true` | Enable search |
 | `clean_urls` | bool | `false` | Use `/page/` instead of `/page.html` |
+| `entrypoint` | string | `""` | Custom homepage file (default: index.md) |
 
 ### OpenAPI Settings
 
@@ -126,6 +207,67 @@ social_links:
 | `stale_warning.enabled` | bool | `true` | Enable stale warnings |
 | `stale_warning.threshold_days` | int | `365` | Days before considered stale |
 | `stale_warning.show_update_date` | bool | `true` | Show last update date |
+
+### Portfolio Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `portfolio.enabled` | bool | `false` | Enable portfolio |
+| `portfolio.title` | string | `"Projects"` | Page title |
+| `portfolio.description` | string | `""` | Page description |
+| `portfolio.path` | string | `"projects"` | Output path |
+
+### Contact Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `contact.enabled` | bool | `false` | Enable contact page |
+| `contact.title` | string | `"Contact"` | Page title |
+| `contact.path` | string | `"contact"` | Output path |
+| `contact.email` | string | `""` | Contact email |
+| `contact.info` | array | `[]` | Info items with icon and text |
+
+### FAQ Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `faq.enabled` | bool | `false` | Enable FAQ page |
+| `faq.title` | string | `"FAQ"` | Page title |
+| `faq.description` | string | `""` | Page description |
+| `faq.path` | string | `"faq"` | Output path |
+| `faq.categories` | array | `[]` | FAQ categories with items |
+
+FAQ items can also be defined as markdown files in `__faq__/` directory.
+
+### Legal Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `legal.enabled` | bool | `false` | Enable legal pages |
+| `legal.path` | string | `"legal"` | Output path prefix |
+| `legal.footer_group` | string | `"Legal"` | Footer section title |
+
+Legal pages are defined as markdown files in `__legal__/` directory.
+
+### Landing Page Settings
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `landing.enabled` | bool | `false` | Enable landing page |
+| `landing.nav` | array | `[]` | Navigation links |
+| `landing.hero` | object | | Hero section config |
+| `landing.features` | object | | Features section config |
+| `landing.steps` | object | | Quick start steps config |
+| `landing.links` | object | | Resource links section |
+| `landing.opensource` | object | | Open source section |
+
+### Footer Settings
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `footer.copyright` | string | Copyright text |
+| `footer.links` | array | Link groups with title and items |
+| `footer.social` | array | Social links with name, url, icon |
 
 ### Social Links
 

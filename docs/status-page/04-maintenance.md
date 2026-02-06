@@ -53,22 +53,22 @@ No action required from users. All data will be preserved.
 
 ## Frontmatter Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | Yes | Maintenance title |
-| `description` | string | No | Brief description |
-| `affected_components` | []string | No | Component IDs |
-| `scheduled_start` | datetime | Yes | Start time (ISO 8601) |
-| `scheduled_end` | datetime | Yes | End time (ISO 8601) |
-| `status` | string | Yes | Current status |
+| Field                 | Type     | Required | Description           |
+| --------------------- | -------- | -------- | --------------------- |
+| `title`               | string   | Yes      | Maintenance title     |
+| `description`         | string   | No       | Brief description     |
+| `affected_components` | []string | No       | Component IDs         |
+| `scheduled_start`     | datetime | Yes      | Start time (ISO 8601) |
+| `scheduled_end`       | datetime | Yes      | End time (ISO 8601)   |
+| `status`              | string   | Yes      | Current status        |
 
 ## Status Values
 
-| Status | Description | Display |
-|--------|-------------|---------|
-| `scheduled` | Planned, not started | Blue calendar |
-| `in_progress` | Currently underway | Yellow spinner |
-| `completed` | Finished successfully | Green check |
+| Status        | Description           | Display        |
+| ------------- | --------------------- | -------------- |
+| `scheduled`   | Planned, not started  | Blue calendar  |
+| `in_progress` | Currently underway    | Yellow spinner |
+| `completed`   | Finished successfully | Green check    |
 
 ## Content Structure
 
@@ -228,9 +228,9 @@ Upcoming maintenance shown in dedicated section:
 During maintenance, affected components show:
 
 ```
-API          🔧 Under Maintenance
-Database     🔧 Under Maintenance
-Web          ✓ Operational
+API          Under Maintenance
+Database     Under Maintenance
+Web          Operational
 ```
 
 ### RSS Feed
@@ -253,36 +253,3 @@ scheduled_start: 2025-01-31T21:00:00-05:00
 ```
 
 Display shows user's local timezone.
-
-## Best Practices
-
-### Advance Notice
-
-Schedule maintenance at least 48-72 hours in advance.
-
-### Clear Communication
-
-- Specific start/end times
-- Expected duration
-- Detailed impact description
-- User preparation steps
-
-### Off-Peak Hours
-
-Schedule during low-traffic periods:
-
-```yaml
-# Good - 2 AM UTC on Saturday
-scheduled_start: 2025-02-01T02:00:00Z
-
-# Avoid - Business hours
-scheduled_start: 2025-02-01T14:00:00Z
-```
-
-### Update During Maintenance
-
-Keep users informed with progress updates.
-
-### Confirm Completion
-
-Update status to `completed` when done.

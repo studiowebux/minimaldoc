@@ -96,7 +96,7 @@ func (g *ContactGenerator) generateMainPage(outputDir string) error {
 	data := map[string]any{
 		"Site":        g.site,
 		"ContactPage": g.site.ContactPage,
-		"Footer":      g.site.Config.Footer,
+		"Footer":      g.buildFooterWithLegal(),
 		"BasePath":    g.getBasePath(),
 		"Version":     g.version,
 		"PageTitle":   g.site.ContactPage.Config.Title + " | " + g.site.Config.Title,
@@ -141,4 +141,39 @@ func (g *ContactGenerator) getBasePath() string {
 	}
 
 	return path
+}
+
+// buildFooterWithLegal creates a footer config with auto-generated legal links
+func (g *ContactGenerator) buildFooterWithLegal() core.FooterConfig {
+	footer := g.site.Config.Footer
+
+	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
+		legalPath := g.site.Config.Legal.Path
+		if legalPath == "" {
+			legalPath = "legal"
+		}
+
+		groupTitle := g.site.Config.Legal.FooterGroup
+		if groupTitle == "" {
+			groupTitle = "Legal"
+		}
+
+		basePath := g.getBasePath()
+
+		var legalLinks []core.FooterLink
+		for _, page := range g.site.LegalPages {
+			legalLinks = append(legalLinks, core.FooterLink{
+				Text: page.Title,
+				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+			})
+		}
+
+		legalGroup := core.FooterLinkGroup{
+			Title: groupTitle,
+			Items: legalLinks,
+		}
+		footer.Links = append(footer.Links, legalGroup)
+	}
+
+	return footer
 }

@@ -126,22 +126,7 @@ docs/
 
 ### DNS Configuration
 
-Add DNS records:
-
-**Apex domain (example.com):**
-
-```
-A     @     185.199.108.153
-A     @     185.199.109.153
-A     @     185.199.110.153
-A     @     185.199.111.153
-```
-
-**Subdomain (docs.example.com):**
-
-```
-CNAME docs  username.github.io
-```
+See [GitHub's official DNS documentation](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site) for current IP addresses and configuration.
 
 ### Update Base URL
 
@@ -254,54 +239,3 @@ on:
           - staging
 ```
 
-## Preview Deployments
-
-Deploy PRs to preview:
-
-```yaml
-name: Preview Documentation
-
-on:
-  pull_request:
-    paths:
-      - 'docs/**'
-
-jobs:
-  preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Preview
-        run: |
-          minimaldoc build ./docs \
-            --base-url "https://preview-${{ github.event.number }}.example.com" \
-            --output dist
-
-      - name: Deploy Preview
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          destination_dir: pr-${{ github.event.number }}
-```
-
-## Troubleshooting
-
-### 404 Errors
-
-- Check `base_url` matches deployment URL
-- Verify paths in TOC.md
-- Check file extensions (.html vs clean URLs)
-
-### Build Failures
-
-- Ensure Go version compatibility
-- Check docs directory path
-- Verify config.yaml syntax
-
-### Deployment Pending
-
-- Check Actions tab for errors
-- Verify Pages is enabled
-- Check permissions in workflow

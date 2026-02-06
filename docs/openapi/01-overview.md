@@ -18,8 +18,9 @@ MinimalDoc generates interactive API documentation from OpenAPI 3.x specificatio
 | Multiple Views | Organize by path, tag, or flat list |
 | Interactive Testing | Try API calls in browser |
 | Authentication | Bearer, API Key, OAuth 2.0 |
-| Code Samples | Auto-generated examples |
+| Code Samples | curl, JavaScript, Go, Python, Swift |
 | Schema Browser | Explore data models |
+| $ref Resolution | Automatic component reference resolution |
 | Export | Generate cURL commands |
 | Dark Mode | Full theme support |
 
