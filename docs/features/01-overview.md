@@ -16,25 +16,31 @@ MinimalDoc provides everything needed for modern documentation sites.
 |----------|---------|-------------|
 | **Content** | Markdown | Full Markdown with GFM extensions |
 | | Frontmatter | YAML metadata for pages |
-| | Admonitions | Callout blocks (info, warning, danger) |
-| | Syntax Highlighting | 100+ languages via Chroma |
+| | Admonitions | Callout blocks (info, warning, danger, success, note, question) |
+| | Syntax Highlighting | 100+ languages via Chroma with copy button |
+| | Stale Warnings | Configurable warnings for outdated content |
 | **Navigation** | Auto Navigation | From folder structure |
 | | Custom TOC | Via TOC.md file |
 | | Page TOC | Auto-generated from headings |
 | | Scrollspy | Active heading highlight |
-| **Search** | Full-Text | Client-side search |
+| **Search** | Full-Text | Client-side search index |
 | | Keyboard | Cmd+K / Ctrl+K shortcut |
 | | Fuzzy Matching | Tolerant search |
 | **Design** | Responsive | Mobile, tablet, desktop |
-| | Dark Mode | Toggle with persistence |
-| | Themes | CSS-only customization |
-| **SEO** | Sitemap | Automatic sitemap.xml |
+| | Dark Mode | Toggle with localStorage persistence |
+| | Themes | CSS-only customization (default, yellow) |
+| **Pages** | Landing | Marketing homepage with hero, features, steps |
+| | Portfolio | Project showcase with tags and filtering |
+| | Contact | Contact page with email and info |
+| | Status | Service health with incidents, maintenance, uptime |
+| | Changelog | Version history with RSS feed |
+| **SEO** | Sitemap | Automatic sitemap.xml generation |
 | | Meta Tags | Open Graph, Twitter Cards |
-| | Canonical URLs | Configurable |
-| **Integrations** | OpenAPI | Interactive API docs |
-| | Status Page | Service health dashboard |
-| | Changelog | Release notes with RSS |
-| | LLM Output | llms.txt generation |
+| | Canonical URLs | Configurable base URL |
+| | LLM Output | llms.txt and llms-full.txt generation |
+| **API** | OpenAPI | Interactive docs with testing UI |
+| | Code Samples | curl, JavaScript, Go, Python, Swift |
+| | Schema Viewer | Request/response visualization |
 
 ## Design Philosophy
 
@@ -94,6 +100,9 @@ Themes are CSS variables only. No template editing.
 | Search | Built-in | Plugin | Plugin | Built-in |
 | OpenAPI | Built-in | Plugin | Plugin | Plugin |
 | Status Page | Built-in | No | No | No |
+| Changelog | Built-in | No | No | No |
+| Portfolio | Built-in | No | No | No |
+| Landing Page | Built-in | Theme | Theme | Built-in |
 | LLM Output | Built-in | No | No | No |
 
 ## Core Strengths

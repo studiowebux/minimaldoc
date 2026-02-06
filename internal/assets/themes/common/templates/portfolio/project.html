@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.PageTitle}}</title>
+<meta name="description" content="{{.Project.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/portfolio.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
+<nav class="landing-nav">
+{{range .Site.Config.Landing.Nav}}
+<a href="{{.URL}}">{{.Text}}</a>
+{{end}}
+{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
+{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/" class="active">Portfolio</a>{{end}}
+{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
+</div>
+</header>
+
+<main id="main" class="landing-main">
+<nav class="breadcrumb">
+<a href="{{.BasePath}}/{{.PortfolioPage.Config.Path}}/">Portfolio</a>
+<span class="breadcrumb-separator">/</span>
+<span>{{.Project.Title}}</span>
+</nav>
+
+<article class="project-detail">
+<header class="project-detail-header">
+<h1>{{.Project.Title}}</h1>
+{{if .Project.Description}}<p class="project-detail-description">{{.Project.Description}}</p>{{end}}
+{{if .Project.Tags}}
+<div class="project-detail-tags">
+{{range .Project.Tags}}<span class="project-tag">{{.}}</span>{{end}}
+</div>
+{{end}}
+{{if .Project.Links}}
+<div class="project-detail-links">
+{{range .Project.Links}}<a href="{{.URL}}" class="project-detail-link" target="_blank" rel="noopener">{{.Text}}</a>{{end}}
+</div>
+{{end}}
+</header>
+
+{{if .Project.Image}}
+<div class="project-detail-image">
+<img src="{{.Project.Image}}" alt="{{.Project.Title}}" loading="lazy">
+</div>
+{{end}}
+
+<div class="project-detail-content markdown-body">
+{{.Project.HTML | safeHTML}}
+</div>
+
+<footer class="project-detail-footer">
+<a href="{{.BasePath}}/{{.PortfolioPage.Config.Path}}/" class="back-to-portfolio">Back to Portfolio</a>
+</footer>
+</article>
+</main>
+
+<footer class="landing-footer">
+<div class="footer-content">
+{{if .Footer.Copyright}}
+<p class="footer-copyright">{{.Footer.Copyright}}</p>
+{{end}}
+</div>
+</footer>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+</body>
+</html>

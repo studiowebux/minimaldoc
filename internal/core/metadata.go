@@ -26,8 +26,19 @@ type Metadata struct {
 	StaleWarning       *bool `yaml:"stale_warning"`        // Override site setting (nil = use site default)
 	StaleThresholdDays *int  `yaml:"stale_threshold_days"` // Override threshold (nil = use site default)
 
+	// Portfolio-specific fields
+	Image    string         `yaml:"image"`    // Project image
+	Links    []MetadataLink `yaml:"links"`    // Project links
+	Featured bool           `yaml:"featured"` // Featured project
+
 	// Custom fields (for extensibility)
 	Custom map[string]interface{} `yaml:"custom"`
+}
+
+// MetadataLink represents a link in metadata
+type MetadataLink struct {
+	Text string `yaml:"text"`
+	URL  string `yaml:"url"`
 }
 
 // SEO represents SEO-specific metadata

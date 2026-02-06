@@ -222,6 +222,39 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Generate landing page (if enabled)
+	landingGen, err := generator.NewLandingGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create landing generator: %w", err)
+	}
+	if landingGen != nil {
+		if err := landingGen.Generate(); err != nil {
+			return fmt.Errorf("landing page generation failed: %w", err)
+		}
+	}
+
+	// Generate portfolio (if enabled)
+	portfolioGen, err := generator.NewPortfolioGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create portfolio generator: %w", err)
+	}
+	if portfolioGen != nil {
+		if err := portfolioGen.Generate(); err != nil {
+			return fmt.Errorf("portfolio generation failed: %w", err)
+		}
+	}
+
+	// Generate contact page (if enabled)
+	contactGen, err := generator.NewContactGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create contact generator: %w", err)
+	}
+	if contactGen != nil {
+		if err := contactGen.Generate(); err != nil {
+			return fmt.Errorf("contact page generation failed: %w", err)
+		}
+	}
+
 	fmt.Println()
 	fmt.Println("✓ Build complete!")
 	fmt.Printf("✓ Output: %s\n", outputDir)

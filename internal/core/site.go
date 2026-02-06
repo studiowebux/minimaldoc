@@ -12,6 +12,9 @@ type Site struct {
 	APISpecs      []*APISpec     // OpenAPI specifications
 	StatusPage    *StatusPage    // Status page data (if enabled)
 	ChangelogPage *ChangelogPage // Changelog data (if enabled)
+	LandingPage   *LandingPage   // Landing page data (if enabled)
+	PortfolioPage *PortfolioPage // Portfolio page data (if enabled)
+	ContactPage   *ContactPage   // Contact page data (if enabled)
 
 	// Paths
 	DocsRoot   string // Root directory of markdown files
@@ -59,6 +62,18 @@ type SiteConfig struct {
 	// Stale Warning
 	StaleWarning StaleWarningConfig `yaml:"stale_warning"` // Stale content warning configuration
 
+	// Landing Page
+	Landing LandingConfig `yaml:"landing"` // Landing page configuration
+
+	// Portfolio
+	Portfolio PortfolioConfig `yaml:"portfolio"` // Portfolio page configuration
+
+	// Contact
+	Contact ContactConfig `yaml:"contact"` // Contact page configuration
+
+	// Footer (for landing pages)
+	Footer FooterConfig `yaml:"footer"` // Footer configuration
+
 	// Social Links
 	SocialLinks []SocialLink `yaml:"social_links"` // Social media links in sidebar
 
@@ -99,6 +114,10 @@ func DefaultSiteConfig() SiteConfig {
 		Status:       DefaultStatusConfig(),
 		Changelog:    DefaultChangelogConfig(),
 		StaleWarning: DefaultStaleWarningConfig(),
+		Landing:      DefaultLandingConfig(),
+		Portfolio:    DefaultPortfolioConfig(),
+		Contact:      DefaultContactConfig(),
+		Footer:       DefaultFooterConfig(),
 		Custom:       make(map[string]interface{}),
 	}
 }

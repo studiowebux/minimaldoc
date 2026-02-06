@@ -67,6 +67,11 @@ type FileConfig struct {
 		ShowUpdateDate bool   `yaml:"show_update_date"`
 	} `yaml:"stale_warning"`
 
+	Landing   core.LandingConfig   `yaml:"landing"`
+	Portfolio core.PortfolioConfig `yaml:"portfolio"`
+	Contact   core.ContactConfig   `yaml:"contact"`
+	Footer    core.FooterConfig    `yaml:"footer"`
+
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
 
@@ -224,6 +229,26 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		if cfg.StaleWarning.ShowUpdateDate {
 			result.StaleWarning.ShowUpdateDate = cfg.StaleWarning.ShowUpdateDate
 		}
+	}
+
+	// Merge Landing config
+	if cfg.Landing.Enabled {
+		result.Landing = cfg.Landing
+	}
+
+	// Merge Portfolio config
+	if cfg.Portfolio.Enabled {
+		result.Portfolio = cfg.Portfolio
+	}
+
+	// Merge Contact config
+	if cfg.Contact.Enabled {
+		result.Contact = cfg.Contact
+	}
+
+	// Merge Footer config
+	if cfg.Footer.Copyright != "" || len(cfg.Footer.Links) > 0 || len(cfg.Footer.Social) > 0 {
+		result.Footer = cfg.Footer
 	}
 
 	// Merge Social Links

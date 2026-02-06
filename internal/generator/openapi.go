@@ -262,21 +262,79 @@ func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) 
 // generateAPIIndex generates an index page listing all OpenAPI specifications
 func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 	var buf bytes.Buffer
+	basePath := g.getBasePath()
 
-	// Generate simple index HTML
+	// Build navigation links
+	var navLinks strings.Builder
+	for _, nav := range g.site.Config.Landing.Nav {
+		navLinks.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, nav.URL, nav.Text))
+	}
+	if g.site.Config.OpenAPI.Enabled {
+		navLinks.WriteString(fmt.Sprintf(`<a href="%s/api/" class="active">API</a>`, basePath))
+	}
+	if g.site.Config.Portfolio.Enabled {
+		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Portfolio</a>`, basePath, g.site.Config.Portfolio.Path))
+	}
+	if g.site.Config.Contact.Enabled {
+		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Contact</a>`, basePath, g.site.Config.Contact.Path))
+	}
+
+	// Build footer links
+	var footerLinks strings.Builder
+	if len(g.site.Config.Footer.Links) > 0 {
+		footerLinks.WriteString(`<div class="footer-links">`)
+		for _, group := range g.site.Config.Footer.Links {
+			footerLinks.WriteString(fmt.Sprintf(`<div class="footer-link-group"><h4 class="footer-group-title">%s</h4><ul class="footer-group-list">`, group.Title))
+			for _, item := range group.Items {
+				footerLinks.WriteString(fmt.Sprintf(`<li><a href="%s">%s</a></li>`, item.URL, item.Text))
+			}
+			footerLinks.WriteString(`</ul></div>`)
+		}
+		footerLinks.WriteString(`</div>`)
+	}
+
+	// Generate index HTML with proper styling
 	buf.WriteString(`<!DOCTYPE html>
-<html>
+<html lang="en" data-theme="light" data-base-path="` + basePath + `">
 <head>
-	<meta charset="UTF-8">
-	<title>API Documentation - ` + g.site.Config.Title + `</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="../css/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>API Documentation | ` + g.site.Config.Title + `</title>
+<meta name="description" content="OpenAPI documentation for ` + g.site.Config.Title + `">
+<link rel="stylesheet" href="` + basePath + `/css/base.css?v=` + g.version + `">
+<link rel="stylesheet" href="` + basePath + `/css/main.css?v=` + g.version + `">
+<link rel="stylesheet" href="` + basePath + `/css/landing.css?v=` + g.version + `">
+<link rel="stylesheet" href="` + basePath + `/css/portfolio.css?v=` + g.version + `">
 </head>
 <body>
-	<div class="container">
-		<h1>API Documentation</h1>
-		<p>Available OpenAPI specifications:</p>
-		<ul>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="` + basePath + `/" class="landing-logo">` + g.site.Config.Title + `</a>
+<nav class="landing-nav">
+` + navLinks.String() + `
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
+</div>
+</header>
+<main id="main" class="landing-main">
+<section class="portfolio-header">
+<h1>API Documentation</h1>
+<p class="portfolio-description">Available OpenAPI specifications</p>
+</section>
+<section class="portfolio-grid">
 `)
 
 	for _, spec := range g.site.APISpecs {
@@ -286,17 +344,30 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 		specName = strings.TrimSuffix(specName, ".yml")
 		specName = strings.TrimSuffix(specName, ".json")
 
-		relPath := filepath.Join("/api", specName)
-		buf.WriteString(fmt.Sprintf(`			<li>
-				<h3><a href="%s">%s</a></h3>
-				<p>%s</p>
-				<p><small>Version %s | %d endpoints</small></p>
-			</li>
+		relPath := basePath + "/api/" + specName
+		buf.WriteString(fmt.Sprintf(`<article class="project-card">
+<div class="project-content">
+<h2 class="project-title"><a href="%s">%s</a></h2>
+<p class="project-description">%s</p>
+<div class="project-tags">
+<span class="project-tag">v%s</span>
+<span class="project-tag">%d endpoints</span>
+</div>
+</div>
+</article>
 `, relPath, spec.Title, spec.Description, spec.Version, len(spec.Endpoints)))
 	}
 
-	buf.WriteString(`		</ul>
-	</div>
+	buf.WriteString(`</section>
+</main>
+<footer class="landing-footer">
+<div class="footer-content">
+` + footerLinks.String() + `
+<p class="footer-copyright">` + g.site.Config.Footer.Copyright + `</p>
+</div>
+</footer>
+</div>
+<script defer src="` + basePath + `/js/theme-toggle.js?v=` + g.version + `"></script>
 </body>
 </html>`)
 

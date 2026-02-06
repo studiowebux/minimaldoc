@@ -20,6 +20,7 @@
   - [Code Highlighting](features/05-code-highlighting.md)
   - [SEO](features/06-seo.md)
   - [LLMs.txt](features/07-llms-txt.md)
+  - [Landing Pages](features/08-landing-pages.md)
 - OpenAPI/Swagger
   - [Overview](openapi/01-overview.md)
   - [Configuration](openapi/02-configuration.md)

@@ -22,9 +22,12 @@ type Builder struct {
 	openapiParser     *parser.OpenAPIParser
 
 	// Builders
-	navBuilder       *NavigationBuilder
-	statusBuilder    *StatusBuilder
-	changelogBuilder *ChangelogBuilder
+	navBuilder        *NavigationBuilder
+	statusBuilder     *StatusBuilder
+	changelogBuilder  *ChangelogBuilder
+	landingBuilder    *LandingBuilder
+	portfolioBuilder  *PortfolioBuilder
+	contactBuilder    *ContactBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -39,6 +42,9 @@ func NewBuilder(site *core.Site) *Builder {
 		navBuilder:        NewNavigationBuilder(),
 		statusBuilder:     NewStatusBuilder(),
 		changelogBuilder:  NewChangelogBuilder(),
+		landingBuilder:    NewLandingBuilder(),
+		portfolioBuilder:  NewPortfolioBuilder(),
+		contactBuilder:    NewContactBuilder(),
 	}
 }
 
@@ -83,10 +89,38 @@ func (b *Builder) Build() error {
 		b.site.ChangelogPage = changelogPage
 	}
 
-	// 6. Build navigation
+	// 6. Build landing page (if enabled)
+	if b.site.Config.Landing.Enabled {
+		landingPage, err := b.landingBuilder.Build(b.site.Config.Landing)
+		if err != nil {
+			return fmt.Errorf("failed to build landing page: %w", err)
+		}
+		b.site.LandingPage = landingPage
+	}
+
+	// 7. Build portfolio page (if enabled)
+	if b.site.Config.Portfolio.Enabled {
+		basePath := b.getBasePath()
+		portfolioPage, err := b.portfolioBuilder.Build(b.site.DocsRoot, b.site.Config.Portfolio, basePath)
+		if err != nil {
+			return fmt.Errorf("failed to build portfolio page: %w", err)
+		}
+		b.site.PortfolioPage = portfolioPage
+	}
+
+	// 8. Build contact page (if enabled)
+	if b.site.Config.Contact.Enabled {
+		contactPage, err := b.contactBuilder.Build(b.site.Config.Contact)
+		if err != nil {
+			return fmt.Errorf("failed to build contact page: %w", err)
+		}
+		b.site.ContactPage = contactPage
+	}
+
+	// 10. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
-	// 7. Compute prev/next links
+	// 11. Compute prev/next links
 	b.computePrevNext()
 
 	fmt.Printf("Discovered %d pages\n", len(b.site.Pages))
@@ -118,6 +152,11 @@ func (b *Builder) discoverPages() error {
 
 		// Skip the changelog directory entirely (it has its own build process)
 		if d.IsDir() && d.Name() == "__changelog__" {
+			return filepath.SkipDir
+		}
+
+		// Skip the portfolio directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == "__portfolio__" {
 			return filepath.SkipDir
 		}
 

@@ -1,6 +1,6 @@
-title: MinimalDoc Documentation
-description: The minimal static site generator for beautiful documentation
-base_url: https://minimaldoc.dev
+title: MinimalDoc
+description: A minimal static site generator for documentation. Fast, clean, and easy to use.
+base_url: https://minimaldoc.com
 author: Studio Webux
 theme: default
 dark_mode: false
@@ -9,12 +9,14 @@ enable_search: true
 clean_urls: false
 
 openapi:
-  enabled: false
+  enabled: true
+  spec_files:
+    - petstore.yaml
 
 status:
   enabled: true
   title: "MinimalDoc Status"
-  description: "Operational status of MinimalDoc services"
+  description: "Example status page with demo data"
   path: "status"
   show_history: true
   rss_enabled: true
@@ -30,6 +32,149 @@ stale_warning:
   enabled: true
   threshold_days: 365
   show_update_date: true
+
+landing:
+  enabled: true
+  nav:
+    - text: "Docs"
+      url: "/getting-started/installation.html"
+    - text: "Features"
+      url: "/features/overview.html"
+    - text: "Status"
+      url: "/status/"
+  hero:
+    title: "Documentation Made Simple"
+    subtitle: "A minimal static site generator for documentation. Fast, clean, and easy to use."
+    buttons:
+      - text: "Download Binary"
+        url: "https://github.com/studiowebux/minimaldoc/releases"
+        primary: true
+      - text: "View on GitHub"
+        url: "https://github.com/studiowebux/minimaldoc"
+        primary: false
+
+  features:
+    title: "Features"
+    items:
+      - emoji: "~"
+        title: "Markdown-based"
+        description: "Write documentation in plain Markdown with YAML frontmatter. No complex configuration required."
+      - emoji: "@"
+        title: "Lightning Fast"
+        description: "Generate complete documentation sites in milliseconds. Built with Go for maximum performance."
+      - emoji: "#"
+        title: "Dark Mode"
+        description: "Automatic light and dark themes with localStorage persistence. Easy on the eyes, day or night."
+      - emoji: "$"
+        title: "Search"
+        description: "Client-side full-text search with keyboard shortcuts. Find what you need instantly."
+      - emoji: "%"
+        title: "OpenAPI Support"
+        description: "Interactive API documentation with endpoint testing, code samples, and schema visualization."
+      - emoji: "&"
+        title: "Status Pages"
+        description: "Track service health with incidents, maintenance windows, uptime metrics, and RSS feeds."
+      - emoji: "+"
+        title: "Changelog"
+        description: "Version history with RSS feed. Automatically generated from markdown release notes."
+      - emoji: "*"
+        title: "Landing Pages"
+        description: "Marketing-style homepages with hero sections, feature grids, and call-to-action blocks."
+      - emoji: "^"
+        title: "Portfolio"
+        description: "Showcase projects with filterable tags, images, and individual project pages."
+      - emoji: "="
+        title: "SEO Ready"
+        description: "Sitemap.xml, meta tags, llms.txt for AI assistants, and clean URL support."
+      - emoji: "!"
+        title: "Syntax Highlighting"
+        description: "Code blocks with support for 100+ languages via Chroma. Copy button included."
+      - emoji: ">"
+        title: "GFM Support"
+        description: "Full GitHub Flavored Markdown including tables, task lists, and admonitions."
+
+  steps:
+    title: "Quick Start"
+    items:
+      - title: "Install"
+        description: "Download the binary for your OS/architecture"
+        code: |
+          curl -sSL \
+            https://github.com/studiowebux/minimaldoc/releases/latest/download/minimaldoc-$(uname -s)-$(uname -m) \
+            -o minimaldoc
+          chmod +x minimaldoc
+      - title: "Initialize"
+        description: "Create your docs folder with example content"
+        code: "minimaldoc init my-docs"
+      - title: "Build"
+        description: "Generate your static site"
+        code: "minimaldoc build"
+      - title: "Deploy"
+        description: "Upload the public directory to any static host"
+        code: "# GitHub Pages, Netlify, Vercel, S3..."
+
+  links:
+    title: "Resources"
+    items:
+      - icon: "github"
+        title: "GitHub"
+        description: "Source code and issues"
+        url: "https://github.com/studiowebux/minimaldoc"
+      - icon: "discord"
+        title: "Community"
+        description: "Join the discussion"
+        url: "https://discord.gg/studiowebux"
+
+  opensource:
+    title: "Open Source"
+    description: "GPL-3.0 Licensed. Self-host your documentation with full control. Built by Studio Webux."
+    links:
+      - text: "GitHub Repository"
+        url: "https://github.com/studiowebux/minimaldoc"
+      - text: "Releases"
+        url: "https://github.com/studiowebux/minimaldoc/releases"
+
+portfolio:
+  enabled: true
+  title: "Projects"
+  description: "Sites built with MinimalDoc"
+  path: "projects"
+
+contact:
+  enabled: true
+  title: "Contact"
+  description: "Get in touch with Studio Webux"
+  path: "contact"
+  email: "hello@studiowebux.com"
+  info:
+    - icon: "mail"
+      text: "hello@studiowebux.com"
+    - icon: "location"
+      text: "Canada"
+
+footer:
+  copyright: "2026 Studio Webux. GPL-3.0 License."
+  links:
+    - title: "Documentation"
+      items:
+        - text: "Getting Started"
+          url: "/getting-started/installation.html"
+        - text: "Features"
+          url: "/features/overview.html"
+        - text: "OpenAPI"
+          url: "/openapi/overview.html"
+    - title: "Resources"
+      items:
+        - text: "Status"
+          url: "/status/"
+        - text: "Changelog"
+          url: "/changelog/"
+        - text: "GitHub"
+          url: "https://github.com/studiowebux/minimaldoc"
+  social:
+    - name: GitHub
+      url: https://github.com/studiowebux/minimaldoc
+      icon: github
 
 social_links:
   - name: GitHub
