@@ -75,6 +75,7 @@ func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS, version string) (*Op
 			// Trim trailing dash
 			return strings.TrimSuffix(result, "-")
 		},
+		"hasPrefix": strings.HasPrefix,
 	})
 
 	// Parse OpenAPI templates from common (all structure is shared, themes only provide CSS)
@@ -452,13 +453,11 @@ func (g *OpenAPIGenerator) buildFooterWithLegal() core.FooterConfig {
 			groupTitle = "Legal"
 		}
 
-		basePath := g.getBasePath()
-
 		var legalLinks []core.FooterLink
 		for _, page := range g.site.LegalPages {
 			legalLinks = append(legalLinks, core.FooterLink{
 				Text: page.Title,
-				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+				URL:  "/" + legalPath + "/" + page.Slug + "/",
 			})
 		}
 

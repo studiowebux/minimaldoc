@@ -53,6 +53,7 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 			}
 			return ""
 		},
+		"hasPrefix": strings.HasPrefix,
 	})
 
 	var err error
@@ -212,13 +213,11 @@ func (g *PortfolioGenerator) buildFooterWithLegal() core.FooterConfig {
 			groupTitle = "Legal"
 		}
 
-		basePath := g.getBasePath()
-
 		var legalLinks []core.FooterLink
 		for _, page := range g.site.LegalPages {
 			legalLinks = append(legalLinks, core.FooterLink{
 				Text: page.Title,
-				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+				URL:  "/" + legalPath + "/" + page.Slug + "/",
 			})
 		}
 

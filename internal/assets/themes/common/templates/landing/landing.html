@@ -26,7 +26,7 @@ a{color:var(--link-color)}
 <a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
 <nav class="landing-nav">
 {{range .LandingPage.Config.Nav}}
-<a href="{{.URL}}">{{.Text}}</a>
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a>
 {{end}}
 {{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
 {{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/">Portfolio</a>{{end}}
@@ -48,7 +48,7 @@ a{color:var(--link-color)}
 {{if .LandingPage.Hero.Buttons}}
 <div class="hero-buttons">
 {{range .LandingPage.Hero.Buttons}}
-<a href="{{.URL}}" class="hero-btn{{if .Primary}} hero-btn-primary{{else}} hero-btn-secondary{{end}}">{{.Text}}</a>
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}" class="hero-btn{{if .Primary}} hero-btn-primary{{else}} hero-btn-secondary{{end}}">{{.Text}}</a>
 {{end}}
 </div>
 {{end}}
@@ -139,7 +139,7 @@ a{color:var(--link-color)}
 {{if .LandingPage.CTA.Buttons}}
 <div class="cta-buttons">
 {{range .LandingPage.CTA.Buttons}}
-<a href="{{.URL}}" class="cta-btn{{if .Primary}} cta-btn-primary{{else}} cta-btn-secondary{{end}}">{{.Text}}</a>
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}" class="cta-btn{{if .Primary}} cta-btn-primary{{else}} cta-btn-secondary{{end}}">{{.Text}}</a>
 {{end}}
 </div>
 {{end}}
@@ -171,7 +171,7 @@ a{color:var(--link-color)}
 <h4 class="footer-group-title">{{.Title}}</h4>
 <ul class="footer-group-list">
 {{range .Items}}
-<li><a href="{{.URL}}">{{.Text}}</a></li>
+<li><a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a></li>
 {{end}}
 </ul>
 </div>

@@ -49,6 +49,7 @@ func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*La
 		"add": func(a, b int) int {
 			return a + b
 		},
+		"hasPrefix": strings.HasPrefix,
 	})
 
 	var err error
@@ -156,14 +157,12 @@ func (g *LandingGenerator) buildFooterWithLegal() core.FooterConfig {
 			groupTitle = "Legal"
 		}
 
-		basePath := g.getBasePath()
-
-		// Build legal links
+		// Build legal links (no basePath - template will add it)
 		var legalLinks []core.FooterLink
 		for _, page := range g.site.LegalPages {
 			legalLinks = append(legalLinks, core.FooterLink{
 				Text: page.Title,
-				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+				URL:  "/" + legalPath + "/" + page.Slug + "/",
 			})
 		}
 

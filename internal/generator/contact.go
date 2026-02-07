@@ -44,7 +44,8 @@ func NewContactGenerator(site *core.Site, themeFS embed.FS, version string) (*Co
 		"safeHTML": func(s string) template.HTML {
 			return template.HTML(s)
 		},
-		"lower": strings.ToLower,
+		"lower":     strings.ToLower,
+		"hasPrefix": strings.HasPrefix,
 	})
 
 	var err error
@@ -158,13 +159,11 @@ func (g *ContactGenerator) buildFooterWithLegal() core.FooterConfig {
 			groupTitle = "Legal"
 		}
 
-		basePath := g.getBasePath()
-
 		var legalLinks []core.FooterLink
 		for _, page := range g.site.LegalPages {
 			legalLinks = append(legalLinks, core.FooterLink{
 				Text: page.Title,
-				URL:  basePath + "/" + legalPath + "/" + page.Slug + "/",
+				URL:  "/" + legalPath + "/" + page.Slug + "/",
 			})
 		}
 
