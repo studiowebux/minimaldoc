@@ -1,6 +1,6 @@
 title: MinimalDoc
 description: A minimal static site generator for documentation. Fast, clean, and easy to use.
-base_url: https://studiowebux.github.io/minimaldoc/
+base_url: https://studiowebux.github.io/minimaldoc
 author: Studio Webux
 theme: default
 dark_mode: false
