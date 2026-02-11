@@ -98,7 +98,8 @@ func (b *Builder) Build() error {
 
 	// 6. Build landing page (if enabled)
 	if b.site.Config.Landing.Enabled {
-		landingPage, err := b.landingBuilder.Build(b.site.Config.Landing)
+		basePath := b.getBasePath()
+		landingPage, err := b.landingBuilder.Build(b.site.DocsRoot, b.site.Config.Landing, basePath)
 		if err != nil {
 			return fmt.Errorf("failed to build landing page: %w", err)
 		}
@@ -207,6 +208,11 @@ func (b *Builder) discoverPages() error {
 
 		// Skip the legal directory entirely (it has its own build process)
 		if d.IsDir() && d.Name() == core.LegalSourceDir {
+			return filepath.SkipDir
+		}
+
+		// Skip the landing directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == core.LandingSourceDir {
 			return filepath.SkipDir
 		}
 

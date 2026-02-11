@@ -261,13 +261,45 @@ Legal pages are defined as markdown files in `__legal__/` directory.
 | `landing.links` | object | | Resource links section |
 | `landing.opensource` | object | | Open source section |
 
+#### Markdown Landing Sections
+
+Landing page sections can also be defined as markdown files in a `__landing__/` directory:
+
+```
+docs/
+  landing/
+    01-hero.md
+    02-features.md
+    03-steps.md
+```
+
+Each markdown file uses frontmatter to configure the section:
+
+```yaml
+---
+title: Documentation Made Simple
+description: Build beautiful docs from Markdown
+section: hero
+buttons:
+  - text: "Get Started"
+    url: "/getting-started/"
+    primary: true
+---
+```
+
+Supported sections: `hero`, `features`, `steps`, `cta`, `testimonials`, `opensource`, `links`.
+
+Markdown files override YAML config values. YAML serves as defaults.
+
 ### Footer Settings
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `footer.copyright` | string | Copyright text |
-| `footer.links` | array | Link groups with title and items |
-| `footer.social` | array | Social links with name, url, icon |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `footer.copyright` | string | `""` | Copyright text |
+| `footer.links` | array | `[]` | Link groups with title and items |
+| `footer.social` | array | `[]` | Social links with name, url, icon |
+| `footer.badges` | array | `[]` | Badge links (powered by, etc.) |
+| `footer.hideVersion` | bool | `false` | Hide auto-generated version badge |
 
 ### Social Links
 

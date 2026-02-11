@@ -23,7 +23,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 - **Responsive** - Mobile, tablet, desktop
 
 ### Pages
-- **Landing Pages** - Marketing homepage with hero, features, steps
+- **Landing Pages** - Marketing homepage with hero, features, steps (YAML or Markdown)
 - **Portfolio** - Project showcase with tags and filtering
 - **Contact** - Contact page with email and info
 - **FAQ** - Collapsible Q&A with categories, search integration, deep linking
@@ -196,6 +196,10 @@ social_links:
   - name: GitHub
     url: https://github.com/org/project
     icon: github
+
+footer:
+  copyright: "2026 Company"
+  hideVersion: false  # Set true to hide version badge
 ```
 
 **Benefits:**
@@ -451,6 +455,62 @@ social_links:
 ```
 
 **Supported icons:** `github`, `twitter`, `linkedin`, `youtube`, `discord`, `mastodon`, `rss`, `email`, `website`
+
+## Landing Pages
+
+Landing pages support two configuration methods:
+
+### YAML Configuration
+
+Define sections in `config.yaml`:
+
+```yaml
+landing:
+  enabled: true
+  hero:
+    title: "Documentation Made Simple"
+    subtitle: "Build beautiful docs from Markdown"
+    buttons:
+      - text: "Get Started"
+        url: "/getting-started/"
+        primary: true
+  features:
+    title: "Features"
+    items:
+      - emoji: "~"
+        title: "Markdown-based"
+        description: "Write in Markdown"
+```
+
+### Markdown Files
+
+Create markdown files in `__landing__/` directory:
+
+```
+docs/
+  __landing__/
+    01-hero.md
+    02-features.md
+    03-steps.md
+```
+
+Each file uses frontmatter:
+
+```yaml
+---
+title: Documentation Made Simple
+description: Build beautiful docs from Markdown
+section: hero
+buttons:
+  - text: "Get Started"
+    url: "/getting-started/"
+    primary: true
+---
+```
+
+Supported sections: `hero`, `features`, `steps`, `cta`, `testimonials`, `opensource`, `links`.
+
+Markdown files override YAML config (YAML serves as defaults).
 
 ### Code Samples
 
