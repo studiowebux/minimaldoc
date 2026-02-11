@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -24,66 +23,8 @@ type HTMLGenerator struct {
 
 // NewHTMLGenerator creates a new HTML generator
 func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLGenerator, error) {
-	// Create template with custom functions
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"hasPrefix": strings.HasPrefix,
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires an even number of arguments")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"json": func(v interface{}) (template.JS, error) {
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return "", err
-			}
-			return template.JS(bytes), nil
-		},
-		"safeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
-		"lower": strings.ToLower,
-		"replace": func(input, old, new string) string {
-			return strings.ReplaceAll(input, old, new)
-		},
-		"stripSpecExt": func(name string) string {
-			// Remove common OpenAPI spec extensions
-			name = strings.TrimSuffix(name, ".yaml")
-			name = strings.TrimSuffix(name, ".yml")
-			name = strings.TrimSuffix(name, ".json")
-			return name
-		},
-		"endpointID": func(endpoint *core.APIEndpoint) string {
-			if endpoint.OperationID != "" {
-				return endpoint.OperationID
-			}
-			// Fallback: use Method-Path with non-alphanumeric chars replaced
-			id := endpoint.Method + "-" + endpoint.Path
-			// Replace non-alphanumeric characters with dashes
-			result := ""
-			lastWasDash := false
-			for _, r := range id {
-				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-					result += string(r)
-					lastWasDash = false
-				} else if !lastWasDash {
-					result += "-"
-					lastWasDash = true
-				}
-			}
-			// Trim trailing dash
-			return strings.TrimSuffix(result, "-")
-		},
-	})
+	// Create template with shared functions (includes OpenAPI helpers for layout compatibility)
+	tmpl := template.New("").Funcs(OpenAPIFuncMap())
 
 	// Parse templates from embedded filesystem using configured theme
 	themeName := site.Config.Theme
@@ -139,7 +80,7 @@ func (g *HTMLGenerator) Generate() error {
 // generatePage generates a single HTML page
 func (g *HTMLGenerator) generatePage(page *core.Page) error {
 	// Prepare template data
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Site":     g.site,
 		"Page":     page,
 		"Content":  template.HTML(page.HTML),

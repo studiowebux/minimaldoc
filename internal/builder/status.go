@@ -26,7 +26,7 @@ func NewStatusBuilder() *StatusBuilder {
 
 // Build parses and builds the status page data
 func (sb *StatusBuilder) Build(docsRoot string, config core.StatusConfig) (*core.StatusPage, error) {
-	statusDir := filepath.Join(docsRoot, parser.StatusSourceDir)
+	statusDir := filepath.Join(docsRoot, core.StatusSourceDir)
 
 	// Parse all status content
 	statusPage, err := sb.parser.ParseStatusDir(statusDir)

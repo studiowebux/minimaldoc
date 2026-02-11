@@ -36,7 +36,7 @@ type Metadata struct {
 	Category string `yaml:"category"` // FAQ category name
 
 	// Custom fields (for extensibility)
-	Custom map[string]interface{} `yaml:"custom"`
+	Custom map[string]any `yaml:"custom"`
 }
 
 // MetadataLink represents a link in metadata
@@ -66,6 +66,6 @@ func DefaultMetadata() Metadata {
 		MenuOrder:   -1, // -1 means "not set", use filename-based order
 		Hidden:      false,
 		SEO:         SEO{},
-		Custom:      make(map[string]interface{}),
+		Custom:      make(map[string]any),
 	}
 }

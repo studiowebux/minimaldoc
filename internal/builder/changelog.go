@@ -25,7 +25,7 @@ func NewChangelogBuilder() *ChangelogBuilder {
 
 // Build parses and builds the changelog data
 func (cb *ChangelogBuilder) Build(docsRoot string, config core.ChangelogConfig) (*core.ChangelogPage, error) {
-	changelogDir := filepath.Join(docsRoot, parser.ChangelogSourceDir)
+	changelogDir := filepath.Join(docsRoot, core.ChangelogSourceDir)
 
 	// Parse all changelog content
 	changelogPage, err := cb.parser.ParseChangelogDir(changelogDir)

@@ -42,9 +42,6 @@ func NewChangelogParser() *ChangelogParser {
 	return &ChangelogParser{md: md}
 }
 
-// ChangelogSourceDir is the directory name for changelog content
-const ChangelogSourceDir = "__changelog__"
-
 // ParseChangelogDir parses all changelog content from a directory
 func (p *ChangelogParser) ParseChangelogDir(changelogDir string) (*core.ChangelogPage, error) {
 	changelogPage := &core.ChangelogPage{

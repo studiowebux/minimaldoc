@@ -81,7 +81,7 @@ type APIParameter struct {
 	Required    bool        // Is required
 	Deprecated  bool        // Is deprecated
 	Schema      *APISchema  // Parameter schema
-	Example     interface{} // Example value
+	Example     any // Example value
 	Examples    map[string]*APIExample // Named examples
 }
 
@@ -102,7 +102,7 @@ type APIResponse struct {
 // APIMediaType represents a media type (e.g., application/json)
 type APIMediaType struct {
 	Schema   *APISchema           // Schema for this media type
-	Example  interface{}          // Example value
+	Example  any          // Example value
 	Examples map[string]*APIExample // Named examples
 	Encoding map[string]*APIEncoding // Encoding for multipart
 }
@@ -115,9 +115,9 @@ type APISchema struct {
 	Properties  map[string]*APISchema  // Object properties
 	Items       *APISchema             // Array items schema
 	Required    []string               // Required properties
-	Enum        []interface{}          // Enumeration values
-	Default     interface{}            // Default value
-	Example     interface{}            // Example value
+	Enum        []any          // Enumeration values
+	Default     any            // Default value
+	Example     any            // Example value
 	Nullable    bool                   // Can be null
 	ReadOnly    bool                   // Read-only property
 	WriteOnly   bool                   // Write-only property
@@ -149,7 +149,7 @@ type APISchema struct {
 type APIExample struct {
 	Summary     string      // Example summary
 	Description string      // Example description
-	Value       interface{} // Example value
+	Value       any // Example value
 }
 
 // APIEncoding represents encoding for multipart/form-data

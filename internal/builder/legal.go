@@ -9,8 +9,6 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/parser"
 )
 
-const LegalSourceDir = "__legal__"
-
 // LegalBuilder handles building legal pages
 type LegalBuilder struct {
 	frontmatterParser *parser.FrontmatterParser
@@ -25,13 +23,13 @@ func NewLegalBuilder() *LegalBuilder {
 	}
 }
 
-// Build creates legal pages from markdown files in __legal__/ directory
+// Build creates legal pages from markdown files in the legal source directory
 func (lb *LegalBuilder) Build(docsRoot string, config core.LegalConfig, basePath string) ([]*core.LegalPage, error) {
 	if !config.Enabled {
 		return nil, nil
 	}
 
-	legalDir := filepath.Join(docsRoot, LegalSourceDir)
+	legalDir := filepath.Join(docsRoot, core.LegalSourceDir)
 
 	// Parse all legal page files
 	pages, err := lb.parsePages(legalDir, basePath)

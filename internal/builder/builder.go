@@ -186,27 +186,27 @@ func (b *Builder) discoverPages() error {
 		}
 
 		// Skip the status directory entirely (it has its own build process)
-		if d.IsDir() && d.Name() == "__status__" {
+		if d.IsDir() && d.Name() == core.StatusSourceDir {
 			return filepath.SkipDir
 		}
 
 		// Skip the changelog directory entirely (it has its own build process)
-		if d.IsDir() && d.Name() == "__changelog__" {
+		if d.IsDir() && d.Name() == core.ChangelogSourceDir {
 			return filepath.SkipDir
 		}
 
 		// Skip the portfolio directory entirely (it has its own build process)
-		if d.IsDir() && d.Name() == "__portfolio__" {
+		if d.IsDir() && d.Name() == core.PortfolioSourceDir {
 			return filepath.SkipDir
 		}
 
 		// Skip the faq directory entirely (it has its own build process)
-		if d.IsDir() && d.Name() == "__faq__" {
+		if d.IsDir() && d.Name() == core.FaqSourceDir {
 			return filepath.SkipDir
 		}
 
 		// Skip the legal directory entirely (it has its own build process)
-		if d.IsDir() && d.Name() == "__legal__" {
+		if d.IsDir() && d.Name() == core.LegalSourceDir {
 			return filepath.SkipDir
 		}
 

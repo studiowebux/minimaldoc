@@ -27,56 +27,8 @@ func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS, version string) (*Op
 		return nil, nil // Skip if OpenAPI is not enabled
 	}
 
-	// Create template with custom functions
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires an even number of arguments")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"safeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
-		"json": func(v interface{}) (template.JS, error) {
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return "", err
-			}
-			return template.JS(bytes), nil
-		},
-		"lower": strings.ToLower,
-		"endpointID": func(endpoint *core.APIEndpoint) string {
-			if endpoint.OperationID != "" {
-				return endpoint.OperationID
-			}
-			// Fallback: use Method-Path with non-alphanumeric chars replaced
-			id := endpoint.Method + "-" + endpoint.Path
-			// Replace non-alphanumeric characters with dashes
-			result := ""
-			lastWasDash := false
-			for _, r := range id {
-				if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-					result += string(r)
-					lastWasDash = false
-				} else if !lastWasDash {
-					result += "-"
-					lastWasDash = true
-				}
-			}
-			// Trim trailing dash
-			return strings.TrimSuffix(result, "-")
-		},
-		"hasPrefix": strings.HasPrefix,
-	})
+	// Create template with shared OpenAPI functions
+	tmpl := template.New("").Funcs(OpenAPIFuncMap())
 
 	// Parse OpenAPI templates from common (all structure is shared, themes only provide CSS)
 	tmpl, err := tmpl.ParseFS(
@@ -165,7 +117,7 @@ func (g *OpenAPIGenerator) generateSpec(spec *core.APISpec, apiDir string) error
 // generateSpecHTML generates the HTML page for an OpenAPI spec
 func (g *OpenAPIGenerator) generateSpecHTML(spec *core.APISpec, specDir string) error {
 	// Prepare template data
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Site":              g.site,
 		"Spec":              spec,
 		"BasePath":          g.getBasePath(),
@@ -224,7 +176,7 @@ func (g *OpenAPIGenerator) generateFallbackHTML(spec *core.APISpec) string {
 // generateSpecJSON generates JSON data files for an OpenAPI spec
 func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) error {
 	// Generate main spec data file with metadata and schemas (schemas stored once)
-	specData := map[string]interface{}{
+	specData := map[string]any{
 		"name":            spec.Name,
 		"title":           spec.Title,
 		"description":     spec.Description,

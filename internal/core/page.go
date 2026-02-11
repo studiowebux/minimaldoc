@@ -63,18 +63,18 @@ func NewPage(sourcePath string, docsRoot string) *Page {
 	return &Page{
 		SourcePath: sourcePath,
 		RelPath:    relPath,
-		Slug:       generateSlug(relPath),
+		Slug:       GenerateSlugFromPath(relPath),
 		Metadata:   DefaultMetadata(),
 		Children:   []*Page{},
 		ModTime:    modTime,
 	}
 }
 
-// generateSlug creates a URL-friendly slug from a file path
+// GenerateSlugFromPath creates a URL-friendly slug from a file path
 // Examples:
 //   - "01-getting-started.md" -> "getting-started"
 //   - "docs/02-api/index.md" -> "docs/api/index"
-func generateSlug(relPath string) string {
+func GenerateSlugFromPath(relPath string) string {
 	// Remove extension
 	slug := strings.TrimSuffix(relPath, filepath.Ext(relPath))
 

@@ -10,8 +10,6 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/parser"
 )
 
-const PortfolioSourceDir = "__portfolio__"
-
 // PortfolioBuilder handles building the portfolio page
 type PortfolioBuilder struct {
 	frontmatterParser *parser.FrontmatterParser
@@ -32,7 +30,7 @@ func (pb *PortfolioBuilder) Build(docsRoot string, config core.PortfolioConfig, 
 		return nil, nil
 	}
 
-	portfolioDir := filepath.Join(docsRoot, PortfolioSourceDir)
+	portfolioDir := filepath.Join(docsRoot, core.PortfolioSourceDir)
 
 	// Parse all portfolio projects
 	projects, err := pb.parseProjects(portfolioDir, basePath)

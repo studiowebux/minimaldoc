@@ -42,9 +42,6 @@ func NewStatusParser() *StatusParser {
 	return &StatusParser{md: md}
 }
 
-// StatusSourceDir is the directory name for status page content
-const StatusSourceDir = "__status__"
-
 // ParseStatusDir parses all status content from a directory
 func (p *StatusParser) ParseStatusDir(statusDir string) (*core.StatusPage, error) {
 	statusPage := &core.StatusPage{

@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/yuin/goldmark/ast"
 )
 
@@ -69,7 +70,7 @@ func transformLink(link string, currentPagePath string, basePath string) string 
 	resolvedPath := resolveRelativePath(mdPath, currentPagePath)
 
 	// Apply slug transformation (remove .md, number prefixes, etc.)
-	slug := generateSlugFromPath(resolvedPath)
+	slug := core.GenerateSlugFromPath(resolvedPath)
 
 	// Construct final .html link with basePath prepended
 	htmlLink := basePath + "/" + slug + ".html"
@@ -93,27 +94,4 @@ func resolveRelativePath(linkPath string, currentPagePath string) string {
 	resolved = strings.ReplaceAll(resolved, "\\", "/")
 
 	return resolved
-}
-
-// generateSlugFromPath creates a URL-friendly slug from a file path
-// Matches the logic in core.generateSlug
-func generateSlugFromPath(relPath string) string {
-	// Remove extension
-	slug := strings.TrimSuffix(relPath, filepath.Ext(relPath))
-
-	// Remove numbered prefixes from each segment
-	parts := strings.Split(slug, "/")
-	for i, part := range parts {
-		// Remove leading numbers and separators (e.g., "01-", "02_")
-		part = strings.TrimLeft(part, "0123456789-_")
-		parts[i] = part
-	}
-
-	slug = strings.Join(parts, "/")
-
-	// Convert to lowercase and replace spaces
-	slug = strings.ToLower(slug)
-	slug = strings.ReplaceAll(slug, " ", "-")
-
-	return slug
 }

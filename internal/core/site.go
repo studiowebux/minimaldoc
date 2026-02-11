@@ -90,7 +90,7 @@ type SiteConfig struct {
 	SocialLinks []SocialLink `yaml:"social_links"` // Social media links in sidebar
 
 	// Custom
-	Custom map[string]interface{} `yaml:"custom"`
+	Custom map[string]any `yaml:"custom"`
 }
 
 // StaleWarningConfig holds configuration for stale content warnings
@@ -132,7 +132,7 @@ func DefaultSiteConfig() SiteConfig {
 		Faq:          DefaultFaqConfig(),
 		Legal:        DefaultLegalConfig(),
 		Footer:       DefaultFooterConfig(),
-		Custom:       make(map[string]interface{}),
+		Custom:       make(map[string]any),
 	}
 }
 

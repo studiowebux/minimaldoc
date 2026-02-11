@@ -29,52 +29,8 @@ func NewChangelogGenerator(site *core.Site, themeFS embed.FS, version string) (*
 		return nil, nil // Skip if changelog is not enabled
 	}
 
-	// Create template with custom functions
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"hasPrefix": strings.HasPrefix,
-		"dict": func(values ...any) (map[string]any, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires an even number of arguments")
-			}
-			dict := make(map[string]any, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"json": func(v any) (template.JS, error) {
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return "", err
-			}
-			return template.JS(bytes), nil
-		},
-		"safeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
-		"lower": func(v any) string {
-			return strings.ToLower(fmt.Sprintf("%v", v))
-		},
-		"upper": func(v any) string {
-			return strings.ToUpper(fmt.Sprintf("%v", v))
-		},
-		"changeColor": func(ct core.ChangeType) string {
-			return ct.Color()
-		},
-		"formatDate": func(t time.Time) string {
-			return t.Format("January 2, 2006")
-		},
-		"formatDateShort": func(t time.Time) string {
-			return t.Format("2006-01-02")
-		},
-		"formatDateRFC": func(t time.Time) string {
-			return t.Format(time.RFC1123Z)
-		},
-	})
+	// Create template with shared changelog functions
+	tmpl := template.New("").Funcs(ChangelogFuncMap())
 
 	// Parse changelog templates from dedicated subdirectory
 	var err error

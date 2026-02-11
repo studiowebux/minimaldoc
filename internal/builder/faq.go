@@ -11,8 +11,6 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/parser"
 )
 
-const FaqSourceDir = "__faq__"
-
 // FaqBuilder handles building the FAQ page
 type FaqBuilder struct {
 	frontmatterParser *parser.FrontmatterParser
@@ -45,8 +43,8 @@ func (fb *FaqBuilder) Build(docsRoot string, config core.FaqConfig, basePath str
 		categoryMap[cat.Name] = cat
 	}
 
-	// Parse markdown files from __faq__/ directory
-	faqDir := filepath.Join(docsRoot, FaqSourceDir)
+	// Parse markdown files from the FAQ source directory
+	faqDir := filepath.Join(docsRoot, core.FaqSourceDir)
 	if _, err := os.Stat(faqDir); err == nil {
 		mdItems, err := fb.parseMarkdownFaqs(faqDir, basePath)
 		if err != nil {

@@ -26,35 +26,7 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 		return nil, nil
 	}
 
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"hasPrefix": strings.HasPrefix,
-		"dict": func(values ...any) (map[string]any, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires an even number of arguments")
-			}
-			dict := make(map[string]any, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"safeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
-		"lower": strings.ToLower,
-		"upper": strings.ToUpper,
-		"join": strings.Join,
-		"formatDate": func(t any) string {
-			if tm, ok := t.(interface{ Format(string) string }); ok {
-				return tm.Format("January 2006")
-			}
-			return ""
-		},
-	})
+	tmpl := template.New("").Funcs(PortfolioFuncMap())
 
 	var err error
 	tmpl, err = tmpl.ParseFS(

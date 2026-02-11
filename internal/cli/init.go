@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/studiowebux/minimaldoc/internal/core"
 )
 
 var (
@@ -76,15 +77,15 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	if withStatus {
 		dirs = append(dirs,
-			filepath.Join(targetDir, "__status__"),
-			filepath.Join(targetDir, "__status__", "incidents"),
-			filepath.Join(targetDir, "__status__", "maintenance"),
+			filepath.Join(targetDir, core.StatusSourceDir),
+			filepath.Join(targetDir, core.StatusSourceDir, "incidents"),
+			filepath.Join(targetDir, core.StatusSourceDir, "maintenance"),
 		)
 	}
 	if withChangelog {
 		dirs = append(dirs,
-			filepath.Join(targetDir, "__changelog__"),
-			filepath.Join(targetDir, "__changelog__", "releases"),
+			filepath.Join(targetDir, core.ChangelogSourceDir),
+			filepath.Join(targetDir, core.ChangelogSourceDir, "releases"),
 		)
 	}
 
@@ -125,12 +126,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	if withStatus {
-		files[filepath.Join(targetDir, "__status__", "components.yaml")] = componentsContent
-		files[filepath.Join(targetDir, "__status__", "incidents", incidentFilename())] = incidentContent
+		files[filepath.Join(targetDir, core.StatusSourceDir, "components.yaml")] = componentsContent
+		files[filepath.Join(targetDir, core.StatusSourceDir, "incidents", incidentFilename())] = incidentContent
 	}
 
 	if withChangelog {
-		files[filepath.Join(targetDir, "__changelog__", "releases", "0.1.0.md")] = releaseContent
+		files[filepath.Join(targetDir, core.ChangelogSourceDir, "releases", "0.1.0.md")] = releaseContent
 	}
 
 	for path, content := range files {
@@ -155,10 +156,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println("  - api/openapi.yaml (OpenAPI specification)")
 	}
 	if withStatus {
-		fmt.Println("  - __status__/ (status page)")
+		fmt.Printf("  - %s/ (status page)\n", core.StatusSourceDir)
 	}
 	if withChangelog {
-		fmt.Println("  - __changelog__/ (changelog)")
+		fmt.Printf("  - %s/ (changelog)\n", core.ChangelogSourceDir)
 	}
 	fmt.Println()
 	fmt.Println("Next steps:")

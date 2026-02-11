@@ -29,100 +29,8 @@ func NewStatusGenerator(site *core.Site, themeFS embed.FS, version string) (*Sta
 		return nil, nil // Skip if status is not enabled
 	}
 
-	// Create template with custom functions
-	tmpl := template.New("").Funcs(template.FuncMap{
-		"hasPrefix": strings.HasPrefix,
-		"dict": func(values ...any) (map[string]any, error) {
-			if len(values)%2 != 0 {
-				return nil, fmt.Errorf("dict requires an even number of arguments")
-			}
-			dict := make(map[string]any, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, fmt.Errorf("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-		"json": func(v any) (template.JS, error) {
-			bytes, err := json.Marshal(v)
-			if err != nil {
-				return "", err
-			}
-			return template.JS(bytes), nil
-		},
-		"safeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
-		"lower": func(v any) string {
-			return strings.ToLower(fmt.Sprintf("%v", v))
-		},
-		"upper": func(v any) string {
-			return strings.ToUpper(fmt.Sprintf("%v", v))
-		},
-		"statusColor": func(status core.ComponentStatus) string {
-			switch status {
-			case core.StatusOperational:
-				return "green"
-			case core.StatusDegraded:
-				return "yellow"
-			case core.StatusPartialOutage:
-				return "orange"
-			case core.StatusMajorOutage:
-				return "red"
-			case core.StatusMaintenance:
-				return "blue"
-			default:
-				return "gray"
-			}
-		},
-		"severityColor": func(severity core.IncidentSeverity) string {
-			switch severity {
-			case core.SeverityMinor:
-				return "yellow"
-			case core.SeverityMajor:
-				return "orange"
-			case core.SeverityCritical:
-				return "red"
-			default:
-				return "gray"
-			}
-		},
-		"incidentStatusLabel": func(status core.IncidentStatus) string {
-			switch status {
-			case core.IncidentInvestigating:
-				return "Investigating"
-			case core.IncidentIdentified:
-				return "Identified"
-			case core.IncidentMonitoring:
-				return "Monitoring"
-			case core.IncidentResolved:
-				return "Resolved"
-			default:
-				return string(status)
-			}
-		},
-		"maintenanceStatusLabel": func(status core.MaintenanceStatus) string {
-			switch status {
-			case core.MaintenanceScheduled:
-				return "Scheduled"
-			case core.MaintenanceInProgress:
-				return "In Progress"
-			case core.MaintenanceCompleted:
-				return "Completed"
-			default:
-				return string(status)
-			}
-		},
-		"formatTime": func(t time.Time) string {
-			return t.Format("Jan 2, 2006 15:04 MST")
-		},
-		"formatDate": func(t time.Time) string {
-			return t.Format("January 2, 2006")
-		},
-	})
+	// Create template with shared status functions
+	tmpl := template.New("").Funcs(StatusFuncMap())
 
 	// Parse status templates from dedicated subdirectory
 	var err error
@@ -252,7 +160,7 @@ func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core
 	if statusPath == "" {
 		statusPath = "status"
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Site":       g.site,
 		"StatusPage": g.site.StatusPage,
 		"Incident":   incident,
@@ -300,7 +208,7 @@ func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, mainten
 	if stPath == "" {
 		stPath = "status"
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Site":        g.site,
 		"StatusPage":  g.site.StatusPage,
 		"Maintenance": maintenance,
@@ -329,7 +237,7 @@ func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
 	if histPath == "" {
 		histPath = "status"
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Site":           g.site,
 		"StatusPage":     g.site.StatusPage,
 		"HistoryByMonth": g.site.StatusPage.HistoryByMonth,
