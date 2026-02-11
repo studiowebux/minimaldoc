@@ -1,0 +1,17 @@
+{{define "landing-header" -}}
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
+{{template "landing-nav-links" .}}
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
+</div>
+</header>
+{{- end}}

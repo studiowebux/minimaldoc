@@ -125,10 +125,10 @@ func NewStatusGenerator(site *core.Site, themeFS embed.FS, version string) (*Sta
 	})
 
 	// Parse status templates from dedicated subdirectory
-	// Note: Status templates are self-contained and don't need partials
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/status/*.html",
 	)
 	if err != nil {
@@ -201,12 +201,17 @@ func (g *StatusGenerator) Generate() error {
 
 // generateMainPage generates the main status dashboard
 func (g *StatusGenerator) generateMainPage(outputDir string) error {
+	statusPath := g.site.Config.Status.Path
+	if statusPath == "" {
+		statusPath = "status"
+	}
 	data := map[string]any{
 		"Site":       g.site,
 		"StatusPage": g.site.StatusPage,
 		"BasePath":   g.getBasePath(),
 		"Version":    g.version,
 		"PageTitle":  g.site.StatusPage.Config.Title,
+		"ActivePath": "/" + statusPath + "/",
 	}
 
 	var buf bytes.Buffer
@@ -243,6 +248,10 @@ func (g *StatusGenerator) generateIncidentPages(outputDir string) error {
 
 // generateIncidentPage generates a single incident detail page
 func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core.Incident) error {
+	statusPath := g.site.Config.Status.Path
+	if statusPath == "" {
+		statusPath = "status"
+	}
 	data := map[string]interface{}{
 		"Site":       g.site,
 		"StatusPage": g.site.StatusPage,
@@ -250,6 +259,7 @@ func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core
 		"BasePath":   g.getBasePath(),
 		"Version":    g.version,
 		"PageTitle":  incident.Title + " - " + g.site.StatusPage.Config.Title,
+		"ActivePath": "/" + statusPath + "/",
 	}
 
 	var buf bytes.Buffer
@@ -286,6 +296,10 @@ func (g *StatusGenerator) generateMaintenancePages(outputDir string) error {
 
 // generateMaintenancePage generates a single maintenance detail page
 func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, maintenance core.Maintenance) error {
+	stPath := g.site.Config.Status.Path
+	if stPath == "" {
+		stPath = "status"
+	}
 	data := map[string]interface{}{
 		"Site":        g.site,
 		"StatusPage":  g.site.StatusPage,
@@ -293,6 +307,7 @@ func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, mainten
 		"BasePath":    g.getBasePath(),
 		"Version":     g.version,
 		"PageTitle":   maintenance.Title + " - " + g.site.StatusPage.Config.Title,
+		"ActivePath":  "/" + stPath + "/",
 	}
 
 	var buf bytes.Buffer
@@ -310,6 +325,10 @@ func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, mainten
 
 // generateHistoryPage generates the incident history page
 func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
+	histPath := g.site.Config.Status.Path
+	if histPath == "" {
+		histPath = "status"
+	}
 	data := map[string]interface{}{
 		"Site":           g.site,
 		"StatusPage":     g.site.StatusPage,
@@ -317,6 +336,7 @@ func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
 		"BasePath":       g.getBasePath(),
 		"Version":        g.version,
 		"PageTitle":      "Incident History - " + g.site.StatusPage.Config.Title,
+		"ActivePath":     "/" + histPath + "/",
 	}
 
 	var buf bytes.Buffer

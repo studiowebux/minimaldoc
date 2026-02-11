@@ -59,6 +59,7 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/portfolio/*.html",
 	)
 	if err != nil {
@@ -107,6 +108,10 @@ func (g *PortfolioGenerator) Generate() error {
 
 // generateMainPage generates the main portfolio listing page
 func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
+	portfolioPath := g.site.Config.Portfolio.Path
+	if portfolioPath == "" {
+		portfolioPath = "portfolio"
+	}
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,
@@ -114,6 +119,7 @@ func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
 		"BasePath":      g.getBasePath(),
 		"Version":       g.version,
 		"PageTitle":     g.site.PortfolioPage.Config.Title + " | " + g.site.Config.Title,
+		"ActivePath":    "/" + portfolioPath + "/",
 	}
 
 	var buf bytes.Buffer
@@ -147,6 +153,10 @@ func (g *PortfolioGenerator) generateProjectPages(outputDir string) error {
 
 // generateProjectPage generates a single project detail page
 func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core.Project) error {
+	pPath := g.site.Config.Portfolio.Path
+	if pPath == "" {
+		pPath = "portfolio"
+	}
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,
@@ -155,6 +165,7 @@ func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core
 		"BasePath":      g.getBasePath(),
 		"Version":       g.version,
 		"PageTitle":     project.Title + " | " + g.site.PortfolioPage.Config.Title + " | " + g.site.Config.Title,
+		"ActivePath":    "/" + pPath + "/",
 	}
 
 	var buf bytes.Buffer

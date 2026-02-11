@@ -51,6 +51,7 @@ func NewFaqGenerator(site *core.Site, themeFS embed.FS, version string) (*FaqGen
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/faq/*.html",
 	)
 	if err != nil {
@@ -101,13 +102,18 @@ func (g *FaqGenerator) Generate() error {
 
 // generateMainPage generates the FAQ page
 func (g *FaqGenerator) generateMainPage(outputDir string) error {
+	faqPath := g.site.Config.Faq.Path
+	if faqPath == "" {
+		faqPath = "faq"
+	}
 	data := map[string]any{
-		"Site":      g.site,
-		"FaqPage":   g.site.FaqPage,
-		"Footer":    g.buildFooterWithLegal(),
-		"BasePath":  g.getBasePath(),
-		"Version":   g.version,
-		"PageTitle": g.site.FaqPage.Config.Title + " | " + g.site.Config.Title,
+		"Site":       g.site,
+		"FaqPage":    g.site.FaqPage,
+		"Footer":     g.buildFooterWithLegal(),
+		"BasePath":   g.getBasePath(),
+		"Version":    g.version,
+		"PageTitle":  g.site.FaqPage.Config.Title + " | " + g.site.Config.Title,
+		"ActivePath": "/" + faqPath + "/",
 	}
 
 	var buf bytes.Buffer

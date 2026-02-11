@@ -51,6 +51,7 @@ func NewContactGenerator(site *core.Site, themeFS embed.FS, version string) (*Co
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/contact/*.html",
 	)
 	if err != nil {
@@ -94,6 +95,10 @@ func (g *ContactGenerator) Generate() error {
 
 // generateMainPage generates the contact page
 func (g *ContactGenerator) generateMainPage(outputDir string) error {
+	contactPath := g.site.Config.Contact.Path
+	if contactPath == "" {
+		contactPath = "contact"
+	}
 	data := map[string]any{
 		"Site":        g.site,
 		"ContactPage": g.site.ContactPage,
@@ -101,6 +106,7 @@ func (g *ContactGenerator) generateMainPage(outputDir string) error {
 		"BasePath":    g.getBasePath(),
 		"Version":     g.version,
 		"PageTitle":   g.site.ContactPage.Config.Title + " | " + g.site.Config.Title,
+		"ActivePath":  "/" + contactPath + "/",
 	}
 
 	var buf bytes.Buffer

@@ -1,17 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
 <head>
-<script>
-(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
-</script>
-<style>
-:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--text-secondary:#4a4a4a;--link-color:#2563eb}
-:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--text-secondary:#e8e8e8;--link-color:#7bb3ff}
-html,body{background-color:var(--bg-primary);color:var(--text-primary)}
-a{color:var(--link-color)}
-</style>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+{{template "landing-head" .}}
 <title>{{.PageTitle}}</title>
 <meta name="description" content="{{.Project.Description}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
@@ -22,27 +12,7 @@ a{color:var(--link-color)}
 <body>
 <a href="#main" class="skip-link">Skip to main content</a>
 <div class="landing-page">
-<header class="landing-header">
-<div class="landing-header-content">
-<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
-<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
-<span></span>
-</button>
-<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
-<nav class="landing-nav" id="landing-nav">
-{{range .Site.Config.Landing.Nav}}
-<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a>
-{{end}}
-{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
-{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/" class="active">Portfolio</a>{{end}}
-{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/">FAQ</a>{{end}}
-{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
-<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-<span class="theme-icon" aria-hidden="true"></span>
-</button>
-</nav>
-</div>
-</header>
+{{template "landing-header" .}}
 
 <main id="main" class="landing-main">
 <nav class="breadcrumb">
@@ -91,38 +61,6 @@ a{color:var(--link-color)}
 </div>
 </footer>
 </div>
-<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
-<script>
-(function(){
-    var toggle = document.getElementById('landing-menu-toggle');
-    var nav = document.getElementById('landing-nav');
-    var backdrop = document.getElementById('landing-nav-backdrop');
-    if (!toggle || !nav || !backdrop) return;
-    function open() {
-        nav.classList.add('open');
-        backdrop.classList.add('open');
-        toggle.classList.add('open');
-        toggle.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-    }
-    function close() {
-        nav.classList.remove('open');
-        backdrop.classList.remove('open');
-        toggle.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
-    }
-    toggle.addEventListener('click', function() {
-        nav.classList.contains('open') ? close() : open();
-    });
-    backdrop.addEventListener('click', close);
-    nav.querySelectorAll('a').forEach(function(link) {
-        link.addEventListener('click', close);
-    });
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768 && nav.classList.contains('open')) close();
-    });
-})();
-</script>
+{{template "landing-scripts" .}}
 </body>
 </html>

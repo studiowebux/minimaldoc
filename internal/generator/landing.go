@@ -55,6 +55,7 @@ func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*La
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/landing/*.html",
 	)
 	if err != nil {

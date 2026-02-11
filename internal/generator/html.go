@@ -26,6 +26,7 @@ type HTMLGenerator struct {
 func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLGenerator, error) {
 	// Create template with custom functions
 	tmpl := template.New("").Funcs(template.FuncMap{
+		"hasPrefix": strings.HasPrefix,
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
 				return nil, fmt.Errorf("dict requires an even number of arguments")

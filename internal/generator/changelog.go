@@ -80,6 +80,7 @@ func NewChangelogGenerator(site *core.Site, themeFS embed.FS, version string) (*
 	var err error
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
+		"themes/common/templates/partials/landing-*.html",
 		"themes/common/templates/changelog/*.html",
 	)
 	if err != nil {
@@ -140,12 +141,17 @@ func (g *ChangelogGenerator) Generate() error {
 
 // generateIndexPage generates the main changelog page
 func (g *ChangelogGenerator) generateIndexPage(outputDir string) error {
+	changelogPath := g.site.Config.Changelog.Path
+	if changelogPath == "" {
+		changelogPath = "changelog"
+	}
 	data := map[string]any{
 		"Site":          g.site,
 		"ChangelogPage": g.site.ChangelogPage,
 		"BasePath":      g.getBasePath(),
 		"Version":       g.version,
 		"PageTitle":     g.site.ChangelogPage.Config.Title,
+		"ActivePath":    "/" + changelogPath + "/",
 	}
 
 	var buf bytes.Buffer
@@ -173,6 +179,10 @@ func (g *ChangelogGenerator) generateReleasePages(outputDir string) error {
 
 // generateReleasePage generates a single release detail page
 func (g *ChangelogGenerator) generateReleasePage(outputDir string, release core.Release) error {
+	clPath := g.site.Config.Changelog.Path
+	if clPath == "" {
+		clPath = "changelog"
+	}
 	data := map[string]any{
 		"Site":          g.site,
 		"ChangelogPage": g.site.ChangelogPage,
@@ -180,6 +190,7 @@ func (g *ChangelogGenerator) generateReleasePage(outputDir string, release core.
 		"BasePath":      g.getBasePath(),
 		"Version":       g.version,
 		"PageTitle":     fmt.Sprintf("%s - %s", release.Version, g.site.ChangelogPage.Config.Title),
+		"ActivePath":    "/" + clPath + "/",
 	}
 
 	var buf bytes.Buffer

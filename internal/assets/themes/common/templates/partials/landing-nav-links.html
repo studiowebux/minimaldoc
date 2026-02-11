@@ -1,0 +1,14 @@
+{{define "landing-nav-links" -}}
+{{- /* Handle both landing page nav and site-wide landing nav */ -}}
+{{- $nav := .Site.Config.Landing.Nav -}}
+{{- if and .LandingPage .LandingPage.Config -}}
+{{- $nav = .LandingPage.Config.Nav -}}
+{{- end -}}
+{{- range $nav}}
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}"{{if $.ActivePath}}{{if eq .URL $.ActivePath}} class="active"{{end}}{{end}}>{{.Text}}</a>
+{{- end}}
+{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/"{{if eq $.ActivePath "/api/"}} class="active"{{end}}>API</a>{{end}}
+{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Portfolio.Path)}} class="active"{{end}}>Portfolio</a>{{end}}
+{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Faq.Path)}} class="active"{{end}}>FAQ</a>{{end}}
+{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Contact.Path)}} class="active"{{end}}>Contact</a>{{end}}
+{{- end}}
