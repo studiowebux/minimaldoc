@@ -68,12 +68,13 @@ type FileConfig struct {
 		ShowUpdateDate bool   `yaml:"show_update_date"`
 	} `yaml:"stale_warning"`
 
-	Landing   core.LandingConfig   `yaml:"landing"`
-	Portfolio core.PortfolioConfig `yaml:"portfolio"`
-	Contact   core.ContactConfig   `yaml:"contact"`
-	Faq       core.FaqConfig       `yaml:"faq"`
-	Legal     core.LegalConfig     `yaml:"legal"`
-	Footer    core.FooterConfig    `yaml:"footer"`
+	Landing       core.LandingConfig   `yaml:"landing"`
+	Portfolio     core.PortfolioConfig `yaml:"portfolio"`
+	Contact       core.ContactConfig   `yaml:"contact"`
+	Faq           core.FaqConfig       `yaml:"faq"`
+	Legal         core.LegalConfig     `yaml:"legal"`
+	KnowledgeBase core.KBConfig        `yaml:"knowledgebase"`
+	Footer        core.FooterConfig    `yaml:"footer"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -260,6 +261,11 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	// Merge Legal config
 	if cfg.Legal.Enabled {
 		result.Legal = cfg.Legal
+	}
+
+	// Merge KnowledgeBase config
+	if cfg.KnowledgeBase.Enabled {
+		result.KnowledgeBase = cfg.KnowledgeBase
 	}
 
 	// Merge Footer config

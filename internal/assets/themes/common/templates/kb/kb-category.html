@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>{{.PageTitle}}</title>
+<meta name="description" content="{{.Category.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/kb.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main">
+<section class="kb-category-page">
+<div class="kb-category-content">
+<nav class="kb-breadcrumb" aria-label="Breadcrumb">
+<ol>
+<li><a href="{{.BasePath}}/{{.KBPath}}/">{{.KBPage.Config.Title}}</a></li>
+<li aria-current="page">{{.Category.Name}}</li>
+</ol>
+</nav>
+
+<header class="kb-category-header">
+<h1>{{.Category.Name}}</h1>
+{{if .Category.Description}}<p class="kb-category-desc">{{.Category.Description}}</p>{{end}}
+<span class="kb-article-count">{{.Category.ArticleCount}} {{if eq .Category.ArticleCount 1}}article{{else}}articles{{end}}</span>
+</header>
+
+<div class="kb-layout">
+<div class="kb-articles-list">
+{{range .Category.Articles}}
+<a href="{{$.BasePath}}/{{$.KBPath}}/{{$.Category.Slug}}/{{.Slug}}.html" class="kb-article-item">
+<div class="kb-article-content">
+<h2 class="kb-article-title">{{.Title}}</h2>
+{{if .Description}}<p class="kb-article-desc">{{.Description}}</p>{{end}}
+{{if .Tags}}
+<div class="kb-article-tags">
+{{range .Tags}}<span class="kb-tag">{{.}}</span>{{end}}
+</div>
+{{end}}
+</div>
+<svg class="kb-article-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<polyline points="9 18 15 12 9 6"/>
+</svg>
+</a>
+{{end}}
+</div>
+
+<aside class="kb-sidebar">
+<h3>Categories</h3>
+<nav class="kb-sidebar-nav">
+{{range .KBPage.Categories}}
+<a href="{{$.BasePath}}/{{$.KBPath}}/{{.Slug}}/" class="kb-sidebar-link{{if eq .Slug $.Category.Slug}} active{{end}}">
+<span class="kb-sidebar-name">{{.Name}}</span>
+<span class="kb-sidebar-count">{{.ArticleCount}}</span>
+</a>
+{{end}}
+</nav>
+</aside>
+</div>
+</div>
+</section>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-icons" .}}
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+{{template "landing-scripts" .}}
+</body>
+</html>

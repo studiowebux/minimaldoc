@@ -10,5 +10,6 @@
 {{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/"{{if eq $.ActivePath "/api/"}} class="active"{{end}}>API</a>{{end}}
 {{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Portfolio.Path)}} class="active"{{end}}>Portfolio</a>{{end}}
 {{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Faq.Path)}} class="active"{{end}}>FAQ</a>{{end}}
+{{if .Site.Config.KnowledgeBase.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.KnowledgeBase.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.KnowledgeBase.Path)}} class="active"{{end}}>KB</a>{{end}}
 {{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Contact.Path)}} class="active"{{end}}>Contact</a>{{end}}
 {{- end}}

@@ -17,6 +17,7 @@ type Site struct {
 	ContactPage   *ContactPage   // Contact page data (if enabled)
 	FaqPage       *FaqPage       // FAQ page data (if enabled)
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
+	KBPage        *KBPage        // Knowledge Base data (if enabled)
 
 	// Paths
 	DocsRoot   string // Root directory of markdown files
@@ -83,6 +84,9 @@ type SiteConfig struct {
 	// Legal
 	Legal LegalConfig `yaml:"legal"` // Legal pages configuration
 
+	// Knowledge Base
+	KnowledgeBase KBConfig `yaml:"knowledgebase"` // Knowledge Base configuration
+
 	// Footer (for landing pages)
 	Footer FooterConfig `yaml:"footer"` // Footer configuration
 
@@ -129,9 +133,10 @@ func DefaultSiteConfig() SiteConfig {
 		Landing:      DefaultLandingConfig(),
 		Portfolio:    DefaultPortfolioConfig(),
 		Contact:      DefaultContactConfig(),
-		Faq:          DefaultFaqConfig(),
-		Legal:        DefaultLegalConfig(),
-		Footer:       DefaultFooterConfig(),
+		Faq:           DefaultFaqConfig(),
+		Legal:         DefaultLegalConfig(),
+		KnowledgeBase: DefaultKBConfig(),
+		Footer:        DefaultFooterConfig(),
 		Custom:       make(map[string]any),
 	}
 }
