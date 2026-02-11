@@ -65,8 +65,7 @@ func (g *LandingGenerator) Generate() error {
 
 // generateMainPage generates the main landing page
 func (g *LandingGenerator) generateMainPage() error {
-	// Build footer with auto-generated legal links
-	footer := g.buildFooterWithLegal()
+	footer := BuildFooter(g.site, g.version)
 
 	data := map[string]any{
 		"Site":        g.site,
@@ -118,38 +117,3 @@ func (g *LandingGenerator) getBasePath() string {
 	return path
 }
 
-// buildFooterWithLegal creates a footer config with auto-generated legal links
-func (g *LandingGenerator) buildFooterWithLegal() core.FooterConfig {
-	footer := g.site.Config.Footer
-
-	// If legal pages are enabled, auto-generate a "Legal" footer group
-	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
-		legalPath := g.site.Config.Legal.Path
-		if legalPath == "" {
-			legalPath = "legal"
-		}
-
-		groupTitle := g.site.Config.Legal.FooterGroup
-		if groupTitle == "" {
-			groupTitle = "Legal"
-		}
-
-		// Build legal links (no basePath - template will add it)
-		var legalLinks []core.FooterLink
-		for _, page := range g.site.LegalPages {
-			legalLinks = append(legalLinks, core.FooterLink{
-				Text: page.Title,
-				URL:  "/" + legalPath + "/" + page.Slug + "/",
-			})
-		}
-
-		// Add legal group to footer
-		legalGroup := core.FooterLinkGroup{
-			Title: groupTitle,
-			Items: legalLinks,
-		}
-		footer.Links = append(footer.Links, legalGroup)
-	}
-
-	return footer
-}
