@@ -267,6 +267,10 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 	// If only one API spec, redirect directly to it
 	if len(g.site.APISpecs) == 1 {
 		spec := g.site.APISpecs[0]
+		// Strip extension from name (same as generateSpec does)
+		specSlug := strings.TrimSuffix(spec.Name, ".yaml")
+		specSlug = strings.TrimSuffix(specSlug, ".yml")
+		specSlug = strings.TrimSuffix(specSlug, ".json")
 		redirectHTML := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -276,7 +280,7 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 <body>
 <p>Redirecting to <a href="%s/api/%s/">API Documentation</a>...</p>
 </body>
-</html>`, basePath, spec.Name, basePath, spec.Name, basePath, spec.Name)
+</html>`, basePath, specSlug, basePath, specSlug, basePath, specSlug)
 
 		indexPath := filepath.Join(apiDir, "index.html")
 		if err := os.WriteFile(indexPath, []byte(redirectHTML), 0644); err != nil {

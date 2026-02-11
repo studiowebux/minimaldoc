@@ -141,7 +141,16 @@
 
 /* Change Categories */
 .change-category {
+    margin-top: 2rem;
     margin-bottom: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-primary);
+}
+
+.change-category:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
 }
 
 .change-category:last-child {
@@ -149,7 +158,7 @@
 }
 
 .category-header {
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .category-badge {

@@ -16,17 +16,35 @@ a{color:var(--link-color)}
 <meta name="description" content="Incident history for {{.StatusPage.Config.Title}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/status.css?v={{.Version}}">
 </head>
 <body>
-<div class="status-page">
-<header class="status-header">
-<div class="status-header-content">
-<h1>Incident History</h1>
-<p>{{.StatusPage.Config.Title}}</p>
-<a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/" class="back-link">Back to Status</a>
+<a href="#status-main" class="skip-link">Skip to content</a>
+<div class="landing-page">
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
+{{$statusPath := printf "/%s/" .StatusPage.Config.Path}}
+{{range .Site.Config.Landing.Nav}}
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}"{{if eq .URL $statusPath}} class="active"{{end}}>{{.Text}}</a>
+{{end}}
+{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
+{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/">Portfolio</a>{{end}}
+{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/">FAQ</a>{{end}}
+{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
 </div>
 </header>
+<div class="status-page">
 <main class="status-main">
 {{if .HistoryByMonth}}
 {{range $month, $incidents := .HistoryByMonth}}
@@ -62,6 +80,39 @@ a{color:var(--link-color)}
 <p><a href="{{.BasePath}}/{{.StatusPage.Config.Path}}/">Return to Status Page</a></p>
 </footer>
 </div>
+</div>
 <script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script>
+(function(){
+    var toggle = document.getElementById('landing-menu-toggle');
+    var nav = document.getElementById('landing-nav');
+    var backdrop = document.getElementById('landing-nav-backdrop');
+    if (!toggle || !nav || !backdrop) return;
+    function open() {
+        nav.classList.add('open');
+        backdrop.classList.add('open');
+        toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        nav.classList.remove('open');
+        backdrop.classList.remove('open');
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    toggle.addEventListener('click', function() {
+        nav.classList.contains('open') ? close() : open();
+    });
+    backdrop.addEventListener('click', close);
+    nav.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', close);
+    });
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768 && nav.classList.contains('open')) close();
+    });
+})();
+</script>
 </body>
 </html>

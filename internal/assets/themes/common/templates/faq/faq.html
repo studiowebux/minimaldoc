@@ -25,7 +25,11 @@ a{color:var(--link-color)}
 <header class="landing-header">
 <div class="landing-header-content">
 <a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
-<nav class="landing-nav">
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
 {{range .Site.Config.Landing.Nav}}
 <a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a>
 {{end}}
@@ -90,7 +94,7 @@ a{color:var(--link-color)}
 <h4 class="footer-group-title">{{.Title}}</h4>
 <ul class="footer-group-list">
 {{range .Items}}
-<li><a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a></li>
+<li>{{if or (hasPrefix .URL "http://") (hasPrefix .URL "https://")}}<a href="{{.URL}}" target="_blank" rel="noopener">{{.Text}}</a>{{else}}<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a>{{end}}</li>
 {{end}}
 </ul>
 </div>
@@ -110,8 +114,6 @@ function toggleAllFaq(expand) {
         item.open = expand;
     });
 }
-
-// Handle deep links to specific questions
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash) {
         var target = document.querySelector(window.location.hash);
@@ -121,6 +123,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+(function(){
+    var toggle = document.getElementById('landing-menu-toggle');
+    var nav = document.getElementById('landing-nav');
+    var backdrop = document.getElementById('landing-nav-backdrop');
+    if (!toggle || !nav || !backdrop) return;
+    function open() {
+        nav.classList.add('open');
+        backdrop.classList.add('open');
+        toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        nav.classList.remove('open');
+        backdrop.classList.remove('open');
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    toggle.addEventListener('click', function() {
+        nav.classList.contains('open') ? close() : open();
+    });
+    backdrop.addEventListener('click', close);
+    nav.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', close);
+    });
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768 && nav.classList.contains('open')) close();
+    });
+})();
 </script>
 </body>
 </html>

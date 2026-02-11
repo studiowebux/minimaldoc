@@ -27,6 +27,7 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 	}
 
 	tmpl := template.New("").Funcs(template.FuncMap{
+		"hasPrefix": strings.HasPrefix,
 		"dict": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, fmt.Errorf("dict requires an even number of arguments")
@@ -53,7 +54,6 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 			}
 			return ""
 		},
-		"hasPrefix": strings.HasPrefix,
 	})
 
 	var err error

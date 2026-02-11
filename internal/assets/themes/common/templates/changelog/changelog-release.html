@@ -16,24 +16,35 @@ a{color:var(--link-color)}
 <meta name="description" content="Release {{.Release.Version}}{{if .Release.Title}} - {{.Release.Title}}{{end}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/changelog.css?v={{.Version}}">
 </head>
 <body>
-<div class="changelog-page release-detail">
-<header class="changelog-header">
-<div class="changelog-header-content">
-<a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/" class="back-link">Back to Changelog</a>
-<div class="release-badges">
-{{if .Release.Prerelease}}<span class="prerelease-badge">Prerelease</span>{{end}}
-</div>
-<h1>{{.Release.Version}}</h1>
-{{if .Release.Title}}<p class="release-title-text">{{.Release.Title}}</p>{{end}}
-<div class="release-detail-meta">
-<span class="meta-item"><strong>Released:</strong> {{.Release.Date | formatDate}}</span>
-{{if .Release.CompareURL}}<a href="{{.Release.CompareURL}}" target="_blank" rel="noopener noreferrer" class="compare-link">View changes on GitHub</a>{{end}}
-</div>
+<a href="#changelog-main" class="skip-link">Skip to content</a>
+<div class="landing-page">
+<header class="landing-header">
+<div class="landing-header-content">
+<a href="{{.BasePath}}/" class="landing-logo">{{.Site.Config.Title}}</a>
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
+{{$changelogPath := printf "/%s/" .ChangelogPage.Config.Path}}
+{{range .Site.Config.Landing.Nav}}
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}"{{if eq .URL $changelogPath}} class="active"{{end}}>{{.Text}}</a>
+{{end}}
+{{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/">API</a>{{end}}
+{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/">Portfolio</a>{{end}}
+{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/">FAQ</a>{{end}}
+{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/">Contact</a>{{end}}
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon" aria-hidden="true"></span>
+</button>
+</nav>
 </div>
 </header>
+<div class="changelog-page release-detail">
 <main class="changelog-main">
 <article class="release-full-content">
 {{if .Release.Categories}}
@@ -60,6 +71,39 @@ a{color:var(--link-color)}
 <p><a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/">Back to Changelog</a></p>
 </footer>
 </div>
+</div>
 <script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script>
+(function(){
+    var toggle = document.getElementById('landing-menu-toggle');
+    var nav = document.getElementById('landing-nav');
+    var backdrop = document.getElementById('landing-nav-backdrop');
+    if (!toggle || !nav || !backdrop) return;
+    function open() {
+        nav.classList.add('open');
+        backdrop.classList.add('open');
+        toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        nav.classList.remove('open');
+        backdrop.classList.remove('open');
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+    }
+    toggle.addEventListener('click', function() {
+        nav.classList.contains('open') ? close() : open();
+    });
+    backdrop.addEventListener('click', close);
+    nav.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', close);
+    });
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768 && nav.classList.contains('open')) close();
+    });
+})();
+</script>
 </body>
 </html>

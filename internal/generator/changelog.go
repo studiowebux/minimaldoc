@@ -31,6 +31,7 @@ func NewChangelogGenerator(site *core.Site, themeFS embed.FS, version string) (*
 
 	// Create template with custom functions
 	tmpl := template.New("").Funcs(template.FuncMap{
+		"hasPrefix": strings.HasPrefix,
 		"dict": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, fmt.Errorf("dict requires an even number of arguments")
