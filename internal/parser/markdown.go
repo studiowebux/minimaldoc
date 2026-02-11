@@ -67,6 +67,9 @@ func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string
 		TransformMarkdownLinks(doc, currentPagePath, basePath)
 	}
 
+	// Add target="_blank" to external links
+	TransformExternalLinks(doc)
+
 	// Render AST to HTML
 	var buf bytes.Buffer
 	if err := p.md.Renderer().Render(&buf, content, doc); err != nil {
@@ -76,32 +79,3 @@ func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string
 	return buf.Bytes(), nil
 }
 
-// ParseWithExternalLinks converts markdown to HTML and marks external links with target="_blank"
-// This is done as a post-processing step
-func (p *MarkdownParser) ParseWithExternalLinks(content []byte, baseURL string) ([]byte, error) {
-	html, err := p.Parse(content)
-	if err != nil {
-		return nil, err
-	}
-
-	// Post-process to add target="_blank" to external links
-	// This will be handled by a custom transformer in the future
-	// For now, we'll use a simple string replacement approach
-	html = addExternalLinkAttributes(html, baseURL)
-
-	return html, nil
-}
-
-// addExternalLinkAttributes adds target="_blank" and rel="noopener noreferrer" to external links
-// This is a simple implementation - a more robust solution would use an AST transformer
-func addExternalLinkAttributes(html []byte, baseURL string) []byte {
-	// Simple regex-based replacement for external links
-	// TODO: Implement proper AST-based transformer for better reliability
-	htmlStr := string(html)
-
-	// For now, return as-is
-	// In a production implementation, we'd use regex or HTML parsing
-	// to find <a href="http..."> tags and add target="_blank"
-
-	return []byte(htmlStr)
-}

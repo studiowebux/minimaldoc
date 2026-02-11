@@ -95,3 +95,27 @@ func resolveRelativePath(linkPath string, currentPagePath string) string {
 
 	return resolved
 }
+
+// TransformExternalLinks adds target="_blank" and rel="noopener noreferrer" to external links
+func TransformExternalLinks(doc ast.Node) {
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+
+		link, ok := n.(*ast.Link)
+		if !ok {
+			return ast.WalkContinue, nil
+		}
+
+		destination := string(link.Destination)
+
+		// Check if external (http:// or https://)
+		if strings.HasPrefix(destination, "http://") || strings.HasPrefix(destination, "https://") {
+			link.SetAttributeString("target", "_blank")
+			link.SetAttributeString("rel", "noopener noreferrer")
+		}
+
+		return ast.WalkContinue, nil
+	})
+}

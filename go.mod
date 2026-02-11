@@ -4,11 +4,11 @@ go 1.24.0
 
 require (
 	github.com/adrg/frontmatter v0.2.0
-	github.com/alecthomas/chroma/v2 v2.20.0
+	github.com/alecthomas/chroma/v2 v2.23.1
 	github.com/getkin/kin-openapi v0.133.0
-	github.com/spf13/cobra v1.10.1
-	github.com/spf13/pflag v1.0.9
-	github.com/yuin/goldmark v1.7.13
+	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.10
+	github.com/yuin/goldmark v1.7.16
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/toc v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
