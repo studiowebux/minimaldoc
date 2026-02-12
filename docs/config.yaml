@@ -298,3 +298,11 @@ claude_assist:
   enabled: true
   label: "Ask Claude"
   # prompt: "Custom prompt prefix (optional)"
+
+# analytics:
+#   enabled: true
+#   providers:
+#     - type: plausible
+#       enabled: true
+#       config:
+#         domain: "docs.example.com"

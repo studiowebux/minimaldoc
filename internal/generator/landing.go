@@ -26,7 +26,7 @@ func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*La
 		return nil, nil
 	}
 
-	tmpl := template.New("").Funcs(BaseFuncMap())
+	tmpl := template.New("").Funcs(BaseFuncMap()).Funcs(AnalyticsFuncMap())
 
 	var err error
 	tmpl, err = tmpl.ParseFS(

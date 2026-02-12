@@ -37,6 +37,7 @@ a{color:var(--link-color)}
 {{if .Site.Config.Versions.Enabled}}<link rel="stylesheet" href="{{.BasePath}}/css/version-selector.css?v={{.Version}}">{{end}}
 {{if .Site.Config.I18n.Enabled}}<link rel="stylesheet" href="{{.BasePath}}/css/locale-selector.css?v={{.Version}}">{{end}}
 {{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-head" .}}{{end}}
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -240,5 +241,6 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 {{if .Site.Config.I18n.Enabled}}<script defer src="{{.BasePath}}/js/locale-selector.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.PDFExport.Enabled}}<script defer src="{{.BasePath}}/js/pdf-export.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.ClaudeAssist.Enabled}}<script defer src="{{.BasePath}}/js/claude-assist.js?v={{.Version}}"></script>{{end}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

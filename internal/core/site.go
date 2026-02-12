@@ -117,6 +117,9 @@ type SiteConfig struct {
 	// Claude Assist
 	ClaudeAssist ClaudeAssistConfig `yaml:"claude_assist"` // Claude AI assist configuration
 
+	// Analytics
+	Analytics AnalyticsConfig `yaml:"analytics"` // Analytics providers configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -197,6 +200,7 @@ func DefaultSiteConfig() SiteConfig {
 		I18n:          DefaultI18nConfig(),
 		PDFExport:     DefaultPDFExportConfig(),
 		ClaudeAssist:  DefaultClaudeAssistConfig(),
+		Analytics:     DefaultAnalyticsConfig(),
 		Custom:        make(map[string]any),
 	}
 }

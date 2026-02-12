@@ -38,4 +38,5 @@
     });
 })();
 </script>
+{{if .Site.Config.Analytics.Enabled}}{{analyticsBodyScripts .Site.Config.Analytics}}{{end}}
 {{- end}}

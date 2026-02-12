@@ -129,6 +129,19 @@ Complete list of all MinimalDoc features with one-liner descriptions.
 | Robots Meta | noindex/nofollow per page |
 | LLM Output | llms.txt and llms-full.txt for AI assistants |
 
+## Analytics
+
+| Feature | Description |
+|---------|-------------|
+| Plugin System | Multiple providers can run simultaneously |
+| Google Analytics 4 | Native support with measurement ID |
+| Plausible | Privacy-friendly analytics (hosted or self-hosted) |
+| Umami | Open-source analytics support |
+| Matomo | Self-hosted analytics support |
+| Fathom | Privacy-focused analytics |
+| Simple Analytics | Minimal tracking solution |
+| Custom Provider | Arbitrary script injection with custom attributes |
+
 ## Build
 
 | Feature | Description |

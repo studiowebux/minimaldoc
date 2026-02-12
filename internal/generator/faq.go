@@ -26,7 +26,7 @@ func NewFaqGenerator(site *core.Site, themeFS embed.FS, version string) (*FaqGen
 		return nil, nil
 	}
 
-	tmpl := template.New("").Funcs(BaseFuncMap())
+	tmpl := template.New("").Funcs(BaseFuncMap()).Funcs(AnalyticsFuncMap())
 
 	var err error
 	tmpl, err = tmpl.ParseFS(

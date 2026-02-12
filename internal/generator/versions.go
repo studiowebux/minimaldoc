@@ -39,7 +39,7 @@ type VersionInfoJSON struct {
 
 // NewVersionGenerator creates a new version generator
 func NewVersionGenerator(site *core.Site, themeFS embed.FS, version string) (*VersionGenerator, error) {
-	tmpl := template.New("").Funcs(OpenAPIFuncMap())
+	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(AnalyticsFuncMap())
 
 	tmpl, err := tmpl.ParseFS(
 		themeFS,

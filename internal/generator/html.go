@@ -24,7 +24,7 @@ type HTMLGenerator struct {
 // NewHTMLGenerator creates a new HTML generator
 func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLGenerator, error) {
 	// Create template with shared functions (includes OpenAPI helpers for layout compatibility)
-	tmpl := template.New("").Funcs(OpenAPIFuncMap())
+	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(AnalyticsFuncMap())
 
 	// Parse templates from embedded filesystem using configured theme
 	themeName := site.Config.Theme

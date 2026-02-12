@@ -15,6 +15,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 | **Pages** | Landing, Knowledge Base, Portfolio, Contact, FAQ, Legal, Status, Changelog |
 | **API Docs** | OpenAPI/Swagger, Live testing, Code samples (curl/JS/Go/Python/Swift), Schema viewer |
 | **SEO** | Sitemap, Open Graph, Twitter Cards, LLM output (llms.txt) |
+| **Analytics** | GA4, Plausible, Umami, Matomo, Fathom, Simple Analytics, Custom providers |
 | **Build** | Single binary, Fast (Go), Config file or CLI flags, Clean URLs option |
 
 See [Feature Index](docs/features/00-index.md) for the complete list with descriptions
@@ -768,6 +769,49 @@ The default theme uses soft, eye-friendly colors:
 **Dark Mode:** Background `#1a1a1a`, Text `#ffffff`, Secondary `#2a2a2a`
 
 For config-based customization, see [Custom Themes](#custom-themes) above.
+
+## Analytics
+
+MinimalDoc supports multiple analytics providers that can run simultaneously.
+
+### Quick Start
+
+```yaml
+analytics:
+  enabled: true
+  providers:
+    - type: plausible
+      enabled: true
+      config:
+        domain: "docs.example.com"
+```
+
+### Supported Providers
+
+| Provider | Type | Required Config |
+|----------|------|-----------------|
+| Google Analytics 4 | `ga4` | `measurement_id` |
+| Plausible | `plausible` | `domain` |
+| Umami | `umami` | `website_id`, `src` |
+| Matomo | `matomo` | `url`, `site_id` |
+| Fathom | `fathom` | `site_id` |
+| Simple Analytics | `simple` | (none) |
+| Custom | `custom` | `src` |
+
+### Custom Provider
+
+For any analytics service, use the `custom` type with arbitrary attributes:
+
+```yaml
+- type: custom
+  enabled: true
+  config:
+    src: "https://analytics.example.com/tracker.js"
+    defer: "true"
+    attrs:
+      data-site-id: "my-site"
+      data-cookieless: "true"
+```
 
 ## LLM-Friendly Output
 

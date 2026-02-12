@@ -30,7 +30,7 @@ func NewStatusGenerator(site *core.Site, themeFS embed.FS, version string) (*Sta
 	}
 
 	// Create template with shared status functions
-	tmpl := template.New("").Funcs(StatusFuncMap())
+	tmpl := template.New("").Funcs(StatusFuncMap()).Funcs(AnalyticsFuncMap())
 
 	// Parse status templates from dedicated subdirectory
 	var err error

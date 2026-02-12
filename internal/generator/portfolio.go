@@ -26,7 +26,7 @@ func NewPortfolioGenerator(site *core.Site, themeFS embed.FS, version string) (*
 		return nil, nil
 	}
 
-	tmpl := template.New("").Funcs(PortfolioFuncMap())
+	tmpl := template.New("").Funcs(PortfolioFuncMap()).Funcs(AnalyticsFuncMap())
 
 	var err error
 	tmpl, err = tmpl.ParseFS(

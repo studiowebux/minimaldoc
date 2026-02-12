@@ -81,6 +81,7 @@ type FileConfig struct {
 	I18n          core.I18nConfig        `yaml:"i18n"`
 	PDFExport     core.PDFExportConfig    `yaml:"pdf_export"`
 	ClaudeAssist  core.ClaudeAssistConfig `yaml:"claude_assist"`
+	Analytics     core.AnalyticsConfig    `yaml:"analytics"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -310,6 +311,11 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		if result.ClaudeAssist.Label == "" {
 			result.ClaudeAssist.Label = "Ask Claude"
 		}
+	}
+
+	// Merge Analytics config
+	if cfg.Analytics.Enabled {
+		result.Analytics = cfg.Analytics
 	}
 
 	// Merge Social Links
