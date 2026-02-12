@@ -111,6 +111,9 @@ type SiteConfig struct {
 	// Internationalization
 	I18n I18nConfig `yaml:"i18n"` // Internationalization configuration
 
+	// PDF Export
+	PDFExport PDFExportConfig `yaml:"pdf_export"` // PDF export configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -123,6 +126,12 @@ type StaleWarningConfig struct {
 	ShowUpdateDate bool   `yaml:"show_update_date"` // Show the actual last update date
 }
 
+// PDFExportConfig holds configuration for PDF export feature
+type PDFExportConfig struct {
+	Enabled        bool `yaml:"enabled"`          // Enable PDF export button
+	PageBreakLevel int  `yaml:"page_break_level"` // Heading level for page breaks (1=h1, 2=h1+h2, 0=none)
+}
+
 // DefaultStaleWarningConfig returns a StaleWarningConfig with sensible defaults
 func DefaultStaleWarningConfig() StaleWarningConfig {
 	return StaleWarningConfig{
@@ -130,6 +139,14 @@ func DefaultStaleWarningConfig() StaleWarningConfig {
 		ThresholdDays:  365,
 		Message:        "",
 		ShowUpdateDate: true,
+	}
+}
+
+// DefaultPDFExportConfig returns a PDFExportConfig with sensible defaults
+func DefaultPDFExportConfig() PDFExportConfig {
+	return PDFExportConfig{
+		Enabled:        false,
+		PageBreakLevel: 1, // Default: page break before h1 only
 	}
 }
 
@@ -159,6 +176,7 @@ func DefaultSiteConfig() SiteConfig {
 		LinkCheck:     DefaultLinkCheckConfig(),
 		Versions:      DefaultVersionConfig(),
 		I18n:          DefaultI18nConfig(),
+		PDFExport:     DefaultPDFExportConfig(),
 		Custom:        make(map[string]any),
 	}
 }

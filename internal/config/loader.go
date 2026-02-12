@@ -76,9 +76,10 @@ type FileConfig struct {
 	Legal         core.LegalConfig     `yaml:"legal"`
 	KnowledgeBase core.KBConfig        `yaml:"knowledgebase"`
 	Footer        core.FooterConfig    `yaml:"footer"`
-	LinkCheck     core.LinkCheckConfig `yaml:"link_check"`
-	Versions      core.VersionConfig   `yaml:"versions"`
-	I18n          core.I18nConfig      `yaml:"i18n"`
+	LinkCheck     core.LinkCheckConfig   `yaml:"link_check"`
+	Versions      core.VersionConfig     `yaml:"versions"`
+	I18n          core.I18nConfig        `yaml:"i18n"`
+	PDFExport     core.PDFExportConfig   `yaml:"pdf_export"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -295,6 +296,11 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	// Merge I18n config
 	if cfg.I18n.Enabled {
 		result.I18n = cfg.I18n
+	}
+
+	// Merge PDFExport config
+	if cfg.PDFExport.Enabled {
+		result.PDFExport = cfg.PDFExport
 	}
 
 	// Merge Social Links
