@@ -188,7 +188,10 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 {{if .Page.Metadata.Title}}<header class="page-header">
 <div class="page-title-row">
 <h1>{{.Page.Metadata.Title}}</h1>
+<div class="page-title-actions">
+{{if $.Site.Config.ClaudeAssist.Enabled}}<button class="claude-assist-btn" id="claude-assist-btn" aria-label="{{$.Site.Config.ClaudeAssist.Label}}"{{if $.Site.Config.ClaudeAssist.Prompt}} data-prompt="{{$.Site.Config.ClaudeAssist.Prompt}}"{{end}}>{{$.Site.Config.ClaudeAssist.Label}}</button>{{end}}
 {{if $.Site.Config.PDFExport.Enabled}}<button class="pdf-export-btn" id="pdf-export-btn" aria-label="Export to PDF">Export PDF</button>{{end}}
+</div>
 </div>
 {{if .Page.Metadata.Description}}<p class="page-description">{{.Page.Metadata.Description}}</p>{{end}}
 <p class="page-updated">Last updated: {{if .Page.ModTime.IsZero}}Never{{else}}{{.Page.ModTime.Format "January 2, 2006"}}{{end}}</p>
@@ -236,5 +239,6 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 {{if .Site.Config.Versions.Enabled}}<script defer src="{{.BasePath}}/js/version-selector.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.I18n.Enabled}}<script defer src="{{.BasePath}}/js/locale-selector.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.PDFExport.Enabled}}<script defer src="{{.BasePath}}/js/pdf-export.js?v={{.Version}}"></script>{{end}}
+{{if .Site.Config.ClaudeAssist.Enabled}}<script defer src="{{.BasePath}}/js/claude-assist.js?v={{.Version}}"></script>{{end}}
 </body>
 </html>

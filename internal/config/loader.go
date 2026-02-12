@@ -79,7 +79,8 @@ type FileConfig struct {
 	LinkCheck     core.LinkCheckConfig   `yaml:"link_check"`
 	Versions      core.VersionConfig     `yaml:"versions"`
 	I18n          core.I18nConfig        `yaml:"i18n"`
-	PDFExport     core.PDFExportConfig   `yaml:"pdf_export"`
+	PDFExport     core.PDFExportConfig    `yaml:"pdf_export"`
+	ClaudeAssist  core.ClaudeAssistConfig `yaml:"claude_assist"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -301,6 +302,14 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	// Merge PDFExport config
 	if cfg.PDFExport.Enabled {
 		result.PDFExport = cfg.PDFExport
+	}
+
+	// Merge ClaudeAssist config
+	if cfg.ClaudeAssist.Enabled {
+		result.ClaudeAssist = cfg.ClaudeAssist
+		if result.ClaudeAssist.Label == "" {
+			result.ClaudeAssist.Label = "Ask Claude"
+		}
 	}
 
 	// Merge Social Links

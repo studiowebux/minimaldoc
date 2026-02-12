@@ -293,3 +293,8 @@ i18n:
 pdf_export:
   enabled: true
   page_break_level: 2 # 0=none, 1=h1 only, 2=h1+h2
+
+claude_assist:
+  enabled: true
+  label: "Ask Claude"
+  # prompt: "Custom prompt prefix (optional)"

@@ -114,6 +114,9 @@ type SiteConfig struct {
 	// PDF Export
 	PDFExport PDFExportConfig `yaml:"pdf_export"` // PDF export configuration
 
+	// Claude Assist
+	ClaudeAssist ClaudeAssistConfig `yaml:"claude_assist"` // Claude AI assist configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -132,6 +135,13 @@ type PDFExportConfig struct {
 	PageBreakLevel int  `yaml:"page_break_level"` // Heading level for page breaks (1=h1, 2=h1+h2, 0=none)
 }
 
+// ClaudeAssistConfig holds configuration for Claude AI assist feature
+type ClaudeAssistConfig struct {
+	Enabled bool   `yaml:"enabled"`       // Enable "Ask Claude" button
+	Prompt  string `yaml:"prompt"`        // Custom prompt prefix (optional)
+	Label   string `yaml:"label"`         // Button label (default: "Ask Claude")
+}
+
 // DefaultStaleWarningConfig returns a StaleWarningConfig with sensible defaults
 func DefaultStaleWarningConfig() StaleWarningConfig {
 	return StaleWarningConfig{
@@ -147,6 +157,15 @@ func DefaultPDFExportConfig() PDFExportConfig {
 	return PDFExportConfig{
 		Enabled:        false,
 		PageBreakLevel: 1, // Default: page break before h1 only
+	}
+}
+
+// DefaultClaudeAssistConfig returns a ClaudeAssistConfig with sensible defaults
+func DefaultClaudeAssistConfig() ClaudeAssistConfig {
+	return ClaudeAssistConfig{
+		Enabled: false,
+		Prompt:  "",
+		Label:   "Ask Claude",
 	}
 }
 
@@ -177,6 +196,7 @@ func DefaultSiteConfig() SiteConfig {
 		Versions:      DefaultVersionConfig(),
 		I18n:          DefaultI18nConfig(),
 		PDFExport:     DefaultPDFExportConfig(),
+		ClaudeAssist:  DefaultClaudeAssistConfig(),
 		Custom:        make(map[string]any),
 	}
 }

@@ -1614,6 +1614,13 @@ html.no-js .nav-link-parent {
     flex: 1;
 }
 
+.page-title-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.claude-assist-btn,
 .pdf-export-btn {
     display: inline-flex;
     align-items: center;
@@ -1631,12 +1638,14 @@ html.no-js .nav-link-parent {
     white-space: nowrap;
 }
 
+.claude-assist-btn:hover,
 .pdf-export-btn:hover {
     background-color: var(--bg-hover);
     border-color: var(--link-color);
     color: var(--text-primary);
 }
 
+.claude-assist-btn:active,
 .pdf-export-btn:active {
     transform: scale(0.98);
 }
