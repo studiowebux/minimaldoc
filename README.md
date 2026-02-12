@@ -4,51 +4,20 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 
 ## Features
 
-### Content
-- **Markdown-based** - Write in Markdown with YAML frontmatter
-- **GFM Support** - Tables, task lists, strikethrough
-- **Admonitions** - Callout blocks (info, warning, danger, success, note, question)
-- **Syntax Highlighting** - 100+ languages via Chroma with copy button
-- **Stale Warnings** - Configurable warnings for outdated content
-- **Link Checking** - Validate internal and external links during build
+| Category | Features |
+|----------|----------|
+| **Content** | Markdown (GFM), Frontmatter, Admonitions, Syntax Highlighting (100+ langs), Stale Warnings, Link Checking |
+| **Navigation** | Auto-generated from folders, Custom TOC.md, Page TOC with scrollspy, Collapsible sections |
+| **Search** | Full-text inverted index, Cmd+K shortcut, Prefix matching, Section-level results |
+| **Design** | Dark mode, Responsive, Built-in themes, Custom colors/fonts via YAML |
+| **Versioning** | Multi-version docs, Version selector, EOL warnings, Per-version search |
+| **i18n** | Multi-locale, Translation files, Fallback content, RTL support |
+| **Pages** | Landing, Knowledge Base, Portfolio, Contact, FAQ, Legal, Status, Changelog |
+| **API Docs** | OpenAPI/Swagger, Live testing, Code samples (curl/JS/Go/Python/Swift), Schema viewer |
+| **SEO** | Sitemap, Open Graph, Twitter Cards, LLM output (llms.txt) |
+| **Build** | Single binary, Fast (Go), Config file or CLI flags, Clean URLs option |
 
-### Navigation
-- **Auto Navigation** - Generated from folder structure
-- **Custom TOC** - Via TOC.md file
-- **Page TOC** - Auto-generated with scrollspy
-- **Search** - Client-side full-text search with Cmd+K/Ctrl+K
-
-### Design
-- **Dark Mode** - Toggle with localStorage persistence
-- **Themes** - CSS-only customization (default, yellow)
-- **Custom Themes** - Configure colors, fonts, backgrounds in YAML
-- **Responsive** - Mobile, tablet, desktop
-
-### Versioning
-- **Multi-Version Docs** - Maintain documentation for multiple software versions
-- **Version Selector** - Dropdown to switch between versions
-- **EOL Warnings** - Warning banners for end-of-life versions
-- **Per-Version Search** - Separate search indexes per version
-
-### Pages
-- **Landing Pages** - Marketing homepage with hero, features, steps (YAML or Markdown)
-- **Knowledge Base** - Self-service support hub with categories and scoped search
-- **Portfolio** - Project showcase with tags and filtering
-- **Contact** - Contact page with email and info
-- **FAQ** - Collapsible Q&A with categories, search integration, deep linking
-- **Legal** - Privacy policy, terms of service with auto footer links
-- **Status Page** - Service health with incidents, maintenance, uptime
-- **Changelog** - Version history with RSS feed
-
-### API Documentation
-- **OpenAPI Support** - Interactive docs with testing UI
-- **Code Samples** - curl, JavaScript, Go, Python, Swift
-- **Schema Viewer** - Request/response visualization
-
-### SEO
-- **Sitemap** - Automatic sitemap.xml generation
-- **Meta Tags** - Open Graph, Twitter Cards
-- **LLM Output** - llms.txt and llms-full.txt generation
+See [Feature Index](docs/features/00-index.md) for the complete list with descriptions
 
 ## Installation
 

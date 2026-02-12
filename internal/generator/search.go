@@ -36,6 +36,19 @@ type SearchIndex struct {
 	Index    map[string]PostingList `json:"idx"`
 }
 
+// SearchManifest is the lightweight manifest for sharded search
+type SearchManifest struct {
+	Pages    []SearchPage    `json:"pages"`
+	Sections []SearchSection `json:"sections"`
+	Shards   []string        `json:"shards"` // List of shard prefixes (e.g., ["ab", "cd", ...])
+}
+
+// SearchShard contains posting lists for terms with a specific prefix
+type SearchShard struct {
+	Prefix string                 `json:"prefix"`
+	Index  map[string]PostingList `json:"idx"`
+}
+
 // SearchGenerator generates search index JSON
 type SearchGenerator struct {
 	site *core.Site
@@ -149,6 +162,79 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 		pageID++
 	}
 
+	// Index FAQ items (if enabled)
+	if g.site.FaqPage != nil && g.site.Config.Faq.Enabled {
+		faqPath := g.site.Config.Faq.Path
+		if faqPath == "" {
+			faqPath = "faq"
+		}
+
+		for _, cat := range g.site.FaqPage.Categories {
+			for _, item := range cat.Items {
+				index.Pages = append(index.Pages, SearchPage{
+					Title: item.Question,
+					Desc:  cat.Name,
+					URL:   basePath + versionPrefix + "/" + faqPath + "/#" + item.Slug,
+				})
+
+				g.indexText(index.Index, item.Question, pageID, 3)
+				g.indexText(index.Index, cat.Name, pageID, 2)
+
+				for _, tag := range item.Tags {
+					g.indexText(index.Index, tag, pageID, 2)
+				}
+
+				answerText := item.Answer
+				if item.AnswerHTML != "" {
+					answerText = extractPlainText([]byte(item.AnswerHTML))
+				}
+				if len(answerText) > 1000 {
+					answerText = answerText[:1000]
+				}
+				g.indexText(index.Index, answerText, pageID, 1)
+
+				pageID++
+			}
+		}
+	}
+
+	// Index KB articles (if enabled)
+	if g.site.KBPage != nil && g.site.Config.KnowledgeBase.Enabled {
+		kbPath := g.site.Config.KnowledgeBase.Path
+		if kbPath == "" {
+			kbPath = "kb"
+		}
+
+		for _, cat := range g.site.KBPage.Categories {
+			for _, article := range cat.Articles {
+				index.Pages = append(index.Pages, SearchPage{
+					Title: article.Title,
+					Desc:  cat.Name + " | " + article.Description,
+					URL:   basePath + versionPrefix + "/" + kbPath + "/" + cat.Slug + "/" + article.Slug + ".html",
+				})
+
+				g.indexText(index.Index, article.Title, pageID, 3)
+				g.indexText(index.Index, cat.Name, pageID, 2)
+
+				if article.Description != "" {
+					g.indexText(index.Index, article.Description, pageID, 2)
+				}
+
+				for _, tag := range article.Tags {
+					g.indexText(index.Index, tag, pageID, 2)
+				}
+
+				contentText := extractPlainText([]byte(article.HTML))
+				if len(contentText) > 1000 {
+					contentText = contentText[:1000]
+				}
+				g.indexText(index.Index, contentText, pageID, 1)
+
+				pageID++
+			}
+		}
+	}
+
 	for word := range index.Index {
 		list := index.Index[word]
 		sortPostingList(list)
@@ -174,8 +260,21 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 		return fmt.Errorf("failed to write search index: %w", err)
 	}
 
-	fmt.Printf("  Generated search index for %s: %d pages, %d terms\n",
-		versionInfo.Name, len(index.Pages), len(index.Index))
+	// Also write sharded index
+	var shardDir string
+	if isDefault {
+		shardDir = g.site.OutputRoot
+	} else {
+		shardDir = filepath.Join(g.site.OutputRoot, versionInfo.Path)
+	}
+
+	numShards, err := g.writeShardedIndex(index, shardDir)
+	if err != nil {
+		return fmt.Errorf("failed to write sharded index: %w", err)
+	}
+
+	fmt.Printf("  Generated search index for %s: %d pages, %d terms, %d shards\n",
+		versionInfo.Name, len(index.Pages), len(index.Index), numShards)
 	return nil
 }
 
@@ -342,8 +441,14 @@ func (g *SearchGenerator) generateMainIndex() error {
 		return fmt.Errorf("failed to write search index: %w", err)
 	}
 
-	fmt.Printf("Generated search index: %d pages, %d sections, %d terms\n",
-		len(index.Pages), len(index.Sections), len(index.Index))
+	// Also write sharded index
+	numShards, err := g.writeShardedIndex(index, g.site.OutputRoot)
+	if err != nil {
+		return fmt.Errorf("failed to write sharded index: %w", err)
+	}
+
+	fmt.Printf("Generated search index: %d pages, %d sections, %d terms, %d shards\n",
+		len(index.Pages), len(index.Sections), len(index.Index), numShards)
 	return nil
 }
 
@@ -623,4 +728,77 @@ func (g *SearchGenerator) getBasePath() string {
 	}
 
 	return path
+}
+
+// writeShardedIndex writes the search index as sharded files
+// Returns the number of shards created
+func (g *SearchGenerator) writeShardedIndex(index SearchIndex, outputDir string) (int, error) {
+	// Group terms by prefix (first 2 chars, or full term if < 2 chars)
+	shardMap := make(map[string]map[string]PostingList)
+
+	for term, postings := range index.Index {
+		prefix := getShardPrefix(term)
+		if shardMap[prefix] == nil {
+			shardMap[prefix] = make(map[string]PostingList)
+		}
+		shardMap[prefix][term] = postings
+	}
+
+	// Collect shard prefixes
+	shardPrefixes := make([]string, 0, len(shardMap))
+	for prefix := range shardMap {
+		shardPrefixes = append(shardPrefixes, prefix)
+	}
+
+	// Write manifest (pages + sections + shard list)
+	manifest := SearchManifest{
+		Pages:    index.Pages,
+		Sections: index.Sections,
+		Shards:   shardPrefixes,
+	}
+
+	manifestData, err := json.Marshal(manifest)
+	if err != nil {
+		return 0, fmt.Errorf("failed to marshal search manifest: %w", err)
+	}
+
+	manifestPath := filepath.Join(outputDir, "search-manifest.json")
+	if err := os.WriteFile(manifestPath, manifestData, 0644); err != nil {
+		return 0, fmt.Errorf("failed to write search manifest: %w", err)
+	}
+
+	// Create shards directory
+	shardsDir := filepath.Join(outputDir, "search-shards")
+	if err := os.MkdirAll(shardsDir, 0755); err != nil {
+		return 0, fmt.Errorf("failed to create shards directory: %w", err)
+	}
+
+	// Write each shard
+	for prefix, terms := range shardMap {
+		shard := SearchShard{
+			Prefix: prefix,
+			Index:  terms,
+		}
+
+		shardData, err := json.Marshal(shard)
+		if err != nil {
+			return 0, fmt.Errorf("failed to marshal shard %s: %w", prefix, err)
+		}
+
+		shardPath := filepath.Join(shardsDir, prefix+".json")
+		if err := os.WriteFile(shardPath, shardData, 0644); err != nil {
+			return 0, fmt.Errorf("failed to write shard %s: %w", prefix, err)
+		}
+	}
+
+	return len(shardMap), nil
+}
+
+// getShardPrefix returns the shard prefix for a term
+// Uses first 2 characters, or the full term if shorter
+func getShardPrefix(term string) string {
+	if len(term) < 2 {
+		return term
+	}
+	return term[:2]
 }
