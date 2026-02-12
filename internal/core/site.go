@@ -19,6 +19,10 @@ type Site struct {
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
 	KBPage        *KBPage        // Knowledge Base data (if enabled)
 
+	// Versioning
+	VersionedPages map[string][]*Page // Pages per version (key = version name)
+	CurrentVersion string             // Current version being built (empty = default)
+
 	// Paths
 	DocsRoot   string // Root directory of markdown files
 	OutputRoot string // Output directory for generated site
@@ -40,8 +44,9 @@ type SiteConfig struct {
 	Author      string `yaml:"author"`
 
 	// Theme
-	Theme     string `yaml:"theme"`      // Theme name (default: "default")
-	DarkMode  bool   `yaml:"dark_mode"`  // Enable dark mode by default
+	Theme       string      `yaml:"theme"`        // Theme name (default: "default")
+	DarkMode    bool        `yaml:"dark_mode"`    // Enable dark mode by default
+	ThemeConfig ThemeConfig `yaml:"theme_config"` // Custom theme configuration
 
 	// Features
 	EnableLLMS  bool `yaml:"enable_llms"`  // Generate llms.txt
@@ -93,6 +98,12 @@ type SiteConfig struct {
 	// Social Links
 	SocialLinks []SocialLink `yaml:"social_links"` // Social media links in sidebar
 
+	// Link Check
+	LinkCheck LinkCheckConfig `yaml:"link_check"` // Link checker configuration
+
+	// Versions
+	Versions VersionConfig `yaml:"versions"` // Multi-version documentation configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -122,6 +133,7 @@ func DefaultSiteConfig() SiteConfig {
 		Description:  "Documentation site powered by Minimal Doc",
 		Theme:        "default",
 		DarkMode:     false,
+		ThemeConfig:  DefaultThemeConfig(),
 		EnableLLMS:   true,
 		EnableSearch: false,
 		NavDepth:     0,
@@ -137,7 +149,9 @@ func DefaultSiteConfig() SiteConfig {
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),
 		Footer:        DefaultFooterConfig(),
-		Custom:       make(map[string]any),
+		LinkCheck:     DefaultLinkCheckConfig(),
+		Versions:      DefaultVersionConfig(),
+		Custom:        make(map[string]any),
 	}
 }
 

@@ -1,6 +1,7 @@
 title: MinimalDoc
 description: A minimal static site generator for documentation. Fast, clean, and easy to use.
-base_url: https://studiowebux.github.io/minimaldoc
+# base_url: https://studiowebux.github.io/minimaldoc
+base_url: http://localhost:8889
 author: Studio Webux
 theme: default
 dark_mode: false
@@ -176,6 +177,31 @@ legal:
   path: "legal"
   footer_group: "Legal"
 
+knowledgebase:
+  enabled: true
+  title: "Knowledge Base"
+  description: "Find answers, guides, and solutions"
+  path: "kb"
+  search:
+    enabled: true
+    placeholder: "Search articles..."
+  categories:
+    getting-started:
+      name: "Getting Started"
+      description: "Installation, setup, and first steps"
+      icon: "rocket"
+      order: 1
+    features:
+      name: "Features"
+      description: "Search, themes, code blocks, and more"
+      icon: "code"
+      order: 2
+    troubleshooting:
+      name: "Troubleshooting"
+      description: "Common issues and solutions"
+      icon: "wrench"
+      order: 3
+
 footer:
   copyright: "2026 Studio Webux. GPL-3.0 License."
   links:
@@ -209,6 +235,8 @@ footer:
           url: "/guides/deployment.html"
     - title: "Resources"
       items:
+        - text: "Knowledge Base"
+          url: "/kb/"
         - text: "Status"
           url: "/status/"
         - text: "Changelog"

@@ -31,6 +31,7 @@ a{color:var(--link-color)}
 {{if .Page.Metadata.SEO.Image}}<meta property="twitter:image" content="{{.Page.Metadata.SEO.Image}}">{{end}}
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>

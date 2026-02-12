@@ -35,6 +35,13 @@ type Metadata struct {
 	Question string `yaml:"question"` // FAQ question text
 	Category string `yaml:"category"` // FAQ category name
 
+	// Version-specific fields
+	Versions     []string `yaml:"versions"`      // Versions this page appears in (empty = all)
+	Since        string   `yaml:"since"`         // Version this feature was introduced
+	DeprecatedIn string   `yaml:"deprecated_in"` // Version where feature was deprecated
+	RemovedIn    string   `yaml:"removed_in"`    // Version where feature was removed
+	VersionNote  string   `yaml:"version_note"`  // Version to show note for
+
 	// Custom fields (for extensibility)
 	Custom map[string]any `yaml:"custom"`
 }

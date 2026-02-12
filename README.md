@@ -10,6 +10,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 - **Admonitions** - Callout blocks (info, warning, danger, success, note, question)
 - **Syntax Highlighting** - 100+ languages via Chroma with copy button
 - **Stale Warnings** - Configurable warnings for outdated content
+- **Link Checking** - Validate internal and external links during build
 
 ### Navigation
 - **Auto Navigation** - Generated from folder structure
@@ -24,6 +25,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 
 ### Pages
 - **Landing Pages** - Marketing homepage with hero, features, steps (YAML or Markdown)
+- **Knowledge Base** - Self-service support hub with categories and scoped search
 - **Portfolio** - Project showcase with tags and filtering
 - **Contact** - Contact page with email and info
 - **FAQ** - Collapsible Q&A with categories, search integration, deep linking
@@ -119,6 +121,8 @@ minimaldoc build [docs-directory] [flags]
 - `--title` - Site title (default: `Documentation`)
 - `--description` - Site description
 - `--base-url` - Base URL for the site
+- `--link-check` - Link check mode: `error`, `warn`, `ignore` (default: `warn`)
+- `--check-external` - Validate external URLs (slower)
 
 **Example:**
 
@@ -511,6 +515,121 @@ buttons:
 Supported sections: `hero`, `features`, `steps`, `cta`, `testimonials`, `opensource`, `links`.
 
 Markdown files override YAML config (YAML serves as defaults).
+
+## Knowledge Base
+
+Create a self-service support hub with categories and dedicated search.
+
+### Directory Structure
+
+```
+docs/
+  __kb__/
+    getting-started/
+      01-quick-start.md
+      02-configuration.md
+    troubleshooting/
+      01-common-issues.md
+```
+
+Subdirectories become categories. Markdown files are articles.
+
+### Configuration
+
+```yaml
+knowledgebase:
+  enabled: true
+  title: "Knowledge Base"
+  description: "Find answers and solutions"
+  path: "kb"
+  search:
+    enabled: true
+    placeholder: "Search articles..."
+  categories:
+    getting-started:
+      name: "Getting Started"
+      description: "Installation and setup"
+      icon: "rocket"
+      order: 1
+    troubleshooting:
+      name: "Troubleshooting"
+      icon: "wrench"
+      order: 2
+```
+
+### Article Frontmatter
+
+```yaml
+---
+title: "Quick Start Guide"
+description: "Get up and running in minutes"
+tags: ["beginner", "setup"]
+order: 1
+---
+```
+
+### Features
+
+- Category landing page with article counts
+- Scoped search (`kb-search.json`)
+- Breadcrumb navigation
+- Related articles by tags
+- Previous/Next navigation within categories
+
+## Link Checking
+
+Validate links during build to catch broken references before deployment.
+
+### Modes
+
+```bash
+# Warn on broken links (default)
+minimaldoc build docs
+
+# Fail build on broken links (CI/CD)
+minimaldoc build docs --link-check=error
+
+# Skip link checking
+minimaldoc build docs --link-check=ignore
+
+# Also check external URLs
+minimaldoc build docs --check-external
+```
+
+### Configuration
+
+```yaml
+link_check:
+  enabled: true
+  mode: "warn"           # error, warn, ignore
+  check_external: false  # Validate external URLs
+  external_timeout: 5    # Seconds
+  ignore_patterns:
+    - "/api/*"           # Skip generated API docs
+  allowed_broken:
+    - "example.md"       # Documentation examples
+```
+
+### What Gets Checked
+
+- Internal page links (`.md`, `.html`)
+- Anchor links (`#section`)
+- Asset links (images, files)
+- External URLs (optional)
+
+### Output
+
+```
+Checking links...
+
+Warning: Found 2 broken links
+
+docs/guides/deploy.md:
+  Line 42: /api/reference.html (file not found)
+  Line 78: #instalation (anchor not found, did you mean #installation?)
+
+Link check completed with warnings: 2 broken links in 1 files
+```
 
 ### Code Samples
 

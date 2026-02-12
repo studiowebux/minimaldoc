@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/changelog.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
 </head>
 <body>
 <a href="#changelog-main" class="skip-link">Skip to content</a>

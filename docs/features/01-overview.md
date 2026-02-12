@@ -20,6 +20,7 @@ Pure static output designed for CI/CD integration—automate updates to document
 |                | Admonitions         | Callout blocks (info, warning, danger, success, note, question) |
 |                | Syntax Highlighting | 100+ languages via Chroma with copy button                      |
 |                | Stale Warnings      | Configurable warnings for outdated content                      |
+|                | Link Checking       | Validate internal/external links during build                   |
 | **Navigation** | Auto Navigation     | From folder structure                                           |
 |                | Custom TOC          | Via TOC.md file                                                 |
 |                | Page TOC            | Auto-generated from headings                                    |
@@ -35,6 +36,7 @@ Pure static output designed for CI/CD integration—automate updates to document
 |                | Contact             | Contact page with email and info                                |
 |                | FAQ                 | Collapsible Q&A with categories and search integration          |
 |                | Legal               | Privacy policy, terms of service with auto footer links         |
+|                | Knowledge Base      | Self-service support hub with categories and scoped search      |
 |                | Status              | Service health with incidents, maintenance, uptime              |
 |                | Changelog           | Version history with RSS feed                                   |
 | **SEO**        | Sitemap             | Automatic sitemap.xml generation                                |
