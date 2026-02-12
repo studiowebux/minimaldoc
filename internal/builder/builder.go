@@ -30,6 +30,7 @@ type Builder struct {
 	contactBuilder    *ContactBuilder
 	faqBuilder        *FaqBuilder
 	legalBuilder      *LegalBuilder
+	kbBuilder         *KBBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -49,6 +50,7 @@ func NewBuilder(site *core.Site) *Builder {
 		contactBuilder:    NewContactBuilder(),
 		faqBuilder:        NewFaqBuilder(),
 		legalBuilder:      NewLegalBuilder(),
+		kbBuilder:         NewKBBuilder(),
 	}
 }
 
@@ -98,7 +100,8 @@ func (b *Builder) Build() error {
 
 	// 6. Build landing page (if enabled)
 	if b.site.Config.Landing.Enabled {
-		landingPage, err := b.landingBuilder.Build(b.site.Config.Landing)
+		basePath := b.getBasePath()
+		landingPage, err := b.landingBuilder.Build(b.site.DocsRoot, b.site.Config.Landing, basePath)
 		if err != nil {
 			return fmt.Errorf("failed to build landing page: %w", err)
 		}
@@ -144,7 +147,17 @@ func (b *Builder) Build() error {
 		b.site.LegalPages = legalPages
 	}
 
-	// 11. Build navigation
+	// 11. Build knowledge base (if enabled)
+	if b.site.Config.KnowledgeBase.Enabled {
+		basePath := b.getBasePath()
+		kbPage, err := b.kbBuilder.Build(b.site.DocsRoot, b.site.Config.KnowledgeBase, basePath)
+		if err != nil {
+			return fmt.Errorf("failed to build knowledge base: %w", err)
+		}
+		b.site.KBPage = kbPage
+	}
+
+	// 12. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
 	// 11. Compute prev/next links
@@ -207,6 +220,16 @@ func (b *Builder) discoverPages() error {
 
 		// Skip the legal directory entirely (it has its own build process)
 		if d.IsDir() && d.Name() == core.LegalSourceDir {
+			return filepath.SkipDir
+		}
+
+		// Skip the landing directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == core.LandingSourceDir {
+			return filepath.SkipDir
+		}
+
+		// Skip the knowledge base directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == core.KBSourceDir {
 			return filepath.SkipDir
 		}
 

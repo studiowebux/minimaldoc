@@ -2,10 +2,11 @@ package core
 
 // FooterConfig holds configuration for the landing page footer
 type FooterConfig struct {
-	Copyright string            `yaml:"copyright"`
-	Links     []FooterLinkGroup `yaml:"links"`
-	Social    []SocialLink      `yaml:"social"`
-	Badges    []FooterBadge     `yaml:"badges"`
+	Copyright   string            `yaml:"copyright"`
+	Links       []FooterLinkGroup `yaml:"links"`
+	Social      []SocialLink      `yaml:"social"`
+	Badges      []FooterBadge     `yaml:"badges"`
+	HideVersion bool              `yaml:"hideVersion"`
 }
 
 // DefaultFooterConfig returns a FooterConfig with sensible defaults

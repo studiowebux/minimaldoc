@@ -12,8 +12,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.platform }}
+        include:
+          - platform: macos
+            os: macos-latest
+            extension: ""
+          - platform: linux
+            os: ubuntu-latest
+            extension: ""
+          - platform: windows
+            os: windows-latest
+            extension: ".exe"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v6
@@ -22,11 +31,11 @@ jobs:
 
       - name: Compile minimaldoc
         run: |
-          go build -o ./bin/minimaldoc-${{ matrix.platform }} ./cmd/minimaldoc
+          go build -o ./bin/minimaldoc-${{ matrix.platform }}${{ matrix.extension }} ./cmd/minimaldoc
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./bin/minimaldoc-${{ matrix.platform }}
+            ./bin/minimaldoc-${{ matrix.platform }}${{ matrix.extension }}

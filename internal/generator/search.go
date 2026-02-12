@@ -164,6 +164,50 @@ func (g *SearchGenerator) Generate() error {
 		}
 	}
 
+	// Index KB articles (if enabled)
+	if g.site.KBPage != nil && g.site.Config.KnowledgeBase.Enabled {
+		kbPath := g.site.Config.KnowledgeBase.Path
+		if kbPath == "" {
+			kbPath = "kb"
+		}
+
+		for _, cat := range g.site.KBPage.Categories {
+			for _, article := range cat.Articles {
+				// Add KB article as a page
+				index.Pages = append(index.Pages, SearchPage{
+					Title: article.Title,
+					Desc:  cat.Name + " | " + article.Description,
+					URL:   basePath + "/" + kbPath + "/" + cat.Slug + "/" + article.Slug + ".html",
+				})
+
+				// Index title (high weight)
+				g.indexText(index.Index, article.Title, pageID, 3)
+
+				// Index category (medium weight)
+				g.indexText(index.Index, cat.Name, pageID, 2)
+
+				// Index description (medium weight)
+				if article.Description != "" {
+					g.indexText(index.Index, article.Description, pageID, 2)
+				}
+
+				// Index tags (medium weight)
+				for _, tag := range article.Tags {
+					g.indexText(index.Index, tag, pageID, 2)
+				}
+
+				// Index content (low weight)
+				contentText := extractPlainText([]byte(article.HTML))
+				if len(contentText) > 1000 {
+					contentText = contentText[:1000]
+				}
+				g.indexText(index.Index, contentText, pageID, 1)
+
+				pageID++
+			}
+		}
+	}
+
 	// Sort posting lists by score (descending) for better results
 	for word := range index.Index {
 		list := index.Index[word]

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>{{.PageTitle}}</title>
+<meta name="description" content="{{.Article.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/kb.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main">
+<article class="kb-article-page">
+<div class="kb-article-container">
+<nav class="kb-breadcrumb" aria-label="Breadcrumb">
+<ol>
+<li><a href="{{.BasePath}}/{{.KBPath}}/">{{.KBPage.Config.Title}}</a></li>
+<li><a href="{{.BasePath}}/{{.KBPath}}/{{.Category.Slug}}/">{{.Category.Name}}</a></li>
+<li aria-current="page">{{.Article.Title}}</li>
+</ol>
+</nav>
+
+<header class="kb-article-header">
+<h1>{{.Article.Title}}</h1>
+{{if .Article.Description}}<p class="kb-article-summary">{{.Article.Description}}</p>{{end}}
+{{if .Article.Tags}}
+<div class="kb-article-tags">
+{{range .Article.Tags}}<span class="kb-tag">{{.}}</span>{{end}}
+</div>
+{{end}}
+</header>
+
+<div class="kb-article-body">
+{{.Article.HTML | safeHTML}}
+</div>
+
+<nav class="kb-article-nav" aria-label="Article navigation">
+{{if .Article.Prev}}
+<a href="{{$.BasePath}}/{{$.KBPath}}/{{$.Category.Slug}}/{{.Article.Prev.Slug}}.html" class="kb-nav-prev">
+<span class="kb-nav-label">Previous</span>
+<span class="kb-nav-title">{{.Article.Prev.Title}}</span>
+</a>
+{{else}}
+<span class="kb-nav-placeholder"></span>
+{{end}}
+{{if .Article.Next}}
+<a href="{{$.BasePath}}/{{$.KBPath}}/{{$.Category.Slug}}/{{.Article.Next.Slug}}.html" class="kb-nav-next">
+<span class="kb-nav-label">Next</span>
+<span class="kb-nav-title">{{.Article.Next.Title}}</span>
+</a>
+{{end}}
+</nav>
+
+{{if .Article.RelatedArticles}}
+<section class="kb-related">
+<h2>Related Articles</h2>
+<div class="kb-related-list">
+{{range .Article.RelatedArticles}}
+<a href="{{$.BasePath}}/{{$.KBPath}}/{{.CategorySlug}}/{{.Slug}}.html" class="kb-related-item">
+<span class="kb-related-category">{{.CategoryName}}</span>
+<span class="kb-related-title">{{.Title}}</span>
+</a>
+{{end}}
+</div>
+</section>
+{{end}}
+</div>
+</article>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-icons" .}}
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+{{template "landing-scripts" .}}
+</body>
+</html>

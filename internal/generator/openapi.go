@@ -262,7 +262,7 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 	}
 
 	// Build footer links with legal pages
-	footer := g.buildFooterWithLegal()
+	footer := BuildFooter(g.site, g.version)
 	var footerLinks strings.Builder
 	if len(footer.Links) > 0 {
 		footerLinks.WriteString(`<div class="footer-links">`)
@@ -394,35 +394,3 @@ func (g *OpenAPIGenerator) getBasePath() string {
 	return path
 }
 
-// buildFooterWithLegal creates a footer config with auto-generated legal links
-func (g *OpenAPIGenerator) buildFooterWithLegal() core.FooterConfig {
-	footer := g.site.Config.Footer
-
-	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
-		legalPath := g.site.Config.Legal.Path
-		if legalPath == "" {
-			legalPath = "legal"
-		}
-
-		groupTitle := g.site.Config.Legal.FooterGroup
-		if groupTitle == "" {
-			groupTitle = "Legal"
-		}
-
-		var legalLinks []core.FooterLink
-		for _, page := range g.site.LegalPages {
-			legalLinks = append(legalLinks, core.FooterLink{
-				Text: page.Title,
-				URL:  "/" + legalPath + "/" + page.Slug + "/",
-			})
-		}
-
-		legalGroup := core.FooterLinkGroup{
-			Title: groupTitle,
-			Items: legalLinks,
-		}
-		footer.Links = append(footer.Links, legalGroup)
-	}
-
-	return footer
-}

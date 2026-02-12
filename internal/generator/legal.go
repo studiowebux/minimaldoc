@@ -80,7 +80,7 @@ func (g *LegalGenerator) generatePage(outputDir string, page *core.LegalPage) er
 	data := map[string]any{
 		"Site":      g.site,
 		"LegalPage": page,
-		"Footer":    g.buildFooterWithLegal(),
+		"Footer":    BuildFooter(g.site, g.version),
 		"BasePath":  g.getBasePath(),
 		"Version":   g.version,
 		"PageTitle": page.Title + " | " + g.site.Config.Title,
@@ -134,35 +134,3 @@ func (g *LegalGenerator) getBasePath() string {
 	return path
 }
 
-// buildFooterWithLegal creates a footer config with auto-generated legal links
-func (g *LegalGenerator) buildFooterWithLegal() core.FooterConfig {
-	footer := g.site.Config.Footer
-
-	if g.site.Config.Legal.Enabled && len(g.site.LegalPages) > 0 {
-		legalPath := g.site.Config.Legal.Path
-		if legalPath == "" {
-			legalPath = "legal"
-		}
-
-		groupTitle := g.site.Config.Legal.FooterGroup
-		if groupTitle == "" {
-			groupTitle = "Legal"
-		}
-
-		var legalLinks []core.FooterLink
-		for _, page := range g.site.LegalPages {
-			legalLinks = append(legalLinks, core.FooterLink{
-				Text: page.Title,
-				URL:  "/" + legalPath + "/" + page.Slug + "/",
-			})
-		}
-
-		legalGroup := core.FooterLinkGroup{
-			Title: groupTitle,
-			Items: legalLinks,
-		}
-		footer.Links = append(footer.Links, legalGroup)
-	}
-
-	return footer
-}

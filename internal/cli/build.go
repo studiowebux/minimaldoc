@@ -300,6 +300,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Generate knowledge base (if enabled)
+	kbGen, err := generator.NewKBGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create KB generator: %w", err)
+	}
+	if kbGen != nil {
+		if err := kbGen.Generate(); err != nil {
+			return fmt.Errorf("knowledge base generation failed: %w", err)
+		}
+	}
+
 	fmt.Println()
 	fmt.Println("✓ Build complete!")
 	fmt.Printf("✓ Output: %s\n", outputDir)

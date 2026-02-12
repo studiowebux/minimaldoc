@@ -8,4 +8,6 @@ const (
 	PortfolioSourceDir = "__portfolio__"
 	FaqSourceDir       = "__faq__"
 	LegalSourceDir     = "__legal__"
+	LandingSourceDir   = "__landing__"
+	KBSourceDir        = "__kb__"
 )
