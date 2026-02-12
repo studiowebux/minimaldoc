@@ -112,213 +112,111 @@ func LoadConfig(docsDir string) (*FileConfig, error) {
 	return &cfg, nil
 }
 
-// MergeWithCLI merges config file with CLI flags
-// CLI flags take precedence over config file values
+// MergeWithCLI merges config file with CLI flags.
+// CLI flags take precedence over config file values.
 func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[string]bool) core.SiteConfig {
 	result := cliConfig
 
-	// Only use config file values if CLI flag was not explicitly set
-	if !cliFlags["title"] && cfg.Title != "" {
-		result.Title = cfg.Title
-	}
-	if !cliFlags["description"] && cfg.Description != "" {
-		result.Description = cfg.Description
-	}
-	if !cliFlags["base-url"] && cfg.BaseURL != "" {
-		result.BaseURL = cfg.BaseURL
-	}
-	if !cliFlags["theme"] && cfg.Theme != "" {
-		result.Theme = cfg.Theme
-	}
-	if !cliFlags["llms"] && cfg.EnableLLMS {
-		result.EnableLLMS = cfg.EnableLLMS
-	}
-	if !cliFlags["clean-urls"] && cfg.CleanURLs {
-		result.CleanURLs = cfg.CleanURLs
-	}
-	if cfg.Entrypoint != "" {
-		result.Entrypoint = cfg.Entrypoint
-	}
+	// Basic site settings (CLI flag check)
+	mergeString(&result.Title, cfg.Title, cliFlags, "title")
+	mergeString(&result.Description, cfg.Description, cliFlags, "description")
+	mergeString(&result.BaseURL, cfg.BaseURL, cliFlags, "base-url")
+	mergeString(&result.Theme, cfg.Theme, cliFlags, "theme")
+	mergeBool(&result.EnableLLMS, cfg.EnableLLMS, cliFlags, "llms")
+	mergeBool(&result.CleanURLs, cfg.CleanURLs, cliFlags, "clean-urls")
+	mergeStringNoFlag(&result.Entrypoint, cfg.Entrypoint)
 
-	// Merge OpenAPI config
-	if !cliFlags["openapi"] {
-		result.OpenAPI.Enabled = cfg.OpenAPI.Enabled
-	}
-
-	// If OpenAPI is enabled (either via CLI or config), merge OpenAPI settings
+	// OpenAPI config
+	mergeBool(&result.OpenAPI.Enabled, cfg.OpenAPI.Enabled, cliFlags, "openapi")
 	if result.OpenAPI.Enabled {
-		if !cliFlags["openapi-dir"] && len(cfg.OpenAPI.SpecFiles) > 0 {
-			result.OpenAPI.SpecFiles = cfg.OpenAPI.SpecFiles
-		}
-		if len(cfg.OpenAPI.SpecURLs) > 0 {
-			result.OpenAPI.SpecURLs = cfg.OpenAPI.SpecURLs
-		}
-		if cfg.OpenAPI.DefaultView != "" {
-			result.OpenAPI.DefaultView = cfg.OpenAPI.DefaultView
-		}
-		if cfg.OpenAPI.SyncOnBuild {
-			result.OpenAPI.SyncOnBuild = cfg.OpenAPI.SyncOnBuild
-		}
-		if cfg.OpenAPI.CacheDir != "" {
-			result.OpenAPI.CacheDir = cfg.OpenAPI.CacheDir
-		}
-		if cfg.OpenAPI.EnableTesting {
-			result.OpenAPI.EnableTesting = cfg.OpenAPI.EnableTesting
-		}
-		if cfg.OpenAPI.EnableExport {
-			result.OpenAPI.EnableExport = cfg.OpenAPI.EnableExport
-		}
-		if cfg.OpenAPI.EnableCodeSamples {
-			result.OpenAPI.EnableCodeSamples = cfg.OpenAPI.EnableCodeSamples
-		}
-		if cfg.OpenAPI.LazyLoadChunkSize > 0 {
-			result.OpenAPI.LazyLoadChunkSize = cfg.OpenAPI.LazyLoadChunkSize
-		}
+		mergeStringSlice(&result.OpenAPI.SpecFiles, cfg.OpenAPI.SpecFiles, cliFlags, "openapi-dir")
+		mergeStringSliceNoFlag(&result.OpenAPI.SpecURLs, cfg.OpenAPI.SpecURLs)
+		mergeStringNoFlag(&result.OpenAPI.DefaultView, cfg.OpenAPI.DefaultView)
+		mergeBoolNoFlag(&result.OpenAPI.SyncOnBuild, cfg.OpenAPI.SyncOnBuild)
+		mergeStringNoFlag(&result.OpenAPI.CacheDir, cfg.OpenAPI.CacheDir)
+		mergeBoolNoFlag(&result.OpenAPI.EnableTesting, cfg.OpenAPI.EnableTesting)
+		mergeBoolNoFlag(&result.OpenAPI.EnableExport, cfg.OpenAPI.EnableExport)
+		mergeBoolNoFlag(&result.OpenAPI.EnableCodeSamples, cfg.OpenAPI.EnableCodeSamples)
+		mergeIntNoFlag(&result.OpenAPI.LazyLoadChunkSize, cfg.OpenAPI.LazyLoadChunkSize)
 	}
 
-	// Merge Status config
-	if !cliFlags["status"] {
-		result.Status.Enabled = cfg.Status.Enabled
-	}
-
-	// If Status is enabled (either via CLI or config), merge Status settings
+	// Status config
+	mergeBool(&result.Status.Enabled, cfg.Status.Enabled, cliFlags, "status")
 	if result.Status.Enabled {
-		if !cliFlags["status-title"] && cfg.Status.Title != "" {
-			result.Status.Title = cfg.Status.Title
-		}
-		if !cliFlags["status-description"] && cfg.Status.Description != "" {
-			result.Status.Description = cfg.Status.Description
-		}
-		if !cliFlags["status-path"] && cfg.Status.Path != "" {
-			result.Status.Path = cfg.Status.Path
-		}
-		if cfg.Status.ShowHistory {
-			result.Status.ShowHistory = cfg.Status.ShowHistory
-		}
-		if cfg.Status.HistoryMonths > 0 {
-			result.Status.HistoryMonths = cfg.Status.HistoryMonths
-		}
-		if cfg.Status.RSSEnabled {
-			result.Status.RSSEnabled = cfg.Status.RSSEnabled
-		}
+		mergeString(&result.Status.Title, cfg.Status.Title, cliFlags, "status-title")
+		mergeString(&result.Status.Description, cfg.Status.Description, cliFlags, "status-description")
+		mergeString(&result.Status.Path, cfg.Status.Path, cliFlags, "status-path")
+		mergeBoolNoFlag(&result.Status.ShowHistory, cfg.Status.ShowHistory)
+		mergeIntNoFlag(&result.Status.HistoryMonths, cfg.Status.HistoryMonths)
+		mergeBoolNoFlag(&result.Status.RSSEnabled, cfg.Status.RSSEnabled)
 	}
 
-	// Merge Changelog config
-	if !cliFlags["changelog"] {
-		result.Changelog.Enabled = cfg.Changelog.Enabled
-	}
-
-	// If Changelog is enabled (either via CLI or config), merge Changelog settings
+	// Changelog config
+	mergeBool(&result.Changelog.Enabled, cfg.Changelog.Enabled, cliFlags, "changelog")
 	if result.Changelog.Enabled {
-		if !cliFlags["changelog-title"] && cfg.Changelog.Title != "" {
-			result.Changelog.Title = cfg.Changelog.Title
-		}
-		if !cliFlags["changelog-path"] && cfg.Changelog.Path != "" {
-			result.Changelog.Path = cfg.Changelog.Path
-		}
-		if cfg.Changelog.Description != "" {
-			result.Changelog.Description = cfg.Changelog.Description
-		}
-		if cfg.Changelog.Repository != "" {
-			result.Changelog.Repository = cfg.Changelog.Repository
-		}
-		if cfg.Changelog.RSSEnabled {
-			result.Changelog.RSSEnabled = cfg.Changelog.RSSEnabled
-		}
+		mergeString(&result.Changelog.Title, cfg.Changelog.Title, cliFlags, "changelog-title")
+		mergeString(&result.Changelog.Path, cfg.Changelog.Path, cliFlags, "changelog-path")
+		mergeStringNoFlag(&result.Changelog.Description, cfg.Changelog.Description)
+		mergeStringNoFlag(&result.Changelog.Repository, cfg.Changelog.Repository)
+		mergeBoolNoFlag(&result.Changelog.RSSEnabled, cfg.Changelog.RSSEnabled)
 	}
 
-	// Merge Stale Warning config
-	if !cliFlags["stale-warning"] {
-		result.StaleWarning.Enabled = cfg.StaleWarning.Enabled
-	}
-
-	// If Stale Warning is enabled, merge settings
+	// Stale Warning config
+	mergeBool(&result.StaleWarning.Enabled, cfg.StaleWarning.Enabled, cliFlags, "stale-warning")
 	if result.StaleWarning.Enabled {
-		if !cliFlags["stale-threshold"] && cfg.StaleWarning.ThresholdDays > 0 {
-			result.StaleWarning.ThresholdDays = cfg.StaleWarning.ThresholdDays
-		}
-		if cfg.StaleWarning.Message != "" {
-			result.StaleWarning.Message = cfg.StaleWarning.Message
-		}
-		if cfg.StaleWarning.ShowUpdateDate {
-			result.StaleWarning.ShowUpdateDate = cfg.StaleWarning.ShowUpdateDate
-		}
+		mergeInt(&result.StaleWarning.ThresholdDays, cfg.StaleWarning.ThresholdDays, cliFlags, "stale-threshold")
+		mergeStringNoFlag(&result.StaleWarning.Message, cfg.StaleWarning.Message)
+		mergeBoolNoFlag(&result.StaleWarning.ShowUpdateDate, cfg.StaleWarning.ShowUpdateDate)
 	}
 
-	// Merge Landing config
+	// Complex configs that merge as whole structs when enabled
 	if cfg.Landing.Enabled {
 		result.Landing = cfg.Landing
 	}
-
-	// Merge ThemeConfig
 	if cfg.ThemeConfig.Name != "" || cfg.ThemeConfig.HasCustomColors() || cfg.ThemeConfig.HasCustomFonts() {
 		result.ThemeConfig = mergeThemeConfig(result.ThemeConfig, cfg.ThemeConfig)
 	}
-
-	// Merge Portfolio config
 	if cfg.Portfolio.Enabled {
 		result.Portfolio = cfg.Portfolio
 	}
-
-	// Merge Contact config
 	if cfg.Contact.Enabled {
 		result.Contact = cfg.Contact
 	}
-
-	// Merge FAQ config
 	if cfg.Faq.Enabled {
 		result.Faq = cfg.Faq
 	}
-
-	// Merge Legal config
 	if cfg.Legal.Enabled {
 		result.Legal = cfg.Legal
 	}
-
-	// Merge KnowledgeBase config
 	if cfg.KnowledgeBase.Enabled {
 		result.KnowledgeBase = cfg.KnowledgeBase
 	}
-
-	// Merge Footer config
 	if cfg.Footer.Copyright != "" || len(cfg.Footer.Links) > 0 || len(cfg.Footer.Social) > 0 {
 		result.Footer = cfg.Footer
 	}
-
-	// Merge LinkCheck config
 	if cfg.LinkCheck.Mode != "" {
 		result.LinkCheck = cfg.LinkCheck
 	}
-
-	// Merge Versions config
 	if cfg.Versions.Enabled {
 		result.Versions = cfg.Versions
 	}
-
-	// Merge I18n config
 	if cfg.I18n.Enabled {
 		result.I18n = cfg.I18n
 	}
-
-	// Merge PDFExport config
 	if cfg.PDFExport.Enabled {
 		result.PDFExport = cfg.PDFExport
 	}
-
-	// Merge ClaudeAssist config
 	if cfg.ClaudeAssist.Enabled {
 		result.ClaudeAssist = cfg.ClaudeAssist
 		if result.ClaudeAssist.Label == "" {
 			result.ClaudeAssist.Label = "Ask Claude"
 		}
 	}
-
-	// Merge Analytics config
 	if cfg.Analytics.Enabled {
 		result.Analytics = cfg.Analytics
 	}
 
-	// Merge Social Links
+	// Social Links
 	if len(cfg.SocialLinks) > 0 {
 		result.SocialLinks = make([]core.SocialLink, len(cfg.SocialLinks))
 		for i, link := range cfg.SocialLinks {
@@ -333,99 +231,28 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	return result
 }
 
-// mergeThemeConfig merges theme config, with file config values overriding defaults
+// mergeThemeConfig merges theme config, with file config values overriding defaults.
+// Uses reflection-based merging for nested structs with string fields.
 func mergeThemeConfig(base, override core.ThemeConfig) core.ThemeConfig {
 	result := base
 
-	if override.Name != "" {
-		result.Name = override.Name
-	}
+	mergeStringNoFlag(&result.Name, override.Name)
 
-	// Merge light colors
+	// Merge colors (light and dark)
 	result.Colors.Light = mergeColorSet(result.Colors.Light, override.Colors.Light)
-	// Merge dark colors
 	result.Colors.Dark = mergeColorSet(result.Colors.Dark, override.Colors.Dark)
 
-	// Merge fonts
-	if override.Fonts.Heading != "" {
-		result.Fonts.Heading = override.Fonts.Heading
-	}
-	if override.Fonts.Body != "" {
-		result.Fonts.Body = override.Fonts.Body
-	}
-	if override.Fonts.Code != "" {
-		result.Fonts.Code = override.Fonts.Code
-	}
-	if override.Fonts.GoogleURL != "" {
-		result.Fonts.GoogleURL = override.Fonts.GoogleURL
-	}
-
-	// Merge hero
-	if override.Hero.BackgroundImage != "" {
-		result.Hero.BackgroundImage = override.Hero.BackgroundImage
-	}
-	if override.Hero.BackgroundOverlay != "" {
-		result.Hero.BackgroundOverlay = override.Hero.BackgroundOverlay
-	}
-	if override.Hero.TextAlign != "" {
-		result.Hero.TextAlign = override.Hero.TextAlign
-	}
-	if override.Hero.MinHeight != "" {
-		result.Hero.MinHeight = override.Hero.MinHeight
-	}
+	// Merge fonts and hero using reflection
+	mergeStringFields(&result.Fonts, override.Fonts)
+	mergeStringFields(&result.Hero, override.Hero)
 
 	return result
 }
 
-// mergeColorSet merges color sets, with override values replacing base values
+// mergeColorSet merges color sets, with override values replacing base values.
+// Uses reflection to merge all non-empty string fields automatically.
 func mergeColorSet(base, override core.ThemeColorSet) core.ThemeColorSet {
 	result := base
-
-	if override.BgPrimary != "" {
-		result.BgPrimary = override.BgPrimary
-	}
-	if override.BgSecondary != "" {
-		result.BgSecondary = override.BgSecondary
-	}
-	if override.BgTertiary != "" {
-		result.BgTertiary = override.BgTertiary
-	}
-	if override.BgCode != "" {
-		result.BgCode = override.BgCode
-	}
-	if override.BgHover != "" {
-		result.BgHover = override.BgHover
-	}
-	if override.TextPrimary != "" {
-		result.TextPrimary = override.TextPrimary
-	}
-	if override.TextSecondary != "" {
-		result.TextSecondary = override.TextSecondary
-	}
-	if override.TextTertiary != "" {
-		result.TextTertiary = override.TextTertiary
-	}
-	if override.TextMuted != "" {
-		result.TextMuted = override.TextMuted
-	}
-	if override.BorderPrimary != "" {
-		result.BorderPrimary = override.BorderPrimary
-	}
-	if override.BorderSecondary != "" {
-		result.BorderSecondary = override.BorderSecondary
-	}
-	if override.AccentPrimary != "" {
-		result.AccentPrimary = override.AccentPrimary
-	}
-	if override.AccentHover != "" {
-		result.AccentHover = override.AccentHover
-	}
-	if override.LinkColor != "" {
-		result.LinkColor = override.LinkColor
-	}
-	if override.LinkHover != "" {
-		result.LinkHover = override.LinkHover
-	}
-
+	mergeStringFields(&result, override)
 	return result
 }
