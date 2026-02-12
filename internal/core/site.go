@@ -23,6 +23,10 @@ type Site struct {
 	VersionedPages map[string][]*Page // Pages per version (key = version name)
 	CurrentVersion string             // Current version being built (empty = default)
 
+	// Internationalization
+	LocalizedPages map[string][]*Page // Pages per locale (key = locale code)
+	CurrentLocale  string             // Current locale being built (empty = default)
+
 	// Paths
 	DocsRoot   string // Root directory of markdown files
 	OutputRoot string // Output directory for generated site
@@ -104,6 +108,9 @@ type SiteConfig struct {
 	// Versions
 	Versions VersionConfig `yaml:"versions"` // Multi-version documentation configuration
 
+	// Internationalization
+	I18n I18nConfig `yaml:"i18n"` // Internationalization configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -151,6 +158,7 @@ func DefaultSiteConfig() SiteConfig {
 		Footer:        DefaultFooterConfig(),
 		LinkCheck:     DefaultLinkCheckConfig(),
 		Versions:      DefaultVersionConfig(),
+		I18n:          DefaultI18nConfig(),
 		Custom:        make(map[string]any),
 	}
 }

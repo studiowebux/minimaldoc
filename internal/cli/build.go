@@ -342,6 +342,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Generate localized documentation (if enabled)
+	if site.Config.I18n.Enabled {
+		i18nGen, err := generator.NewI18nGenerator(site, assets.ThemeFS, version.Version)
+		if err != nil {
+			return fmt.Errorf("failed to create i18n generator: %w", err)
+		}
+		if err := i18nGen.Generate(); err != nil {
+			return fmt.Errorf("localized documentation generation failed: %w", err)
+		}
+	}
+
 	// Run link checker
 	linkChecker := checker.NewLinkChecker(site, site.Config.LinkCheck)
 	if err := linkChecker.Check(); err != nil {

@@ -32,6 +32,7 @@ type Builder struct {
 	legalBuilder      *LegalBuilder
 	kbBuilder         *KBBuilder
 	versionBuilder    *VersionBuilder
+	i18nBuilder       *I18nBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -53,6 +54,7 @@ func NewBuilder(site *core.Site) *Builder {
 		legalBuilder:      NewLegalBuilder(),
 		kbBuilder:         NewKBBuilder(),
 		versionBuilder:    NewVersionBuilder(),
+		i18nBuilder:       NewI18nBuilder(),
 	}
 }
 
@@ -167,10 +169,18 @@ func (b *Builder) Build() error {
 		fmt.Printf("Built %d version(s)\n", len(b.site.Config.Versions.List))
 	}
 
-	// 13. Build navigation
+	// 13. Build localized page sets (if enabled)
+	if b.site.Config.I18n.Enabled {
+		if err := b.i18nBuilder.Build(b.site); err != nil {
+			return fmt.Errorf("failed to build localized pages: %w", err)
+		}
+		fmt.Printf("Built %d locale(s)\n", len(b.site.Config.I18n.Locales))
+	}
+
+	// 14. Build navigation
 	b.site.Navigation = b.navBuilder.Build(b.site.Pages, b.site.DocsRoot, b.site.Config.NavDepth)
 
-	// 14. Compute prev/next links
+	// 15. Compute prev/next links
 	b.computePrevNext()
 
 	fmt.Printf("Discovered %d pages\n", len(b.site.Pages))
@@ -245,6 +255,11 @@ func (b *Builder) discoverPages() error {
 
 		// Skip the versions directory entirely (it has its own build process)
 		if d.IsDir() && d.Name() == core.VersionSourceDir {
+			return filepath.SkipDir
+		}
+
+		// Skip the translations directory entirely (it has its own build process)
+		if d.IsDir() && d.Name() == core.I18nSourceDir {
 			return filepath.SkipDir
 		}
 

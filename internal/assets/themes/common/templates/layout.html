@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light" data-base-path="{{.BasePath}}" class="no-js">
+<html lang="{{if .Lang}}{{.Lang}}{{else}}en{{end}}" dir="{{if .Dir}}{{.Dir}}{{else}}ltr{{end}}" data-theme="light" data-base-path="{{.BasePath}}"{{if .Site.Config.I18n.Enabled}} data-hide-default-locale="{{.Site.Config.I18n.HideDefaultLocale}}" data-default-locale="{{.Site.Config.I18n.DefaultLocale}}"{{end}} class="no-js">
 <head>
 <script>
 document.documentElement.classList.remove('no-js');
@@ -32,6 +32,7 @@ a{color:var(--link-color)}
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 {{if .Site.Config.Versions.Enabled}}<link rel="stylesheet" href="{{.BasePath}}/css/version-selector.css?v={{.Version}}">{{end}}
+{{if .Site.Config.I18n.Enabled}}<link rel="stylesheet" href="{{.BasePath}}/css/locale-selector.css?v={{.Version}}">{{end}}
 {{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
 </head>
 <body>
@@ -84,6 +85,27 @@ a{color:var(--link-color)}
 <span class="version-eol-warning-text">This version reached end of life on {{$currentVersion.EOL}}. <a href="{{.BasePath}}/">View latest</a></span>
 </div>
 {{end}}{{end}}
+{{end}}{{end}}
+{{if .Site.Config.I18n.Enabled}}{{if .Site.Config.I18n.Locales}}
+{{$lang := .Lang}}{{if not $lang}}{{$lang = .Site.Config.I18n.DefaultLocale}}{{end}}
+<div class="locale-selector" id="locale-selector">
+<button class="locale-current" aria-expanded="false" aria-haspopup="listbox" aria-label="Select language">
+<span class="locale-label">
+<span class="locale-icon">A</span>
+<span class="locale-name">{{range .Site.Config.I18n.Locales}}{{if eq .Code $lang}}{{if .Name}}{{.Name}}{{else}}{{.Code}}{{end}}{{end}}{{end}}</span>
+</span>
+<span class="locale-arrow">&#x25BC;</span>
+</button>
+<div class="locale-dropdown" role="listbox" aria-label="Available languages">
+{{range .Site.Config.I18n.Locales}}
+<div class="locale-item{{if eq .Code $lang}} active{{end}}" role="option" tabindex="0" data-code="{{.Code}}"{{if eq .Code $lang}} aria-selected="true"{{end}}>
+{{if .Flag}}<span class="locale-flag">{{.Flag}}</span>{{end}}
+<span class="locale-item-label">{{if .Name}}{{.Name}}{{else}}{{.Code}}{{end}}</span>
+{{if eq .Direction "rtl"}}<span class="locale-rtl-badge">RTL</span>{{end}}
+</div>
+{{end}}
+</div>
+</div>
 {{end}}{{end}}
 <button class="search-button" id="search-button" aria-label="Search documentation">
 <span class="search-icon">⌕</span>
@@ -206,5 +228,6 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 <script defer src="{{.BasePath}}/js/search.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/code-copy.js?v={{.Version}}"></script>
 {{if .Site.Config.Versions.Enabled}}<script defer src="{{.BasePath}}/js/version-selector.js?v={{.Version}}"></script>{{end}}
+{{if .Site.Config.I18n.Enabled}}<script defer src="{{.BasePath}}/js/locale-selector.js?v={{.Version}}"></script>{{end}}
 </body>
 </html>

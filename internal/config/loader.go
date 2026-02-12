@@ -78,6 +78,7 @@ type FileConfig struct {
 	Footer        core.FooterConfig    `yaml:"footer"`
 	LinkCheck     core.LinkCheckConfig `yaml:"link_check"`
 	Versions      core.VersionConfig   `yaml:"versions"`
+	I18n          core.I18nConfig      `yaml:"i18n"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -289,6 +290,11 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	// Merge Versions config
 	if cfg.Versions.Enabled {
 		result.Versions = cfg.Versions
+	}
+
+	// Merge I18n config
+	if cfg.I18n.Enabled {
+		result.I18n = cfg.I18n
 	}
 
 	// Merge Social Links

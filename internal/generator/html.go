@@ -90,7 +90,20 @@ func (g *HTMLGenerator) generatePage(page *core.Page) error {
 		currentVersion = g.site.Config.Versions.GetVersion(defaultVersionName)
 	}
 
+	// Get current locale info for template
+	var currentLocale *core.LocaleInfo
+	if g.site.Config.I18n.Enabled && len(g.site.Config.I18n.Locales) > 0 {
+		currentLocale = g.site.Config.I18n.GetDefaultLocale()
+	}
+
 	// Prepare template data
+	lang := ""
+	dir := ""
+	if currentLocale != nil {
+		lang = currentLocale.Code
+		dir = currentLocale.GetDirection()
+	}
+
 	data := map[string]any{
 		"Site":           g.site,
 		"Page":           page,
@@ -99,6 +112,9 @@ func (g *HTMLGenerator) generatePage(page *core.Page) error {
 		"Version":        g.version,
 		"CurrentVersion": currentVersion,
 		"IsDefault":      isDefault,
+		"CurrentLocale":  currentLocale,
+		"Lang":           lang,
+		"Dir":            dir,
 	}
 
 	// Execute template

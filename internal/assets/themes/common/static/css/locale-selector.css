@@ -1,12 +1,12 @@
-/* Version Selector Styles */
+/* Locale Selector Styles */
 
-.version-selector {
+.locale-selector {
   position: relative;
   margin-bottom: 1rem;
   width: 100%;
 }
 
-.version-current {
+.locale-current {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,47 +21,55 @@
   transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
 }
 
-[data-theme="dark"] .version-current {
+[data-theme="dark"] .locale-current {
   border-color: var(--border-primary, #3a3a3a);
   background: var(--bg-secondary, #2a2a2a);
   color: var(--text-primary, #ffffff);
 }
 
-.version-current:hover {
+.locale-current:hover {
   border-color: var(--accent-primary, #2563eb);
   background: var(--bg-hover, #f1f5f9);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="dark"] .version-current:hover {
+[data-theme="dark"] .locale-current:hover {
   background: var(--bg-hover, #333333);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.version-current:focus {
+.locale-current:focus {
   outline: 2px solid var(--accent-primary, #2563eb);
   outline-offset: 2px;
 }
 
-.version-label {
+.locale-label {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   flex: 1;
 }
 
-.version-icon {
-  font-size: 1.125rem;
-  opacity: 0.6;
+.locale-icon {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.7;
   flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
 }
 
-.version-name {
+.locale-name {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
-.version-arrow {
+.locale-arrow {
   font-size: 0.625rem;
   opacity: 0.5;
   margin-left: 1rem;
@@ -69,12 +77,12 @@
   transition: transform 0.2s ease;
 }
 
-.version-dropdown.open + .version-current .version-arrow,
-.version-selector:has(.version-dropdown.open) .version-arrow {
+.locale-dropdown.open + .locale-current .locale-arrow,
+.locale-selector:has(.locale-dropdown.open) .locale-arrow {
   transform: rotate(180deg);
 }
 
-.version-dropdown {
+.locale-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -92,22 +100,22 @@
   z-index: 100;
 }
 
-[data-theme="dark"] .version-dropdown {
+[data-theme="dark"] .locale-dropdown {
   border-color: var(--border-primary, #3a3a3a);
   background: var(--bg-primary, #1a1a1a);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.version-dropdown.open {
+.locale-dropdown.open {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.version-item {
+.locale-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.625rem 0.875rem;
   border-radius: 6px;
   cursor: pointer;
@@ -116,39 +124,46 @@
   transition: background-color 0.15s;
 }
 
-[data-theme="dark"] .version-item {
+[data-theme="dark"] .locale-item {
   color: var(--text-primary, #ffffff);
 }
 
-.version-item:hover,
-.version-item:focus {
+.locale-item:hover,
+.locale-item:focus {
   background: var(--bg-hover, #f1f5f9);
   outline: none;
 }
 
-[data-theme="dark"] .version-item:hover,
-[data-theme="dark"] .version-item:focus {
+[data-theme="dark"] .locale-item:hover,
+[data-theme="dark"] .locale-item:focus {
   background: var(--bg-hover, #333333);
 }
 
-.version-item.active {
+.locale-item.active {
   background: var(--link-color, #2563eb);
   color: #ffffff;
 }
 
-.version-item.active:hover {
+.locale-item.active:hover {
   background: var(--link-hover, #1d4ed8);
 }
 
-.version-item + .version-item {
+.locale-item + .locale-item {
   margin-top: 0.125rem;
 }
 
-.version-item-label {
-  font-weight: 500;
+.locale-flag {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
-.version-eol-badge {
+.locale-item-label {
+  font-weight: 500;
+  flex: 1;
+}
+
+/* RTL Badge */
+.locale-rtl-badge {
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.375rem;
@@ -157,22 +172,22 @@
   text-transform: uppercase;
   letter-spacing: 0.025em;
   border-radius: 3px;
-  background: #fef3c7;
-  color: #92400e;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
-[data-theme="dark"] .version-eol-badge {
-  background: #451a03;
-  color: #fcd34d;
+[data-theme="dark"] .locale-rtl-badge {
+  background: #1e3a5f;
+  color: #93c5fd;
 }
 
-.version-item.active .version-eol-badge {
+.locale-item.active .locale-rtl-badge {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
-/* EOL Warning Banner */
-.version-eol-warning {
+/* Untranslated Warning Banner */
+.locale-untranslated-warning {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -180,66 +195,35 @@
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   border-radius: 8px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 1px solid #f59e0b;
-  color: #92400e;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #3b82f6;
+  color: #1e40af;
   font-size: 0.8125rem;
   line-height: 1.4;
 }
 
-[data-theme="dark"] .version-eol-warning {
-  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
-  border-color: #b45309;
-  color: #fcd34d;
+[data-theme="dark"] .locale-untranslated-warning {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+  border-color: #60a5fa;
+  color: #93c5fd;
 }
 
-.version-eol-warning-icon {
+.locale-untranslated-warning-icon {
   flex-shrink: 0;
   font-size: 1.125rem;
 }
 
-.version-eol-warning-text {
+.locale-untranslated-warning-text {
   flex: 1;
 }
 
-.version-eol-warning a {
+.locale-untranslated-warning a {
   color: inherit;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.version-eol-warning a:hover {
+.locale-untranslated-warning a:hover {
   text-decoration-thickness: 2px;
-}
-
-/* Since/Deprecated badges for page content */
-.version-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: 4px;
-  margin-left: 0.5rem;
-}
-
-.version-badge-since {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-[data-theme="dark"] .version-badge-since {
-  background: #064e3b;
-  color: #6ee7b7;
-}
-
-.version-badge-deprecated {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-[data-theme="dark"] .version-badge-deprecated {
-  background: #451a03;
-  color: #fcd34d;
 }
