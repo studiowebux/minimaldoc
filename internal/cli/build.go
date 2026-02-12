@@ -331,6 +331,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Generate versioned documentation (if enabled)
+	if site.Config.Versions.Enabled {
+		versionGen, err := generator.NewVersionGenerator(site, assets.ThemeFS, version.Version)
+		if err != nil {
+			return fmt.Errorf("failed to create version generator: %w", err)
+		}
+		if err := versionGen.Generate(); err != nil {
+			return fmt.Errorf("versioned documentation generation failed: %w", err)
+		}
+	}
+
 	// Run link checker
 	linkChecker := checker.NewLinkChecker(site, site.Config.LinkCheck)
 	if err := linkChecker.Check(); err != nil {

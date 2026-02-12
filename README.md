@@ -21,7 +21,14 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 ### Design
 - **Dark Mode** - Toggle with localStorage persistence
 - **Themes** - CSS-only customization (default, yellow)
+- **Custom Themes** - Configure colors, fonts, backgrounds in YAML
 - **Responsive** - Mobile, tablet, desktop
+
+### Versioning
+- **Multi-Version Docs** - Maintain documentation for multiple software versions
+- **Version Selector** - Dropdown to switch between versions
+- **EOL Warnings** - Warning banners for end-of-life versions
+- **Per-Version Search** - Separate search indexes per version
 
 ### Pages
 - **Landing Pages** - Marketing homepage with hero, features, steps (YAML or Markdown)
@@ -631,6 +638,143 @@ docs/guides/deploy.md:
 Link check completed with warnings: 2 broken links in 1 files
 ```
 
+## Multi-Version Documentation
+
+Maintain documentation for multiple versions of your software with version-specific content and overrides.
+
+### Configuration
+
+```yaml
+versions:
+  enabled: true
+  default: "v2"
+  list:
+    - name: "v2"
+      label: "2.x (Latest)"
+      path: ""              # Default version at root
+    - name: "v1"
+      label: "1.x (LTS)"
+      path: "v1"
+    - name: "v0"
+      label: "0.x (EOL)"
+      path: "v0"
+      eol: "2025-01-01"     # End of life date
+  selector:
+    position: "header"
+    show_eol_warning: true
+```
+
+### Directory Structure
+
+Shared content lives in the main `docs/` directory. Version-specific overrides go in `__versions__/`:
+
+```
+docs/
+  getting-started/
+    install.md              # Shared across all versions
+  features/
+    new-feature.md          # Can use frontmatter to limit versions
+  __versions__/
+    v1/
+      getting-started/
+        install.md          # Overrides install.md for v1
+      migration/
+        upgrade.md          # Only appears in v1
+```
+
+### Frontmatter
+
+Control version visibility with frontmatter:
+
+```yaml
+---
+title: New API Feature
+versions:
+  - v2                      # Only show in v2
+since: "v2.0"               # Badge: "Since v2.0"
+deprecated_in: "v3.0"       # Badge: "Deprecated in v3.0"
+---
+```
+
+### URL Structure
+
+```
+/docs/getting-started/      # Default version (v2)
+/v1/docs/getting-started/   # v1 version
+/v0/docs/getting-started/   # v0 version (with EOL warning)
+```
+
+### Features
+
+- Version selector dropdown in sidebar
+- EOL badges and warning banners
+- Per-version search indexes
+- Shared content with version-specific overrides
+- `versions.json` metadata file for client-side switching
+
+## Custom Themes
+
+Configure colors, fonts, and backgrounds directly in `config.yaml` without creating theme files.
+
+### Colors
+
+```yaml
+theme_config:
+  colors:
+    light:
+      bg_primary: "#ffffff"
+      bg_secondary: "#f8fafc"
+      text_primary: "#1a1a1a"
+      accent_primary: "#2563eb"
+      link_color: "#0066cc"
+    dark:
+      bg_primary: "#0f172a"
+      bg_secondary: "#1e293b"
+      text_primary: "#f8fafc"
+      accent_primary: "#3b82f6"
+      link_color: "#60a5fa"
+```
+
+### Fonts
+
+```yaml
+theme_config:
+  fonts:
+    heading: "Inter"
+    body: "Inter"
+    code: "JetBrains Mono"
+    google_url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap"
+```
+
+### Hero Background
+
+```yaml
+theme_config:
+  hero:
+    background_image: "/images/hero-bg.jpg"
+    background_overlay: "rgba(0,0,0,0.6)"
+    text_align: "center"
+    min_height: "80vh"
+```
+
+### Available Color Variables
+
+| Variable | Description |
+|----------|-------------|
+| `bg_primary` | Main background |
+| `bg_secondary` | Sidebar, cards |
+| `bg_tertiary` | Nested elements |
+| `bg_code` | Code blocks |
+| `bg_hover` | Hover states |
+| `text_primary` | Main text |
+| `text_secondary` | Secondary text |
+| `text_muted` | Muted text |
+| `border_primary` | Main borders |
+| `accent_primary` | Buttons, links |
+| `accent_hover` | Accent hover |
+| `link_color` | Link text |
+| `link_hover` | Link hover |
+
 ### Code Samples
 
 When `enable_code_samples: true` is set, each endpoint displays auto-generated code examples in a right sidebar:
@@ -646,34 +790,15 @@ Code samples include:
 - Authentication headers based on security schemes (Bearer, API Key, OAuth2)
 - Request body examples generated from schema
 
-## Theme
-
-### Colors
+## Default Theme
 
 The default theme uses soft, eye-friendly colors:
 
-**Light Mode:**
+**Light Mode:** Background `#fafafa`, Text `#1a1a1a`
 
-- Background: `#fafafa` (soft white)
-- Text: `#1a1a1a` (soft black)
+**Dark Mode:** Background `#1a1a1a`, Text `#ffffff`, Secondary `#2a2a2a`
 
-**Dark Mode:**
-
-- Background: `#1a1a1a` (soft black)
-- Text: `#ffffff` (white)
-- Secondary: `#2a2a2a` (cards, sidebars)
-
-### Customization
-
-Theme customization via CSS variables:
-
-```css
-:root[data-theme="light"] {
-  --bg-primary: #fafafa;
-  --text-primary: #1a1a1a;
-  /* ... */
-}
-```
+For config-based customization, see [Custom Themes](#custom-themes) above.
 
 ## LLM-Friendly Output
 

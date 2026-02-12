@@ -66,4 +66,4 @@ func (c *VersionConfig) GetDefaultVersion() *VersionInfo {
 }
 
 // VersionSourceDir is the directory name for version-specific content
-const VersionSourceDir = "_versions"
+const VersionSourceDir = "__versions__"

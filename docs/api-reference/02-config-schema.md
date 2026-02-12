@@ -108,6 +108,19 @@ link_check:
   ignore_patterns: [string]      # URL patterns to skip
   allowed_broken: [string]       # Known broken links to ignore
 
+# Multi-Version Documentation
+versions:
+  enabled: boolean               # Enable multi-version docs (default: false)
+  default: string                # Default version name (e.g., "v2")
+  list:                          # Available versions
+    - name: string               # Version identifier (e.g., "v2")
+      label: string              # Display label (e.g., "2.x (Latest)")
+      path: string               # URL path prefix
+      eol: string                # End of life date (YYYY-MM-DD)
+  selector:
+    position: string             # Selector position: header, sidebar
+    show_eol_warning: boolean    # Show EOL warning banner (default: true)
+
 # Landing Page Configuration
 landing:
   enabled: boolean               # Enable landing page (default: false)
@@ -760,6 +773,86 @@ link_check:
 
 Type: `array of string`
 Default: `[]`
+
+## Multi-Version Documentation Settings
+
+### versions.enabled
+
+Enable multi-version documentation support.
+
+```yaml
+versions:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### versions.default
+
+Default version to display at root URLs.
+
+```yaml
+versions:
+  default: "v2"
+```
+
+Type: `string`
+Default: First version in list
+
+### versions.list
+
+Array of version definitions.
+
+```yaml
+versions:
+  list:
+    - name: "v2"
+      label: "2.x (Latest)"
+      path: "v2"
+    - name: "v1"
+      label: "1.x (LTS)"
+      path: "v1"
+      eol: "2025-12-31"
+```
+
+Type: `array of object`
+
+### Version Definition Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Version identifier |
+| `label` | string | No | Display label |
+| `path` | string | Yes | URL path prefix |
+| `eol` | string | No | End of life date (YYYY-MM-DD) |
+
+### versions.selector.position
+
+Where to show the version selector.
+
+```yaml
+versions:
+  selector:
+    position: "header"
+```
+
+Type: `string`
+Default: `"header"`
+Options: `header`, `sidebar`
+
+### versions.selector.show_eol_warning
+
+Show warning banner for EOL versions.
+
+```yaml
+versions:
+  selector:
+    show_eol_warning: true
+```
+
+Type: `boolean`
+Default: `true`
 
 ## Social Links
 

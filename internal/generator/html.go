@@ -79,13 +79,26 @@ func (g *HTMLGenerator) Generate() error {
 
 // generatePage generates a single HTML page
 func (g *HTMLGenerator) generatePage(page *core.Page) error {
+	// Get current version info for template
+	var currentVersion *core.VersionInfo
+	isDefault := true
+	if g.site.Config.Versions.Enabled && len(g.site.Config.Versions.List) > 0 {
+		defaultVersionName := g.site.Config.Versions.Default
+		if defaultVersionName == "" {
+			defaultVersionName = g.site.Config.Versions.List[0].Name
+		}
+		currentVersion = g.site.Config.Versions.GetVersion(defaultVersionName)
+	}
+
 	// Prepare template data
 	data := map[string]any{
-		"Site":     g.site,
-		"Page":     page,
-		"Content":  template.HTML(page.HTML),
-		"BasePath": g.getBasePath(),
-		"Version":  g.version,
+		"Site":           g.site,
+		"Page":           page,
+		"Content":        template.HTML(page.HTML),
+		"BasePath":       g.getBasePath(),
+		"Version":        g.version,
+		"CurrentVersion": currentVersion,
+		"IsDefault":      isDefault,
 	}
 
 	// Execute template

@@ -59,7 +59,7 @@ func (vb *VersionBuilder) buildVersionPages(site *core.Site, version core.Versio
 		}
 	}
 
-	// 2. Look for version-specific overrides in _versions/{version}/
+	// 2. Look for version-specific overrides in __versions__/{version}/
 	versionDir := filepath.Join(site.DocsRoot, core.VersionSourceDir, version.Name)
 	if _, err := os.Stat(versionDir); err == nil {
 		overrides, err := vb.discoverVersionOverrides(versionDir, site.DocsRoot, version)

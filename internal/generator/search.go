@@ -67,6 +67,121 @@ var stopWords = map[string]bool{
 func (g *SearchGenerator) Generate() error {
 	fmt.Println("Generating search index...")
 
+	// If versioning is enabled, generate per-version indexes
+	if g.site.Config.Versions.Enabled && len(g.site.VersionedPages) > 0 {
+		return g.generateVersionedIndexes()
+	}
+
+	return g.generateMainIndex()
+}
+
+// generateVersionedIndexes creates search indexes for each version
+func (g *SearchGenerator) generateVersionedIndexes() error {
+	defaultVersion := g.site.Config.Versions.Default
+	if defaultVersion == "" && len(g.site.Config.Versions.List) > 0 {
+		defaultVersion = g.site.Config.Versions.List[0].Name
+	}
+
+	for _, versionInfo := range g.site.Config.Versions.List {
+		pages, ok := g.site.VersionedPages[versionInfo.Name]
+		if !ok {
+			continue
+		}
+
+		isDefault := versionInfo.Name == defaultVersion
+		if err := g.generateVersionIndex(versionInfo, pages, isDefault); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// generateVersionIndex creates a search index for a specific version
+func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pages []*core.Page, isDefault bool) error {
+	basePath := g.getBasePath()
+	versionPrefix := ""
+	if !isDefault {
+		versionPrefix = "/" + versionInfo.Path
+	}
+
+	index := SearchIndex{
+		Pages:    []SearchPage{},
+		Sections: []SearchSection{},
+		Index:    make(map[string]PostingList),
+	}
+
+	pageID := 0
+
+	for _, page := range pages {
+		if page.IsHidden() {
+			continue
+		}
+
+		index.Pages = append(index.Pages, SearchPage{
+			Title: page.Title(),
+			Desc:  page.Metadata.Description,
+			URL:   basePath + versionPrefix + "/" + page.Slug + ".html",
+		})
+
+		g.indexText(index.Index, page.Title(), pageID, 3)
+
+		if page.Metadata.Description != "" {
+			g.indexText(index.Index, page.Metadata.Description, pageID, 2)
+		}
+
+		for _, tag := range page.Metadata.Tags {
+			g.indexText(index.Index, tag, pageID, 2)
+		}
+
+		sections := g.extractSections(page.RawMD)
+		for _, section := range sections {
+			index.Sections = append(index.Sections, SearchSection{
+				PageID: pageID,
+				Title:  section.title,
+				Anchor: section.anchor,
+			})
+
+			g.indexText(index.Index, section.title, pageID, 3)
+			g.indexText(index.Index, section.content, pageID, 1)
+		}
+
+		pageID++
+	}
+
+	for word := range index.Index {
+		list := index.Index[word]
+		sortPostingList(list)
+		index.Index[word] = list
+	}
+
+	indexData, err := json.Marshal(index)
+	if err != nil {
+		return fmt.Errorf("failed to marshal search index: %w", err)
+	}
+
+	var indexPath string
+	if isDefault {
+		indexPath = filepath.Join(g.site.OutputRoot, "search-index.json")
+	} else {
+		indexPath = filepath.Join(g.site.OutputRoot, versionInfo.Path, "search-index.json")
+		if err := os.MkdirAll(filepath.Dir(indexPath), 0755); err != nil {
+			return fmt.Errorf("failed to create version directory: %w", err)
+		}
+	}
+
+	if err := os.WriteFile(indexPath, indexData, 0644); err != nil {
+		return fmt.Errorf("failed to write search index: %w", err)
+	}
+
+	fmt.Printf("  Generated search index for %s: %d pages, %d terms\n",
+		versionInfo.Name, len(index.Pages), len(index.Index))
+	return nil
+}
+
+// generateMainIndex creates the main search index (non-versioned)
+func (g *SearchGenerator) generateMainIndex() error {
+
 	basePath := g.getBasePath()
 
 	index := SearchIndex{
