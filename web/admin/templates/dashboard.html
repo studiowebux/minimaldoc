@@ -1,0 +1,66 @@
+{{define "content"}}
+<div class="dashboard">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" hx-get="/api/analytics/summary" hx-trigger="load" hx-target="this" hx-select=".total-views">
+                --
+            </div>
+            <div class="stat-label">Page Views (Today)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" hx-get="/api/analytics/summary" hx-trigger="load" hx-target="this" hx-select=".unique-visitors">
+                --
+            </div>
+            <div class="stat-label">Unique Visitors</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" hx-get="/api/feedback/stats" hx-trigger="load" hx-target="this" hx-select=".avg-rating">
+                --
+            </div>
+            <div class="stat-label">Avg. Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" hx-get="/api/newsletter/subscribers" hx-trigger="load" hx-target="this" hx-select=".total-subscribers">
+                --
+            </div>
+            <div class="stat-label">Subscribers</div>
+        </div>
+    </div>
+
+    <div class="dashboard-row">
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Page Views</h3>
+            </div>
+            <div class="card-body" hx-get="/api/analytics/pages?limit=10" hx-trigger="load">
+                <p class="loading">Loading...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Recent Feedback</h3>
+            </div>
+            <div class="card-body" hx-get="/api/feedback/list?limit=5" hx-trigger="load">
+                <p class="loading">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-row">
+        <div class="card full-width">
+            <div class="card-header">
+                <h3>Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="/admin/analytics" class="action-btn">View Full Analytics</a>
+                    <a href="/admin/feedback" class="action-btn">Manage Feedback</a>
+                    <a href="/admin/subscribers" class="action-btn">Export Subscribers</a>
+                    <a href="/admin/settings" class="action-btn">Site Settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

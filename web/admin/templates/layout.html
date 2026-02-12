@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - MinimalDoc Admin</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>MinimalDoc</h1>
+                <span class="version">Server</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin" class="nav-item {{if eq .active "dashboard"}}active{{end}}">
+                    <span class="nav-icon">&#9632;</span>
+                    Dashboard
+                </a>
+                <a href="/admin/analytics" class="nav-item {{if eq .active "analytics"}}active{{end}}">
+                    <span class="nav-icon">&#9650;</span>
+                    Analytics
+                </a>
+                <a href="/admin/feedback" class="nav-item {{if eq .active "feedback"}}active{{end}}">
+                    <span class="nav-icon">&#9733;</span>
+                    Feedback
+                </a>
+                <a href="/admin/subscribers" class="nav-item {{if eq .active "subscribers"}}active{{end}}">
+                    <span class="nav-icon">&#9993;</span>
+                    Subscribers
+                </a>
+                <a href="/admin/settings" class="nav-item {{if eq .active "settings"}}active{{end}}">
+                    <span class="nav-icon">&#9881;</span>
+                    Settings
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/admin/logout" class="nav-item">
+                    <span class="nav-icon">&#8594;</span>
+                    Logout
+                </a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="content-header">
+                <h2>{{.title}}</h2>
+                {{if .user}}
+                <div class="user-info">
+                    <span>{{.user.Email}}</span>
+                </div>
+                {{end}}
+            </header>
+            <div class="content-body">
+                {{template "content" .}}
+            </div>
+        </main>
+    </div>
+</body>
+</html>
