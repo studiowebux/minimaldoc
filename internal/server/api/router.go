@@ -2,11 +2,13 @@
 package api
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/studiowebux/minimaldoc/internal/server/config"
+	"github.com/studiowebux/minimaldoc/internal/server/email"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
@@ -15,17 +17,20 @@ type Router struct {
 	*gin.Engine
 	config *config.Config
 	db     *store.DB
+	email  email.Sender
 }
 
-// NewRouter creates a new API router.
-func NewRouter(cfg *config.Config, db *store.DB) *Router {
-	// Set Gin mode based on environment
+// NewPublicRouter creates the public-facing API router.
+// This handles: tracking, feedback submission, newsletter subscribe.
+// No authentication required, no admin access.
+func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender) *Router {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := &Router{
 		Engine: gin.New(),
 		config: cfg,
 		db:     db,
+		email:  emailSender,
 	}
 
 	// Global middleware
@@ -36,11 +41,61 @@ func NewRouter(cfg *config.Config, db *store.DB) *Router {
 	// Health check
 	r.GET("/health", r.healthCheck)
 
-	// API routes
+	// Public API routes
 	api := r.Group(cfg.Server.APIPath)
 	{
-		// Public endpoints
 		api.GET("/health", r.healthCheck)
+
+		// Analytics - public tracking only
+		api.POST("/analytics/track", r.trackPageView)
+		api.POST("/analytics/duration", r.trackDuration)
+		api.POST("/analytics/event", r.trackEvent)
+
+		// Feedback - public submission only
+		api.POST("/feedback", r.submitFeedback)
+
+		// Newsletter - public subscription
+		api.POST("/newsletter/subscribe", r.subscribe)
+		api.GET("/newsletter/verify", r.verifySubscription)
+		api.POST("/newsletter/unsubscribe", r.unsubscribe)
+	}
+
+	// Client JS/CSS for static sites integration
+	r.StaticFile("/minimaldoc.js", "web/client/minimaldoc-client.js")
+	r.StaticFile("/minimaldoc.css", "web/client/minimaldoc-client.css")
+
+	return r
+}
+
+// NewAdminRouter creates the admin API and UI router.
+// This handles: authentication, dashboard, management APIs.
+// Should be on a separate port, not publicly accessible.
+func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender) *Router {
+	gin.SetMode(gin.ReleaseMode)
+
+	r := &Router{
+		Engine: gin.New(),
+		config: cfg,
+		db:     db,
+		email:  emailSender,
+	}
+
+	// Load templates
+	tmpl := template.Must(template.ParseGlob("web/admin/templates/*.html"))
+	r.SetHTMLTemplate(tmpl)
+
+	// Global middleware
+	r.Use(gin.Recovery())
+	r.Use(LoggerMiddleware())
+
+	// Health check
+	r.GET("/health", r.healthCheck)
+
+	// Admin API routes
+	api := r.Group(cfg.Server.APIPath)
+	{
+		api.GET("/health", r.healthCheck)
+		api.POST("/bootstrap", r.bootstrap)
 
 		// Auth endpoints
 		auth := api.Group("/auth")
@@ -50,7 +105,6 @@ func NewRouter(cfg *config.Config, db *store.DB) *Router {
 			auth.POST("/refresh", r.refreshToken)
 			auth.GET("/me", AuthMiddleware(cfg), r.getCurrentUser)
 
-			// OAuth endpoints
 			if cfg.Auth.EnableOAuth {
 				auth.GET("/providers", r.listOAuthProviders)
 				auth.GET("/oauth/:provider/login", r.oauthLogin)
@@ -58,32 +112,27 @@ func NewRouter(cfg *config.Config, db *store.DB) *Router {
 			}
 		}
 
-		// Analytics endpoints
+		// Analytics - admin viewing
 		analytics := api.Group("/analytics")
+		analytics.Use(AuthMiddleware(cfg))
 		{
-			analytics.POST("/track", r.trackPageView)
-			analytics.POST("/event", r.trackEvent)
-
-			// Admin-only analytics
-			analytics.GET("/summary", AuthMiddleware(cfg), r.analyticsSummary)
-			analytics.GET("/pages", AuthMiddleware(cfg), r.analyticsPages)
+			analytics.GET("/summary", r.analyticsSummary)
+			analytics.GET("/pages", r.analyticsPages)
 		}
 
-		// Feedback endpoints
+		// Feedback - admin viewing
 		feedback := api.Group("/feedback")
+		feedback.Use(AuthMiddleware(cfg))
 		{
-			feedback.POST("", r.submitFeedback)
-			feedback.GET("/stats", AuthMiddleware(cfg), r.feedbackStats)
-			feedback.GET("/list", AuthMiddleware(cfg), r.feedbackList)
+			feedback.GET("/stats", r.feedbackStats)
+			feedback.GET("/list", r.feedbackList)
 		}
 
-		// Newsletter endpoints
+		// Newsletter - admin management
 		newsletter := api.Group("/newsletter")
+		newsletter.Use(AuthMiddleware(cfg))
 		{
-			newsletter.POST("/subscribe", r.subscribe)
-			newsletter.GET("/verify", r.verifySubscription)
-			newsletter.POST("/unsubscribe", r.unsubscribe)
-			newsletter.GET("/subscribers", AuthMiddleware(cfg), r.listSubscribers)
+			newsletter.GET("/subscribers", r.listSubscribers)
 		}
 
 		// Site management (admin only)
@@ -113,14 +162,32 @@ func NewRouter(cfg *config.Config, db *store.DB) *Router {
 	// Admin UI routes
 	admin := r.Group(cfg.Server.AdminPath)
 	{
-		admin.GET("", r.adminDashboard)
+		admin.GET("", AdminUIAuthMiddleware(cfg), r.adminDashboard)
 		admin.GET("/login", r.adminLogin)
 		admin.POST("/login", r.adminLoginPost)
 		admin.GET("/logout", r.adminLogout)
-		admin.GET("/analytics", AuthMiddleware(cfg), r.adminAnalytics)
-		admin.GET("/feedback", AuthMiddleware(cfg), r.adminFeedback)
-		admin.GET("/subscribers", AuthMiddleware(cfg), r.adminSubscribers)
-		admin.GET("/settings", AuthMiddleware(cfg), r.adminSettings)
+		admin.GET("/analytics", AdminUIAuthMiddleware(cfg), r.adminAnalytics)
+		admin.GET("/feedback", AdminUIAuthMiddleware(cfg), r.adminFeedback)
+		admin.GET("/subscribers", AdminUIAuthMiddleware(cfg), r.adminSubscribers)
+		admin.GET("/settings", AdminUIAuthMiddleware(cfg), r.adminSettings)
+
+		// HTMX fragment endpoints
+		fragments := admin.Group("/fragments")
+		fragments.Use(AdminUIAuthMiddleware(cfg))
+		{
+			fragments.GET("/dashboard-stats", r.fragmentDashboardStats)
+			fragments.GET("/recent-pages", r.fragmentRecentPages)
+			fragments.GET("/recent-feedback", r.fragmentRecentFeedback)
+			fragments.GET("/analytics-stats", r.fragmentAnalyticsStats)
+			fragments.GET("/top-pages", r.fragmentTopPages)
+			fragments.GET("/traffic-sources", r.fragmentTrafficSources)
+			fragments.GET("/views-chart", r.fragmentViewsChart)
+			fragments.GET("/feedback-stats", r.fragmentFeedbackStats)
+			fragments.GET("/feedback-list", r.fragmentFeedbackList)
+			fragments.GET("/subscriber-stats", r.fragmentSubscriberStats)
+			fragments.GET("/subscriber-list", r.fragmentSubscriberList)
+			fragments.GET("/site-info", r.fragmentSiteInfo)
+		}
 	}
 
 	// Static files for admin UI

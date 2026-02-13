@@ -54,3 +54,46 @@ social_links:
 
 # Supported social icons:
 # github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
+
+# Analytics configuration
+analytics:
+  enabled: false
+  providers:
+    # MinimalDoc Backend (self-hosted, cookie-free)
+    # - type: minimaldoc
+    #   enabled: true
+    #   config:
+    #     endpoint: "https://your-minimaldoc-server.com"
+    #     site_id: "your-site-id"
+    #     features: "analytics,feedback"  # analytics, feedback, newsletter
+    #     debug: "false"
+
+    # Google Analytics 4
+    # - type: ga4
+    #   enabled: true
+    #   config:
+    #     measurement_id: "G-XXXXXXXXXX"
+
+    # Plausible Analytics (privacy-friendly)
+    # - type: plausible
+    #   enabled: true
+    #   config:
+    #     domain: "your-domain.com"
+    #     src: "https://plausible.io/js/script.js"
+
+    # Umami Analytics (self-hosted)
+    # - type: umami
+    #   enabled: true
+    #   config:
+    #     website_id: "your-website-id"
+    #     src: "https://your-umami-instance.com/script.js"
+
+    # Custom analytics script
+    # - type: custom
+    #   enabled: true
+    #   config:
+    #     src: "https://example.com/analytics.js"
+    #     location: "head"  # head | body
+    #     defer: "true"
+    #     attrs:
+    #       data-key: "value"

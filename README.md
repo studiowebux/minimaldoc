@@ -15,7 +15,8 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 | **Pages** | Landing, Knowledge Base, Portfolio, Contact, FAQ, Legal, Status, Changelog |
 | **API Docs** | OpenAPI/Swagger, Live testing, Code samples (curl/JS/Go/Python/Swift), Schema viewer |
 | **SEO** | Sitemap, Open Graph, Twitter Cards, LLM output (llms.txt) |
-| **Analytics** | GA4, Plausible, Umami, Matomo, Fathom, Simple Analytics, Custom providers |
+| **Analytics** | GA4, Plausible, Umami, Matomo, Fathom, Simple Analytics, MinimalDoc Backend, Custom |
+| **Backend** | Optional self-hosted server for analytics, feedback, newsletter (cookie-free) |
 | **Build** | Single binary, Fast (Go), Config file or CLI flags, Clean URLs option |
 
 See [Feature Index](docs/features/00-index.md) for the complete list with descriptions
@@ -790,6 +791,7 @@ analytics:
 
 | Provider | Type | Required Config |
 |----------|------|-----------------|
+| MinimalDoc Backend | `minimaldoc` | `endpoint`, `site_id` |
 | Google Analytics 4 | `ga4` | `measurement_id` |
 | Plausible | `plausible` | `domain` |
 | Umami | `umami` | `website_id`, `src` |
@@ -822,6 +824,63 @@ Perfect for:
 - AI assistants
 - Documentation search
 - Content indexing
+
+## Backend Server (Optional)
+
+MinimalDoc includes an optional self-hosted backend for dynamic features. The CLI and static site generation work without it.
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| Analytics | Cookie-free, privacy-first page tracking |
+| Feedback | Page rating widget with comments |
+| Newsletter | Email subscription with double opt-in verification |
+| Email | SMTP support with verification and welcome emails |
+| Admin Portal | Web dashboard for all features |
+
+### Quick Start
+
+```bash
+# Build the server
+make build-server
+
+# Run with SQLite (mock email for testing)
+DB_DRIVER=sqlite DATABASE_URL=./data.db \
+AUTH_JWT_SECRET=your-32-char-secret \
+EMAIL_PROVIDER=mock \
+./minimaldoc-server
+
+# Run with SMTP email
+DB_DRIVER=sqlite DATABASE_URL=./data.db \
+AUTH_JWT_SECRET=your-32-char-secret \
+EMAIL_PROVIDER=smtp SMTP_HOST=smtp.example.com \
+SMTP_USER=user SMTP_PASS=pass \
+EMAIL_BASE_URL=https://api.example.com \
+./minimaldoc-server
+
+# Bootstrap (first run)
+curl -X POST http://localhost:8080/api/bootstrap \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"pass","site_name":"My Docs"}'
+```
+
+### Enable in Static Site
+
+```yaml
+# config.yaml
+analytics:
+  enabled: true
+  providers:
+    - type: minimaldoc
+      enabled: true
+      config:
+        endpoint: "http://localhost:8080"
+        site_id: "your-site-id"
+        features: "analytics,feedback,newsletter"
+```
+
+See [Backend Documentation](docs/features/12-backend.md) for full setup guide.
 
 ## Contributing
 

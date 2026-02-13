@@ -299,10 +299,13 @@ claude_assist:
   label: "Ask Claude"
   # prompt: "Custom prompt prefix (optional)"
 
-# analytics:
-#   enabled: true
-#   providers:
-#     - type: plausible
-#       enabled: true
-#       config:
-#         domain: "docs.example.com"
+analytics:
+  enabled: true
+  providers:
+    - type: minimaldoc
+      enabled: true
+      config:
+        endpoint: "http://localhost:8080"
+        site_id: "R0WxUG7qefQDOTZnJ-16Qi8X0SjLYFdxD7AKFkQPI7c="
+        features: "analytics,feedback,newsletter"
+        debug: "true"

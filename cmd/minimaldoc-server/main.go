@@ -15,6 +15,7 @@ import (
 
 	"github.com/studiowebux/minimaldoc/internal/server/api"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
+	"github.com/studiowebux/minimaldoc/internal/server/email"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
@@ -47,26 +48,49 @@ func main() {
 		log.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	// Initialize router
-	router := api.NewRouter(cfg, db)
+	// Initialize email sender
+	emailSender, err := email.NewSender(cfg.Email)
+	if err != nil {
+		log.Fatalf("Failed to initialize email sender: %v", err)
+	}
+	log.Printf("Email provider: %s", cfg.Email.Provider)
 
-	// Configure HTTP server
-	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	srv := &http.Server{
-		Addr:         addr,
-		Handler:      router,
+	// Initialize routers
+	publicRouter := api.NewPublicRouter(cfg, db, emailSender)
+	adminRouter := api.NewAdminRouter(cfg, db, emailSender)
+
+	// Configure public HTTP server
+	publicAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	publicSrv := &http.Server{
+		Addr:         publicAddr,
+		Handler:      publicRouter,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}
 
-	// Start server in goroutine
-	go func() {
-		log.Printf("Starting server on %s", addr)
-		log.Printf("Admin UI: http://%s%s", addr, cfg.Server.AdminPath)
-		log.Printf("API: http://%s%s", addr, cfg.Server.APIPath)
+	// Configure admin HTTP server
+	adminAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.AdminPort)
+	adminSrv := &http.Server{
+		Addr:         adminAddr,
+		Handler:      adminRouter,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+	}
 
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed: %v", err)
+	// Start public server
+	go func() {
+		log.Printf("Public API:  http://%s (tracking, feedback, newsletter)", publicAddr)
+		if err := publicSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Public server failed: %v", err)
+		}
+	}()
+
+	// Start admin server
+	go func() {
+		log.Printf("Admin API:   http://%s%s", adminAddr, cfg.Server.APIPath)
+		log.Printf("Admin UI:    http://%s%s", adminAddr, cfg.Server.AdminPath)
+		if err := adminSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Admin server failed: %v", err)
 		}
 	}()
 
@@ -75,15 +99,19 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	log.Println("Shutting down servers...")
 
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+	// Shutdown both servers
+	if err := publicSrv.Shutdown(ctx); err != nil {
+		log.Printf("Public server forced to shutdown: %v", err)
+	}
+	if err := adminSrv.Shutdown(ctx); err != nil {
+		log.Printf("Admin server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server stopped")
+	log.Println("Servers stopped")
 }

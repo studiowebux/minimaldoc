@@ -11,9 +11,47 @@ import (
 // AnalyticsFuncMap returns template functions for analytics rendering.
 func AnalyticsFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"analyticsHeadScripts": analyticsHeadScripts,
-		"analyticsBodyScripts": analyticsBodyScripts,
+		"analyticsHeadScripts":     analyticsHeadScripts,
+		"analyticsBodyScripts":     analyticsBodyScripts,
+		"hasMinimalDocFeedback":    hasMinimalDocFeedback,
+		"hasMinimalDocNewsletter":  hasMinimalDocNewsletter,
+		"minimalDocFeedbackWidget": minimalDocFeedbackWidget,
+		"minimalDocNewsletterForm": minimalDocNewsletterForm,
 	}
+}
+
+// hasMinimalDocFeedback checks if feedback feature is enabled
+func hasMinimalDocFeedback(config core.AnalyticsConfig) bool {
+	return config.HasMinimalDocFeature("feedback")
+}
+
+// hasMinimalDocNewsletter checks if newsletter feature is enabled
+func hasMinimalDocNewsletter(config core.AnalyticsConfig) bool {
+	return config.HasMinimalDocFeature("newsletter")
+}
+
+// minimalDocFeedbackWidget renders the feedback widget placeholder
+func minimalDocFeedbackWidget(config core.AnalyticsConfig) template.HTML {
+	if !config.HasMinimalDocFeature("feedback") {
+		return ""
+	}
+	return template.HTML(`<div class="minimaldoc-feedback-wrapper" data-minimaldoc-feedback></div>`)
+}
+
+// minimalDocNewsletterForm renders the newsletter form placeholder
+func minimalDocNewsletterForm(config core.AnalyticsConfig) template.HTML {
+	if !config.HasMinimalDocFeature("newsletter") {
+		return ""
+	}
+	return template.HTML(`<div class="minimaldoc-newsletter-wrapper">
+<form data-minimaldoc-newsletter class="minimaldoc-newsletter-form">
+<label for="newsletter-email">Subscribe to updates</label>
+<div class="newsletter-input-group">
+<input type="email" id="newsletter-email" placeholder="Enter your email" required>
+<button type="submit">Subscribe</button>
+</div>
+</form>
+</div>`)
 }
 
 // analyticsHeadScripts generates script tags for analytics providers that go in <head>
@@ -83,6 +121,11 @@ func renderProviderScript(provider core.AnalyticsProvider, location string) stri
 			return ""
 		}
 		return renderSimpleAnalytics(provider)
+	case "minimaldoc":
+		if location != "body" {
+			return ""
+		}
+		return renderMinimalDoc(provider)
 	case "custom":
 		return renderCustom(provider, location)
 	default:
@@ -162,6 +205,30 @@ func renderSimpleAnalytics(provider core.AnalyticsProvider) string {
 	return fmt.Sprintf(`<script async defer src="%s"></script>
 <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade"/></noscript>`,
 		escapeHTML(src))
+}
+
+// renderMinimalDoc renders the MinimalDoc backend tracking script
+func renderMinimalDoc(provider core.AnalyticsProvider) string {
+	endpoint := provider.GetConfigString("endpoint")
+	siteID := provider.GetConfigString("site_id")
+	if endpoint == "" || siteID == "" {
+		return ""
+	}
+
+	// Features to enable (default: analytics only)
+	features := provider.GetConfigString("features")
+	if features == "" {
+		features = "analytics"
+	}
+
+	// Debug mode
+	debug := ""
+	if provider.GetConfigString("debug") == "true" {
+		debug = ` data-debug`
+	}
+
+	return fmt.Sprintf(`<script src="%s/minimaldoc.js" data-endpoint="%s" data-site-id="%s" data-features="%s"%s defer></script>`,
+		escapeHTML(endpoint), escapeHTML(endpoint), escapeHTML(siteID), escapeHTML(features), debug)
 }
 
 // renderCustom renders a custom analytics script tag with arbitrary attributes

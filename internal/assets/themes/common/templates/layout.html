@@ -212,6 +212,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 </div>
 </div>
 {{end}}
+{{if .Site.Config.Analytics.Enabled}}{{minimalDocFeedbackWidget .Site.Config.Analytics}}{{end}}
 {{if or .Page.Prev .Page.Next}}<nav class="page-nav">
 {{if .Page.Prev}}<a href="{{$.BasePath}}/{{.Page.Prev.Slug}}.html" class="page-nav-link page-nav-prev">
 <span class="page-nav-label">Previous</span>
@@ -222,6 +223,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 <span class="page-nav-title">{{.Page.Next.Title}}</span>
 </a>{{end}}
 </nav>{{end}}
+{{if .Site.Config.Analytics.Enabled}}{{minimalDocNewsletterForm .Site.Config.Analytics}}{{end}}
 </article>
 </main>
 {{if .Page.TOC.Items}}<aside class="sidebar sidebar-right" aria-label="Page table of contents">

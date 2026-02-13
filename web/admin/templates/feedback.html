@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - MinimalDoc Admin</title>
+    <title>Feedback - MinimalDoc Admin</title>
     <link rel="stylesheet" href="/static/css/admin.css">
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
 </head>
@@ -15,7 +15,7 @@
                 <span class="version">Server</span>
             </div>
             <nav class="sidebar-nav">
-                <a href="/admin" class="nav-item active">
+                <a href="/admin" class="nav-item">
                     <span class="nav-icon">&#9632;</span>
                     Dashboard
                 </a>
@@ -23,7 +23,7 @@
                     <span class="nav-icon">&#9650;</span>
                     Analytics
                 </a>
-                <a href="/admin/feedback" class="nav-item">
+                <a href="/admin/feedback" class="nav-item active">
                     <span class="nav-icon">&#9733;</span>
                     Feedback
                 </a>
@@ -45,7 +45,7 @@
         </aside>
         <main class="main-content">
             <header class="content-header">
-                <h2>Dashboard</h2>
+                <h2>Feedback</h2>
                 {{if .user}}
                 <div class="user-info">
                     <span>{{.user.Email}}</span>
@@ -53,58 +53,43 @@
                 {{end}}
             </header>
             <div class="content-body">
-                <div class="dashboard">
-                    <div class="stats-grid" hx-get="/admin/fragments/dashboard-stats" hx-trigger="load" hx-swap="innerHTML">
+                <div class="feedback-page">
+                    <div class="stats-grid" id="feedback-stats" hx-get="/admin/fragments/feedback-stats" hx-trigger="load">
                         <div class="stat-card">
                             <div class="stat-value">--</div>
-                            <div class="stat-label">Page Views (Today)</div>
+                            <div class="stat-label">Average Rating</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">--</div>
-                            <div class="stat-label">Unique Visitors</div>
+                            <div class="stat-label">Total Feedback</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">--</div>
-                            <div class="stat-label">Avg. Rating</div>
+                            <div class="stat-label">With Comments</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-value">--</div>
-                            <div class="stat-label">Subscribers</div>
+                            <div class="stat-label">This Week</div>
                         </div>
                     </div>
 
-                    <div class="dashboard-row">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Recent Page Views</h3>
-                            </div>
-                            <div class="card-body" hx-get="/admin/fragments/recent-pages" hx-trigger="load">
-                                <p class="loading">Loading...</p>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <h3>Recent Feedback</h3>
-                            </div>
-                            <div class="card-body" hx-get="/admin/fragments/recent-feedback" hx-trigger="load">
-                                <p class="loading">Loading...</p>
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Recent Feedback</h3>
+                            <div class="card-actions">
+                                <select id="rating-filter" hx-get="/admin/fragments/feedback-list" hx-trigger="change" hx-target="#feedback-list" hx-include="this">
+                                    <option value="">All Ratings</option>
+                                    <option value="5">5 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="1">1 Star</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="dashboard-row">
-                        <div class="card full-width">
-                            <div class="card-header">
-                                <h3>Quick Actions</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="quick-actions">
-                                    <a href="/admin/analytics" class="action-btn">View Full Analytics</a>
-                                    <a href="/admin/feedback" class="action-btn">Manage Feedback</a>
-                                    <a href="/admin/subscribers" class="action-btn">Export Subscribers</a>
-                                    <a href="/admin/settings" class="action-btn">Site Settings</a>
-                                </div>
+                        <div class="card-body">
+                            <div id="feedback-list" hx-get="/admin/fragments/feedback-list" hx-trigger="load">
+                                <p class="loading">Loading...</p>
                             </div>
                         </div>
                     </div>

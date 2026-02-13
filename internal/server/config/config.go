@@ -34,7 +34,8 @@ type Config struct {
 // ServerConfig holds HTTP server settings.
 type ServerConfig struct {
 	Host         string
-	Port         int
+	Port         int // Public API port (tracking, feedback, newsletter)
+	AdminPort    int // Admin UI and management API port
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	AdminPath    string // Path prefix for admin UI (default: /admin)
@@ -92,6 +93,7 @@ type EmailConfig struct {
 	SMTPPass    string
 	FromAddress string
 	FromName    string
+	BaseURL     string // Base URL for verification links (e.g., https://api.example.com)
 }
 
 // AIConfig holds Claude API settings.
@@ -108,6 +110,7 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			Host:         getEnv("SERVER_HOST", "0.0.0.0"),
 			Port:         getEnvInt("SERVER_PORT", 8080),
+			AdminPort:    getEnvInt("SERVER_ADMIN_PORT", 8090),
 			ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
 			WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
 			AdminPath:    getEnv("SERVER_ADMIN_PATH", "/admin"),
@@ -140,6 +143,7 @@ func Load() (*Config, error) {
 			SMTPPass:    getEnv("SMTP_PASS", ""),
 			FromAddress: getEnv("EMAIL_FROM_ADDRESS", "noreply@example.com"),
 			FromName:    getEnv("EMAIL_FROM_NAME", "MinimalDoc"),
+			BaseURL:     getEnv("EMAIL_BASE_URL", "http://localhost:8080"),
 		},
 		AI: AIConfig{
 			Enabled:   getEnvBool("AI_ENABLED", false),

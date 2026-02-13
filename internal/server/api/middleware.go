@@ -124,6 +124,43 @@ func AdminMiddleware() gin.HandlerFunc {
 	}
 }
 
+// AdminUIAuthMiddleware validates JWT for admin UI routes.
+// Redirects to login page instead of returning JSON error.
+func AdminUIAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var token string
+
+		// Check session cookie
+		cookie, err := c.Cookie(cfg.Auth.SessionCookieKey)
+		if err == nil {
+			token = cookie
+		}
+
+		if token == "" {
+			c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
+			c.Abort()
+			return
+		}
+
+		// Validate JWT
+		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
+		if err != nil {
+			c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
+			c.Abort()
+			return
+		}
+
+		// Set user info in context
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Set("site_id", claims.SiteID)
+		c.Set("user", claims)
+
+		c.Next()
+	}
+}
+
 // SiteMiddleware validates and sets site context from API key or user.
 func SiteMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

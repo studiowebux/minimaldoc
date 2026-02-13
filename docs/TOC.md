@@ -21,6 +21,10 @@
   - [SEO](features/06-seo.md)
   - [LLMs.txt](features/07-llms-txt.md)
   - [Landing Pages](features/08-landing-pages.md)
+  - [Multi-Version](features/09-multi-version.md)
+  - [Internationalization](features/10-i18n.md)
+  - [Analytics](features/11-analytics.md)
+  - [Backend Server](features/12-backend.md)
 - OpenAPI/Swagger
   - [Overview](openapi/01-overview.md)
   - [Configuration](openapi/02-configuration.md)

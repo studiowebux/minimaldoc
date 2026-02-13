@@ -1654,3 +1654,158 @@ html.no-js .nav-link-parent {
     opacity: 0.7;
     cursor: wait;
 }
+
+/* ========================================
+   MinimalDoc Feedback Widget
+   ======================================== */
+
+.minimaldoc-feedback-wrapper {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.minimaldoc-feedback {
+    text-align: center;
+}
+
+.minimaldoc-feedback-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.minimaldoc-feedback-stars {
+    display: inline-flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.minimaldoc-feedback-stars button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.15s, transform 0.15s;
+}
+
+.minimaldoc-feedback-stars button:hover {
+    transform: scale(1.1);
+}
+
+.minimaldoc-feedback-stars button.active {
+    color: #f59e0b;
+}
+
+.minimaldoc-feedback-form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.minimaldoc-feedback-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    margin-bottom: 0.75rem;
+}
+
+.minimaldoc-feedback-form textarea:focus {
+    outline: none;
+    border-color: var(--link-color);
+}
+
+.minimaldoc-feedback-form button[type="submit"] {
+    padding: 0.5rem 1.25rem;
+    background: var(--link-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.minimaldoc-feedback-form button[type="submit"]:hover {
+    background: var(--link-hover);
+}
+
+.minimaldoc-feedback-thanks {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* ========================================
+   MinimalDoc Newsletter Form
+   ======================================== */
+
+.minimaldoc-newsletter-wrapper {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.minimaldoc-newsletter-form label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.newsletter-input-group {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.newsletter-input-group input[type="email"] {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.newsletter-input-group input[type="email"]:focus {
+    outline: none;
+    border-color: var(--link-color);
+}
+
+.newsletter-input-group button[type="submit"] {
+    padding: 0.6rem 1.25rem;
+    background: var(--link-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.newsletter-input-group button[type="submit"]:hover {
+    background: var(--link-hover);
+}
+
+.minimaldoc-newsletter-msg {
+    margin-top: 0.75rem;
+    text-align: center;
+    color: #10b981;
+    font-size: 0.9rem;
+}
