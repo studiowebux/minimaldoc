@@ -5,9 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-
-	"github.com/studiowebux/minimaldoc/internal/server/auth"
 )
 
 // adminUsers renders the user management page.
@@ -272,53 +269,4 @@ func (r *Router) fragmentUserForm(c *gin.Context) {
 	)
 
 	respondHTML(c, html)
-}
-
-// fragmentUserFormCreate is an API handler that creates a user and returns HTML.
-func (r *Router) fragmentUserCreate(c *gin.Context) {
-	siteID, _ := getSiteID(c)
-
-	var req struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		Role     string `json:"role"`
-		Name     string `json:"name"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		respondHTMLError(c, "Invalid form data")
-		return
-	}
-
-	// Validate
-	if req.Email == "" || req.Password == "" || req.Role == "" {
-		respondHTMLError(c, "Email, password, and role are required")
-		return
-	}
-
-	// Check if user already exists
-	existing, _ := r.db.GetUserByEmail(c.Request.Context(), siteID, req.Email)
-	if existing != nil {
-		respondHTMLError(c, "User with this email already exists")
-		return
-	}
-
-	// Hash password
-	passwordHash, err := auth.HashPassword(req.Password, r.config.Auth.BCryptCost)
-	if err != nil {
-		respondHTMLError(c, "Failed to hash password")
-		return
-	}
-
-	// Create user
-	userID := uuid.New().String()
-	_, err = r.db.CreateUser(c.Request.Context(), userID, siteID, req.Email, passwordHash, req.Role, req.Name)
-	if err != nil {
-		respondHTMLError(c, "Failed to create user")
-		return
-	}
-
-	// Return success - the form will refresh the list
-	c.Header("HX-Trigger", "user-created")
-	respondHTML(c, `<p class="success">User created successfully</p>`)
 }

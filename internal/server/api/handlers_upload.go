@@ -55,8 +55,8 @@ func (r *Router) uploadImage(c *gin.Context) {
 	id := uuid.New().String()
 	upload, err := r.db.CreateUpload(c.Request.Context(), id, user.SiteID, user.ID, header.Filename, contentType, header.Size, storagePath, url)
 	if err != nil {
-		// Try to clean up the uploaded file
-		r.storage.Delete(c.Request.Context(), storagePath)
+		// Try to clean up the uploaded file (ignore cleanup error)
+		_ = r.storage.Delete(c.Request.Context(), storagePath)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save upload metadata"})
 		return
 	}

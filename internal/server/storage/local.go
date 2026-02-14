@@ -19,8 +19,8 @@ type LocalStorage struct {
 
 // NewLocalStorage creates a local filesystem storage provider.
 func NewLocalStorage(cfg config.StorageConfig) (*LocalStorage, error) {
-	// Ensure the upload directory exists
-	if err := os.MkdirAll(cfg.LocalPath, 0755); err != nil {
+	// Ensure the upload directory exists (0750: owner rwx, group rx, others none)
+	if err := os.MkdirAll(cfg.LocalPath, 0750); err != nil {
 		return nil, fmt.Errorf("failed to create upload directory: %w", err)
 	}
 
@@ -36,9 +36,9 @@ func (s *LocalStorage) Upload(ctx context.Context, filename string, contentType 
 	storagePath := generatePath(sanitizeFilename(filename))
 	fullPath := filepath.Join(s.basePath, storagePath)
 
-	// Ensure directory exists
+	// Ensure directory exists (0750: owner rwx, group rx, others none)
 	dir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return "", "", fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -51,8 +51,8 @@ func (s *LocalStorage) Upload(ctx context.Context, filename string, contentType 
 
 	// Copy content
 	if _, err := io.Copy(file, reader); err != nil {
-		// Clean up on failure
-		os.Remove(fullPath)
+		// Clean up on failure (ignore cleanup error)
+		_ = os.Remove(fullPath)
 		return "", "", fmt.Errorf("failed to write file: %w", err)
 	}
 

@@ -68,13 +68,3 @@ func sanitizeFilename(filename string) string {
 	filename = strings.ReplaceAll(filename, "\x00", "")
 	return filename
 }
-
-// isAllowedType checks if a content type is in the allowed list.
-func isAllowedType(contentType string, allowed []string) bool {
-	for _, t := range allowed {
-		if t == contentType {
-			return true
-		}
-	}
-	return false
-}

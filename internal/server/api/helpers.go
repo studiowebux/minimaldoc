@@ -155,14 +155,3 @@ func buildDataTable(columns []TableColumn, rows []TableRow) string {
 func escapeHTML(s string) string {
 	return template.HTMLEscapeString(s)
 }
-
-// formatInt formats an integer for display.
-func formatInt(n int) string {
-	if n < 1000 {
-		return fmt.Sprintf("%d", n)
-	}
-	if n < 1000000 {
-		return fmt.Sprintf("%.1fK", float64(n)/1000)
-	}
-	return fmt.Sprintf("%.1fM", float64(n)/1000000)
-}

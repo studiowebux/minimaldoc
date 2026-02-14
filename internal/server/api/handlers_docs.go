@@ -242,7 +242,7 @@ func (r *Router) getDocContent(c *gin.Context) {
 
 	c.Header("Content-Type", contentType)
 	c.Status(http.StatusOK)
-	io.Copy(c.Writer, file)
+	_, _ = io.Copy(c.Writer, file)
 }
 
 // listDocAccessRules lists all access rules for the site.

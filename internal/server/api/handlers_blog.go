@@ -6,6 +6,7 @@ import (
 	"html"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -155,13 +156,17 @@ func (r *Router) listPublishedPosts(c *gin.Context) {
 	limit := 20
 	offset := 0
 	if l := c.Query("limit"); l != "" {
-		fmt.Sscanf(l, "%d", &limit)
-		if limit > 100 {
-			limit = 100
+		if v, err := strconv.Atoi(l); err == nil && v > 0 {
+			limit = v
+			if limit > 100 {
+				limit = 100
+			}
 		}
 	}
 	if o := c.Query("offset"); o != "" {
-		fmt.Sscanf(o, "%d", &offset)
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			offset = v
+		}
 	}
 
 	// Filtering
