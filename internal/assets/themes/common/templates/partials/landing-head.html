@@ -10,4 +10,5 @@ a{color:var(--link-color)}
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+{{if .Site.Config.Analytics.Enabled}}{{analyticsHeadScripts .Site.Config.Analytics}}{{end}}
 {{- end}}

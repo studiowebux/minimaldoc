@@ -13,16 +13,22 @@ import (
 // BaseFuncMap returns the common template functions used across all generators.
 func BaseFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"dict":      dictFunc,
-		"safeHTML":  safeHTMLFunc,
-		"json":      jsonFunc,
-		"lower":     lowerFunc,
-		"upper":     upperFunc,
-		"hasPrefix": strings.HasPrefix,
-		"add":       addFunc,
-		"join":      strings.Join,
-		"replace":   replaceFunc,
+		"dict":           dictFunc,
+		"safeHTML":       safeHTMLFunc,
+		"json":           jsonFunc,
+		"lower":          lowerFunc,
+		"upper":          upperFunc,
+		"hasPrefix":      strings.HasPrefix,
+		"add":            addFunc,
+		"join":           strings.Join,
+		"replace":        replaceFunc,
+		"hasCustomTheme": hasCustomThemeFunc,
 	}
+}
+
+// hasCustomThemeFunc checks if custom theme configuration is present.
+func hasCustomThemeFunc(cfg core.ThemeConfig) bool {
+	return cfg.HasCustomColors() || cfg.HasCustomFonts() || cfg.HasHeroBackground()
 }
 
 // dictFunc creates a map from key-value pairs for passing multiple values to templates.

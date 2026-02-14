@@ -63,6 +63,8 @@ When a `.md` file is passed instead of a directory, MinimalDoc generates only th
 | `--changelog-path` | | string | `changelog` | Changelog output path |
 | `--stale-warning` | | bool | `true` | Enable stale warnings |
 | `--stale-threshold` | | int | `365` | Days before stale |
+| `--link-check` | | string | `warn` | Link check mode: error, warn, ignore |
+| `--check-external` | | bool | `false` | Validate external URLs |
 
 ### Examples
 
@@ -113,6 +115,24 @@ minimaldoc build ./docs \
 minimaldoc build ./docs \
   --llms=false \
   --stale-warning=false
+```
+
+**Strict link checking (CI/CD):**
+
+```bash
+minimaldoc build ./docs --link-check=error
+```
+
+**Skip link checking:**
+
+```bash
+minimaldoc build ./docs --link-check=ignore
+```
+
+**Check external URLs:**
+
+```bash
+minimaldoc build ./docs --check-external
 ```
 
 ## init

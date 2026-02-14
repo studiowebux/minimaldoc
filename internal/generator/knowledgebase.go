@@ -26,7 +26,7 @@ func NewKBGenerator(site *core.Site, themeFS embed.FS, version string) (*KBGener
 		return nil, nil
 	}
 
-	tmpl := template.New("").Funcs(KBFuncMap())
+	tmpl := template.New("").Funcs(KBFuncMap()).Funcs(AnalyticsFuncMap())
 
 	var err error
 	tmpl, err = tmpl.ParseFS(

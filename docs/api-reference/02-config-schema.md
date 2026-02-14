@@ -24,6 +24,39 @@ author: string                   # Default author
 theme: string                    # Theme name (default: "default")
 dark_mode: boolean               # Default to dark mode (default: false)
 
+# Theme Configuration (config-based theming)
+theme_config:
+  name: string                   # Custom theme name
+  colors:
+    light:                       # Light mode colors
+      bg_primary: string         # Main background
+      bg_secondary: string       # Secondary background
+      bg_tertiary: string        # Tertiary background
+      bg_code: string            # Code block background
+      bg_hover: string           # Hover state background
+      text_primary: string       # Main text
+      text_secondary: string     # Secondary text
+      text_tertiary: string      # Tertiary text
+      text_muted: string         # Muted text
+      border_primary: string     # Main borders
+      border_secondary: string   # Secondary borders
+      accent_primary: string     # Accent color
+      accent_hover: string       # Accent hover
+      link_color: string         # Link color
+      link_hover: string         # Link hover
+    dark:                        # Dark mode colors (same fields)
+      # ...same fields as light
+  fonts:
+    heading: string              # Heading font family
+    body: string                 # Body font family
+    code: string                 # Code font family
+    google_url: string           # Google Fonts import URL
+  hero:
+    background_image: string     # Hero background image URL
+    background_overlay: string   # Overlay color (e.g., "rgba(0,0,0,0.6)")
+    text_align: string           # Text alignment: left, center, right
+    min_height: string           # Minimum height (e.g., "80vh")
+
 # Features
 enable_llms: boolean             # Generate llms.txt (default: true)
 enable_search: boolean           # Enable search (default: true)
@@ -65,6 +98,28 @@ stale_warning:
   enabled: boolean               # Enable stale warnings (default: true)
   threshold_days: integer        # Days before stale (default: 365)
   show_update_date: boolean      # Show last update (default: true)
+
+# Link Check Configuration
+link_check:
+  enabled: boolean               # Enable link checking (default: true)
+  mode: string                   # Mode: error, warn, ignore (default: "warn")
+  check_external: boolean        # Check external URLs (default: false)
+  external_timeout: integer      # Timeout in seconds (default: 5)
+  ignore_patterns: [string]      # URL patterns to skip
+  allowed_broken: [string]       # Known broken links to ignore
+
+# Multi-Version Documentation
+versions:
+  enabled: boolean               # Enable multi-version docs (default: false)
+  default: string                # Default version name (e.g., "v2")
+  list:                          # Available versions
+    - name: string               # Version identifier (e.g., "v2")
+      label: string              # Display label (e.g., "2.x (Latest)")
+      path: string               # URL path prefix
+      eol: string                # End of life date (YYYY-MM-DD)
+  selector:
+    position: string             # Selector position: header, sidebar
+    show_eol_warning: boolean    # Show EOL warning banner (default: true)
 
 # Landing Page Configuration
 landing:
@@ -210,6 +265,82 @@ dark_mode: true
 
 Type: `boolean`
 Default: `false`
+
+## Theme Configuration
+
+Config-based theme customization without creating theme files.
+
+### theme_config
+
+Customize colors, fonts, and hero styling directly in config.
+
+```yaml
+theme_config:
+  name: "custom"
+  colors:
+    light:
+      bg_primary: "#ffffff"
+      link_color: "#0066cc"
+    dark:
+      bg_primary: "#0f172a"
+      link_color: "#60a5fa"
+  fonts:
+    heading: "Inter"
+    body: "Inter"
+    google_url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+  hero:
+    background_image: "/images/hero-bg.jpg"
+    background_overlay: "rgba(0,0,0,0.6)"
+    min_height: "80vh"
+```
+
+Type: `object`
+
+Only specify fields you want to override. Unspecified fields use theme defaults.
+
+### theme_config.colors
+
+Override CSS color variables for light and dark modes.
+
+| Field | Description |
+|-------|-------------|
+| `bg_primary` | Main page background |
+| `bg_secondary` | Sidebar, cards |
+| `bg_tertiary` | Nested elements |
+| `bg_code` | Code block background |
+| `bg_hover` | Hover states |
+| `text_primary` | Main text |
+| `text_secondary` | Secondary text |
+| `text_tertiary` | Muted text |
+| `text_muted` | Very light text |
+| `border_primary` | Main borders |
+| `border_secondary` | Subtle borders |
+| `accent_primary` | Buttons, highlights |
+| `accent_hover` | Accent hover state |
+| `link_color` | Link text |
+| `link_hover` | Link hover |
+
+### theme_config.fonts
+
+Custom font configuration.
+
+| Field | Description |
+|-------|-------------|
+| `heading` | Font family for headings |
+| `body` | Font family for body text |
+| `code` | Font family for code |
+| `google_url` | Google Fonts import URL |
+
+### theme_config.hero
+
+Hero section styling.
+
+| Field | Description |
+|-------|-------------|
+| `background_image` | Background image URL |
+| `background_overlay` | Overlay color (e.g., `rgba(0,0,0,0.6)`) |
+| `text_align` | Text alignment: `left`, `center`, `right` |
+| `min_height` | Minimum height (e.g., `80vh`) |
 
 ## Feature Toggles
 
@@ -560,6 +691,169 @@ stale_warning:
 Type: `boolean`
 Default: `true`
 
+## Link Check Settings
+
+### link_check.enabled
+
+Enable link checking during build.
+
+```yaml
+link_check:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `true`
+
+### link_check.mode
+
+How to handle broken links.
+
+```yaml
+link_check:
+  mode: "error"
+```
+
+Type: `string`
+Default: `"warn"`
+Options: `error` (fail build), `warn` (continue with warnings), `ignore` (skip checking)
+
+### link_check.check_external
+
+Validate external URLs with HTTP requests.
+
+```yaml
+link_check:
+  check_external: true
+```
+
+Type: `boolean`
+Default: `false`
+
+External checking is slower and may hit rate limits.
+
+### link_check.external_timeout
+
+Timeout for external URL requests in seconds.
+
+```yaml
+link_check:
+  external_timeout: 10
+```
+
+Type: `integer`
+Default: `5`
+
+### link_check.ignore_patterns
+
+URL patterns to skip during checking.
+
+```yaml
+link_check:
+  ignore_patterns:
+    - "/api/*"
+    - "https://example.com/*"
+```
+
+Type: `array of string`
+Default: `[]`
+
+Supports `*` wildcard for glob matching.
+
+### link_check.allowed_broken
+
+Known broken links to ignore (documentation examples, etc.).
+
+```yaml
+link_check:
+  allowed_broken:
+    - "path.md"
+    - "/coming-soon.html"
+```
+
+Type: `array of string`
+Default: `[]`
+
+## Multi-Version Documentation Settings
+
+### versions.enabled
+
+Enable multi-version documentation support.
+
+```yaml
+versions:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### versions.default
+
+Default version to display at root URLs.
+
+```yaml
+versions:
+  default: "v2"
+```
+
+Type: `string`
+Default: First version in list
+
+### versions.list
+
+Array of version definitions.
+
+```yaml
+versions:
+  list:
+    - name: "v2"
+      label: "2.x (Latest)"
+      path: "v2"
+    - name: "v1"
+      label: "1.x (LTS)"
+      path: "v1"
+      eol: "2025-12-31"
+```
+
+Type: `array of object`
+
+### Version Definition Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Version identifier |
+| `label` | string | No | Display label |
+| `path` | string | Yes | URL path prefix |
+| `eol` | string | No | End of life date (YYYY-MM-DD) |
+
+### versions.selector.position
+
+Where to show the version selector.
+
+```yaml
+versions:
+  selector:
+    position: "header"
+```
+
+Type: `string`
+Default: `"header"`
+Options: `header`, `sidebar`
+
+### versions.selector.show_eol_warning
+
+Show warning banner for EOL versions.
+
+```yaml
+versions:
+  selector:
+    show_eol_warning: true
+```
+
+Type: `boolean`
+Default: `true`
+
 ## Social Links
 
 ### social_links
@@ -710,6 +1004,112 @@ landing:
       - text: "GitHub Repository"
         url: "https://github.com/org/repo"
 ```
+
+### landing.image_text
+
+Image + content side-by-side sections.
+
+```yaml
+landing:
+  image_text:
+    - id: "feature"
+      title: "Feature Title"
+      description: "Feature description"
+      image: "/images/feature.png"
+      image_position: "right"
+      order: 1
+```
+
+Type: `array of object`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Section identifier |
+| `title` | string | Section heading |
+| `description` | string | Description text |
+| `image` | string | Image URL |
+| `image_alt` | string | Image alt text |
+| `image_position` | string | `left` or `right` |
+| `items` | array | Bullet points with icon, title, description |
+| `buttons` | array | CTA buttons |
+| `background` | object | Background styling |
+| `order` | number | Display order |
+
+### landing.text_blocks
+
+Simple text block sections.
+
+```yaml
+landing:
+  text_blocks:
+    - id: "mission"
+      title: "Our Mission"
+      content: "<p>Description text</p>"
+      alignment: "center"
+      order: 2
+```
+
+Type: `array of object`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Section identifier |
+| `title` | string | Section heading |
+| `subtitle` | string | Optional subtitle |
+| `content` | string | HTML content |
+| `alignment` | string | `left`, `center`, or `right` |
+| `max_width` | string | Max content width |
+| `buttons` | array | CTA buttons |
+| `background` | object | Background styling |
+| `order` | number | Display order |
+
+### landing.links_grid
+
+Grid of external link cards.
+
+```yaml
+landing:
+  links_grid:
+    - id: "platforms"
+      title: "Find Us"
+      columns: 4
+      items:
+        - icon: "github"
+          title: "GitHub"
+          url: "https://github.com/..."
+```
+
+Type: `array of object`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Section identifier |
+| `title` | string | Section heading |
+| `description` | string | Section description |
+| `columns` | number | Grid columns (2, 3, or 4) |
+| `items` | array | Link cards |
+| `background` | object | Background styling |
+| `order` | number | Display order |
+
+### Section Background
+
+Background styling for any landing section.
+
+```yaml
+background:
+  image: "/images/bg.jpg"
+  overlay: "rgba(0,0,0,0.6)"
+  color: "#1a1a2e"
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `image` | string | Background image URL |
+| `overlay` | string | Semi-transparent overlay |
+| `color` | string | Background color |
+| `position` | string | CSS background-position |
+| `size` | string | CSS background-size |
+| `attachment` | string | CSS background-attachment |
 
 ## Portfolio Settings
 

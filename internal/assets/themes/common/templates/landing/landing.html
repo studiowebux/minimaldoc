@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to main content</a>
@@ -132,6 +133,79 @@
 {{end}}
 </div>
 {{end}}
+</section>
+{{end}}
+
+{{range .LandingPage.ImageText}}
+<section class="image-text-section{{if .Background.HasBackground}} section-with-bg{{end}}"{{if .Background.Image}} style="background-image: url('{{.Background.Image}}');{{if .Background.Position}} background-position: {{.Background.Position}};{{end}}{{if .Background.Size}} background-size: {{.Background.Size}};{{end}}{{if .Background.Attachment}} background-attachment: {{.Background.Attachment}};{{end}}"{{else if .Background.Color}} style="background-color: {{.Background.Color}};"{{end}}>
+{{if .Background.Overlay}}<div class="section-bg-overlay" style="background: {{.Background.Overlay}};"></div>{{end}}
+<div class="image-text-container{{if eq .ImagePosition "left"}} image-left{{end}}">
+<div class="image-text-content">
+{{if .Title}}<h2 class="image-text-title">{{.Title}}</h2>{{end}}
+{{if .Description}}<p class="image-text-description">{{.Description}}</p>{{end}}
+{{if .Items}}
+<div class="image-text-items">
+{{range .Items}}
+<div class="image-text-item">
+{{if .Icon}}<div class="image-text-item-icon">{{.Icon}}</div>{{end}}
+<div class="image-text-item-content">
+{{if .Title}}<h4>{{.Title}}</h4>{{end}}
+{{if .Description}}<p>{{.Description}}</p>{{end}}
+</div>
+</div>
+{{end}}
+</div>
+{{end}}
+{{if .Buttons}}
+<div class="image-text-buttons">
+{{range .Buttons}}
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}" class="hero-btn{{if .Primary}} hero-btn-primary{{else}} hero-btn-secondary{{end}}">{{.Text}}</a>
+{{end}}
+</div>
+{{end}}
+</div>
+<div class="image-text-image">
+<img src="{{.Image}}" alt="{{.ImageAlt}}" loading="lazy">
+</div>
+</div>
+</section>
+{{end}}
+
+{{range .LandingPage.TextBlocks}}
+<section class="text-section{{if .Background.HasBackground}} section-with-bg{{end}}"{{if .Background.Image}} style="background-image: url('{{.Background.Image}}');{{if .Background.Position}} background-position: {{.Background.Position}};{{end}}{{if .Background.Size}} background-size: {{.Background.Size}};{{end}}{{if .Background.Attachment}} background-attachment: {{.Background.Attachment}};{{end}}"{{else if .Background.Color}} style="background-color: {{.Background.Color}};"{{end}}>
+{{if .Background.Overlay}}<div class="section-bg-overlay" style="background: {{.Background.Overlay}};"></div>{{end}}
+<div class="text-section-content align-{{if .Alignment}}{{.Alignment}}{{else}}center{{end}}"{{if .MaxWidth}} style="max-width: {{.MaxWidth}};"{{end}}>
+{{if .Title}}<h2 class="text-section-title">{{.Title}}</h2>{{end}}
+{{if .Subtitle}}<p class="text-section-subtitle">{{.Subtitle}}</p>{{end}}
+{{if .Content}}<div class="text-section-body">{{.Content | safeHTML}}</div>{{end}}
+{{if .Buttons}}
+<div class="text-section-buttons">
+{{range .Buttons}}
+<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}" class="hero-btn{{if .Primary}} hero-btn-primary{{else}} hero-btn-secondary{{end}}">{{.Text}}</a>
+{{end}}
+</div>
+{{end}}
+</div>
+</section>
+{{end}}
+
+{{range .LandingPage.LinksGrid}}
+<section class="links-grid-section{{if .Background.HasBackground}} section-with-bg{{end}}"{{if .Background.Image}} style="background-image: url('{{.Background.Image}}');{{if .Background.Position}} background-position: {{.Background.Position}};{{end}}{{if .Background.Size}} background-size: {{.Background.Size}};{{end}}{{if .Background.Attachment}} background-attachment: {{.Background.Attachment}};{{end}}"{{else if .Background.Color}} style="background-color: {{.Background.Color}};"{{end}}>
+{{if .Background.Overlay}}<div class="section-bg-overlay" style="background: {{.Background.Overlay}};"></div>{{end}}
+<div class="links-grid-header">
+{{if .Title}}<h2 class="links-grid-title">{{.Title}}</h2>{{end}}
+{{if .Description}}<p class="links-grid-description">{{.Description}}</p>{{end}}
+</div>
+<div class="links-grid columns-{{if .Columns}}{{.Columns}}{{else}}4{{end}}">
+{{range .Items}}
+<a href="{{.URL}}" class="links-grid-card"{{if or .External (hasPrefix .URL "http")}} target="_blank" rel="noopener"{{end}}>
+{{if .Icon}}<div class="links-grid-card-icon">{{.Icon}}</div>{{end}}
+<h3 class="links-grid-card-title">{{.Title}}</h3>
+{{if .Description}}<p class="links-grid-card-description">{{.Description}}</p>{{end}}
+{{if or .External (hasPrefix .URL "http")}}<span class="links-grid-card-external">External link</span>{{end}}
+</a>
+{{end}}
+</div>
 </section>
 {{end}}
 </main>

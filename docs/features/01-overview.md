@@ -4,6 +4,7 @@ description: Complete feature list and capabilities of MinimalDoc
 tags:
   - features
   - overview
+since: "v1.0"
 ---
 
 # Features Overview
@@ -13,37 +14,44 @@ Pure static output designed for CI/CD integration—automate updates to document
 
 ## Feature Matrix
 
-| Category       | Feature             | Description                                                     |
-| -------------- | ------------------- | --------------------------------------------------------------- |
-| **Content**    | Markdown            | Full Markdown with GFM extensions                               |
-|                | Frontmatter         | YAML metadata for pages                                         |
-|                | Admonitions         | Callout blocks (info, warning, danger, success, note, question) |
-|                | Syntax Highlighting | 100+ languages via Chroma with copy button                      |
-|                | Stale Warnings      | Configurable warnings for outdated content                      |
-| **Navigation** | Auto Navigation     | From folder structure                                           |
-|                | Custom TOC          | Via TOC.md file                                                 |
-|                | Page TOC            | Auto-generated from headings                                    |
-|                | Scrollspy           | Active heading highlight                                        |
-| **Search**     | Full-Text           | Client-side search index                                        |
-|                | Keyboard            | Cmd+K / Ctrl+K shortcut                                         |
-|                | Fuzzy Matching      | Tolerant search                                                 |
-| **Design**     | Responsive          | Mobile, tablet, desktop                                         |
-|                | Dark Mode           | Toggle with localStorage persistence                            |
-|                | Themes              | CSS-only customization (default, yellow)                        |
-| **Pages**      | Landing             | Marketing homepage with hero, features, steps                   |
-|                | Portfolio           | Project showcase with tags and filtering                        |
-|                | Contact             | Contact page with email and info                                |
-|                | FAQ                 | Collapsible Q&A with categories and search integration          |
-|                | Legal               | Privacy policy, terms of service with auto footer links         |
-|                | Status              | Service health with incidents, maintenance, uptime              |
-|                | Changelog           | Version history with RSS feed                                   |
-| **SEO**        | Sitemap             | Automatic sitemap.xml generation                                |
-|                | Meta Tags           | Open Graph, Twitter Cards                                       |
-|                | Canonical URLs      | Configurable base URL                                           |
-|                | LLM Output          | llms.txt and llms-full.txt generation                           |
-| **API**        | OpenAPI             | Interactive docs with testing UI                                |
-|                | Code Samples        | curl, JavaScript, Go, Python, Swift                             |
-|                | Schema Viewer       | Request/response visualization                                  |
+| Category       | Feature             | Description                                                     | Since |
+| -------------- | ------------------- | --------------------------------------------------------------- | ----- |
+| **Content**    | Markdown            | Full Markdown with GFM extensions                               | v1.0  |
+|                | Frontmatter         | YAML metadata for pages                                         | v1.0  |
+|                | Admonitions         | Callout blocks (info, warning, danger, success, note, question) | v1.0  |
+|                | Syntax Highlighting | 100+ languages via Chroma with copy button                      | v1.0  |
+|                | Stale Warnings      | Configurable warnings for outdated content                      | v1.0  |
+|                | Link Checking       | Validate internal/external links during build                   | v1.2  |
+| **Navigation** | Auto Navigation     | From folder structure                                           | v1.0  |
+|                | Custom TOC          | Via TOC.md file                                                 | v1.0  |
+|                | Page TOC            | Auto-generated from headings                                    | v1.0  |
+|                | Scrollspy           | Active heading highlight                                        | v1.0  |
+| **Search**     | Full-Text           | Client-side search index                                        | v1.0  |
+|                | Keyboard            | Cmd+K / Ctrl+K shortcut                                         | v1.0  |
+|                | Fuzzy Matching      | Tolerant search                                                 | v1.0  |
+| **Design**     | Responsive          | Mobile, tablet, desktop                                         | v1.0  |
+|                | Dark Mode           | Toggle with localStorage persistence                            | v1.0  |
+|                | Themes              | CSS-only customization (default, yellow)                        | v1.0  |
+|                | Custom Themes       | Configure colors, fonts, backgrounds in YAML                    | v1.2  |
+| **Pages**      | Landing             | Marketing homepage with hero, features, steps                   | v1.0  |
+|                | MD Landing Sections | Define landing sections in `__landing__/*.md` files             | v1.1  |
+|                | Portfolio           | Project showcase with tags and filtering                        | v1.0  |
+|                | Contact             | Contact page with email and info                                | v1.0  |
+|                | FAQ                 | Collapsible Q&A with categories and search integration          | v1.0  |
+|                | Legal               | Privacy policy, terms of service with auto footer links         | v1.0  |
+|                | Knowledge Base      | Self-service support hub with categories and scoped search      | v1.1  |
+|                | Status              | Service health with incidents, maintenance, uptime              | v1.0  |
+|                | Changelog           | Version history with RSS feed                                   | v1.0  |
+| **Versioning** | Multi-Version       | Documentation for multiple software versions                    | v1.2  |
+|                | Version Selector    | Dropdown to switch between versions                             | v1.2  |
+|                | EOL Warnings        | Warning banners for end-of-life versions                        | v1.2  |
+| **SEO**        | Sitemap             | Automatic sitemap.xml generation                                | v1.0  |
+|                | Meta Tags           | Open Graph, Twitter Cards                                       | v1.0  |
+|                | Canonical URLs      | Configurable base URL                                           | v1.0  |
+|                | LLM Output          | llms.txt and llms-full.txt generation                           | v1.0  |
+| **API**        | OpenAPI             | Interactive docs with testing UI                                | v1.0  |
+|                | Code Samples        | curl, JavaScript, Go, Python, Swift                             | v1.0  |
+|                | Schema Viewer       | Request/response visualization                                  | v1.0  |
 
 ## Design Philosophy
 

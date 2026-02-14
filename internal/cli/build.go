@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/studiowebux/minimaldoc/internal/assets"
 	"github.com/studiowebux/minimaldoc/internal/builder"
+	"github.com/studiowebux/minimaldoc/internal/checker"
 	"github.com/studiowebux/minimaldoc/internal/config"
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/studiowebux/minimaldoc/internal/generator"
@@ -46,6 +47,8 @@ var (
 	changelogPath    string
 	enableStaleWarn  bool
 	staleThreshold   int
+	linkCheckMode    string
+	checkExternal    bool
 )
 
 func init() {
@@ -66,6 +69,8 @@ func init() {
 	BuildCmd.Flags().StringVar(&changelogPath, "changelog-path", "changelog", "Changelog output path")
 	BuildCmd.Flags().BoolVar(&enableStaleWarn, "stale-warning", false, "Enable stale content warnings")
 	BuildCmd.Flags().IntVar(&staleThreshold, "stale-threshold", 365, "Days before content is considered stale")
+	BuildCmd.Flags().StringVar(&linkCheckMode, "link-check", "warn", "Link check mode: error, warn, ignore")
+	BuildCmd.Flags().BoolVar(&checkExternal, "check-external", false, "Check external URLs (slower)")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -147,6 +152,14 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		staleWarningConfig.ThresholdDays = staleThreshold
 	}
 
+	// Create link check configuration
+	linkCheckConfig := core.DefaultLinkCheckConfig()
+	linkCheckConfig.Mode = core.LinkCheckMode(linkCheckMode)
+	linkCheckConfig.CheckExternal = checkExternal
+	if linkCheckMode == "ignore" {
+		linkCheckConfig.Enabled = false
+	}
+
 	siteConfig := core.SiteConfig{
 		Title:        siteTitle,
 		Description:  siteDesc,
@@ -159,6 +172,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		Status:       statusConfig,
 		Changelog:    changelogConfig,
 		StaleWarning: staleWarningConfig,
+		LinkCheck:    linkCheckConfig,
 	}
 
 	// Merge with config.yaml if it exists (CLI flags take precedence)
@@ -221,6 +235,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	searchGen := generator.NewSearchGenerator(site)
 	if err := searchGen.Generate(); err != nil {
 		return fmt.Errorf("search index generation failed: %w", err)
+	}
+
+	// Generate custom theme CSS (if configured)
+	themeGen := generator.NewThemeGenerator(site)
+	if err := themeGen.Generate(); err != nil {
+		return fmt.Errorf("theme CSS generation failed: %w", err)
 	}
 
 	// Generate status page (if enabled)
@@ -309,6 +329,34 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		if err := kbGen.Generate(); err != nil {
 			return fmt.Errorf("knowledge base generation failed: %w", err)
 		}
+	}
+
+	// Generate versioned documentation (if enabled)
+	if site.Config.Versions.Enabled {
+		versionGen, err := generator.NewVersionGenerator(site, assets.ThemeFS, version.Version)
+		if err != nil {
+			return fmt.Errorf("failed to create version generator: %w", err)
+		}
+		if err := versionGen.Generate(); err != nil {
+			return fmt.Errorf("versioned documentation generation failed: %w", err)
+		}
+	}
+
+	// Generate localized documentation (if enabled)
+	if site.Config.I18n.Enabled {
+		i18nGen, err := generator.NewI18nGenerator(site, assets.ThemeFS, version.Version)
+		if err != nil {
+			return fmt.Errorf("failed to create i18n generator: %w", err)
+		}
+		if err := i18nGen.Generate(); err != nil {
+			return fmt.Errorf("localized documentation generation failed: %w", err)
+		}
+	}
+
+	// Run link checker
+	linkChecker := checker.NewLinkChecker(site, site.Config.LinkCheck)
+	if err := linkChecker.Check(); err != nil {
+		return err
 	}
 
 	fmt.Println()

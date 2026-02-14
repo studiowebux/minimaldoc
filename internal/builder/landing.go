@@ -171,6 +171,25 @@ func (lb *LandingBuilder) applyConfig(page *core.LandingPage, config core.Landin
 	if len(config.Links.Items) > 0 {
 		page.Links = &config.Links
 	}
+
+	// Apply new section types
+	if len(config.ImageText) > 0 {
+		for i := range config.ImageText {
+			page.ImageText = append(page.ImageText, &config.ImageText[i])
+		}
+	}
+
+	if len(config.TextBlocks) > 0 {
+		for i := range config.TextBlocks {
+			page.TextBlocks = append(page.TextBlocks, &config.TextBlocks[i])
+		}
+	}
+
+	if len(config.LinksGrid) > 0 {
+		for i := range config.LinksGrid {
+			page.LinksGrid = append(page.LinksGrid, &config.LinksGrid[i])
+		}
+	}
 }
 
 // applyMarkdownFiles overrides sections with markdown file content

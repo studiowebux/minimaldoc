@@ -22,6 +22,8 @@ a{color:var(--link-color)}
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/openapi.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+{{if .Site.Config.Analytics.Enabled}}{{analyticsHeadScripts .Site.Config.Analytics}}{{end}}
 </head>
 <body class="openapi-body">
 <a href="#endpoints-container" class="skip-link">Skip to API endpoints</a>
@@ -208,5 +210,6 @@ a{color:var(--link-color)}
 <script defer src="{{.BasePath}}/js/api-tester.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/oauth-handler.js?v={{.Version}}"></script>
 <script defer src="{{.BasePath}}/js/export.js?v={{.Version}}"></script>
+{{if .Site.Config.Analytics.Enabled}}{{analyticsBodyScripts .Site.Config.Analytics}}{{end}}
 </body>
 </html>

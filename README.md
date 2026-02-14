@@ -4,42 +4,21 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 
 ## Features
 
-### Content
-- **Markdown-based** - Write in Markdown with YAML frontmatter
-- **GFM Support** - Tables, task lists, strikethrough
-- **Admonitions** - Callout blocks (info, warning, danger, success, note, question)
-- **Syntax Highlighting** - 100+ languages via Chroma with copy button
-- **Stale Warnings** - Configurable warnings for outdated content
+| Category | Features |
+|----------|----------|
+| **Content** | Markdown (GFM), Frontmatter, Admonitions, Syntax Highlighting (100+ langs), Stale Warnings, Link Checking |
+| **Navigation** | Auto-generated from folders, Custom TOC.md, Page TOC with scrollspy, Collapsible sections |
+| **Search** | Full-text inverted index, Cmd+K shortcut, Prefix matching, Section-level results |
+| **Design** | Dark mode, Responsive, Built-in themes, Custom colors/fonts via YAML |
+| **Versioning** | Multi-version docs, Version selector, EOL warnings, Per-version search |
+| **i18n** | Multi-locale, Translation files, Fallback content, RTL support |
+| **Pages** | Landing, Knowledge Base, Portfolio, Contact, FAQ, Legal, Status, Changelog |
+| **API Docs** | OpenAPI/Swagger, Live testing, Code samples (curl/JS/Go/Python/Swift), Schema viewer |
+| **SEO** | Sitemap, Open Graph, Twitter Cards, LLM output (llms.txt) |
+| **Analytics** | GA4, Plausible, Umami, Matomo, Fathom, Simple Analytics, Custom providers |
+| **Build** | Single binary, Fast (Go), Config file or CLI flags, Clean URLs option |
 
-### Navigation
-- **Auto Navigation** - Generated from folder structure
-- **Custom TOC** - Via TOC.md file
-- **Page TOC** - Auto-generated with scrollspy
-- **Search** - Client-side full-text search with Cmd+K/Ctrl+K
-
-### Design
-- **Dark Mode** - Toggle with localStorage persistence
-- **Themes** - CSS-only customization (default, yellow)
-- **Responsive** - Mobile, tablet, desktop
-
-### Pages
-- **Landing Pages** - Marketing homepage with hero, features, steps (YAML or Markdown)
-- **Portfolio** - Project showcase with tags and filtering
-- **Contact** - Contact page with email and info
-- **FAQ** - Collapsible Q&A with categories, search integration, deep linking
-- **Legal** - Privacy policy, terms of service with auto footer links
-- **Status Page** - Service health with incidents, maintenance, uptime
-- **Changelog** - Version history with RSS feed
-
-### API Documentation
-- **OpenAPI Support** - Interactive docs with testing UI
-- **Code Samples** - curl, JavaScript, Go, Python, Swift
-- **Schema Viewer** - Request/response visualization
-
-### SEO
-- **Sitemap** - Automatic sitemap.xml generation
-- **Meta Tags** - Open Graph, Twitter Cards
-- **LLM Output** - llms.txt and llms-full.txt generation
+See [Feature Index](docs/features/00-index.md) for the complete list with descriptions
 
 ## Installation
 
@@ -119,6 +98,8 @@ minimaldoc build [docs-directory] [flags]
 - `--title` - Site title (default: `Documentation`)
 - `--description` - Site description
 - `--base-url` - Base URL for the site
+- `--link-check` - Link check mode: `error`, `warn`, `ignore` (default: `warn`)
+- `--check-external` - Validate external URLs (slower)
 
 **Example:**
 
@@ -512,6 +493,258 @@ Supported sections: `hero`, `features`, `steps`, `cta`, `testimonials`, `opensou
 
 Markdown files override YAML config (YAML serves as defaults).
 
+## Knowledge Base
+
+Create a self-service support hub with categories and dedicated search.
+
+### Directory Structure
+
+```
+docs/
+  __kb__/
+    getting-started/
+      01-quick-start.md
+      02-configuration.md
+    troubleshooting/
+      01-common-issues.md
+```
+
+Subdirectories become categories. Markdown files are articles.
+
+### Configuration
+
+```yaml
+knowledgebase:
+  enabled: true
+  title: "Knowledge Base"
+  description: "Find answers and solutions"
+  path: "kb"
+  search:
+    enabled: true
+    placeholder: "Search articles..."
+  categories:
+    getting-started:
+      name: "Getting Started"
+      description: "Installation and setup"
+      icon: "rocket"
+      order: 1
+    troubleshooting:
+      name: "Troubleshooting"
+      icon: "wrench"
+      order: 2
+```
+
+### Article Frontmatter
+
+```yaml
+---
+title: "Quick Start Guide"
+description: "Get up and running in minutes"
+tags: ["beginner", "setup"]
+order: 1
+---
+```
+
+### Features
+
+- Category landing page with article counts
+- Scoped search (`kb-search.json`)
+- Breadcrumb navigation
+- Related articles by tags
+- Previous/Next navigation within categories
+
+## Link Checking
+
+Validate links during build to catch broken references before deployment.
+
+### Modes
+
+```bash
+# Warn on broken links (default)
+minimaldoc build docs
+
+# Fail build on broken links (CI/CD)
+minimaldoc build docs --link-check=error
+
+# Skip link checking
+minimaldoc build docs --link-check=ignore
+
+# Also check external URLs
+minimaldoc build docs --check-external
+```
+
+### Configuration
+
+```yaml
+link_check:
+  enabled: true
+  mode: "warn"           # error, warn, ignore
+  check_external: false  # Validate external URLs
+  external_timeout: 5    # Seconds
+  ignore_patterns:
+    - "/api/*"           # Skip generated API docs
+  allowed_broken:
+    - "example.md"       # Documentation examples
+```
+
+### What Gets Checked
+
+- Internal page links (`.md`, `.html`)
+- Anchor links (`#section`)
+- Asset links (images, files)
+- External URLs (optional)
+
+### Output
+
+```
+Checking links...
+
+Warning: Found 2 broken links
+
+docs/guides/deploy.md:
+  Line 42: /api/reference.html (file not found)
+  Line 78: #instalation (anchor not found, did you mean #installation?)
+
+Link check completed with warnings: 2 broken links in 1 files
+```
+
+## Multi-Version Documentation
+
+Maintain documentation for multiple versions of your software with version-specific content and overrides.
+
+### Configuration
+
+```yaml
+versions:
+  enabled: true
+  default: "v2"
+  list:
+    - name: "v2"
+      label: "2.x (Latest)"
+      path: ""              # Default version at root
+    - name: "v1"
+      label: "1.x (LTS)"
+      path: "v1"
+    - name: "v0"
+      label: "0.x (EOL)"
+      path: "v0"
+      eol: "2025-01-01"     # End of life date
+  selector:
+    position: "header"
+    show_eol_warning: true
+```
+
+### Directory Structure
+
+Shared content lives in the main `docs/` directory. Version-specific overrides go in `__versions__/`:
+
+```
+docs/
+  getting-started/
+    install.md              # Shared across all versions
+  features/
+    new-feature.md          # Can use frontmatter to limit versions
+  __versions__/
+    v1/
+      getting-started/
+        install.md          # Overrides install.md for v1
+      migration/
+        upgrade.md          # Only appears in v1
+```
+
+### Frontmatter
+
+Control version visibility with frontmatter:
+
+```yaml
+---
+title: New API Feature
+versions:
+  - v2                      # Only show in v2
+since: "v2.0"               # Badge: "Since v2.0"
+deprecated_in: "v3.0"       # Badge: "Deprecated in v3.0"
+---
+```
+
+### URL Structure
+
+```
+/docs/getting-started/      # Default version (v2)
+/v1/docs/getting-started/   # v1 version
+/v0/docs/getting-started/   # v0 version (with EOL warning)
+```
+
+### Features
+
+- Version selector dropdown in sidebar
+- EOL badges and warning banners
+- Per-version search indexes
+- Shared content with version-specific overrides
+- `versions.json` metadata file for client-side switching
+
+## Custom Themes
+
+Configure colors, fonts, and backgrounds directly in `config.yaml` without creating theme files.
+
+### Colors
+
+```yaml
+theme_config:
+  colors:
+    light:
+      bg_primary: "#ffffff"
+      bg_secondary: "#f8fafc"
+      text_primary: "#1a1a1a"
+      accent_primary: "#2563eb"
+      link_color: "#0066cc"
+    dark:
+      bg_primary: "#0f172a"
+      bg_secondary: "#1e293b"
+      text_primary: "#f8fafc"
+      accent_primary: "#3b82f6"
+      link_color: "#60a5fa"
+```
+
+### Fonts
+
+```yaml
+theme_config:
+  fonts:
+    heading: "Inter"
+    body: "Inter"
+    code: "JetBrains Mono"
+    google_url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap"
+```
+
+### Hero Background
+
+```yaml
+theme_config:
+  hero:
+    background_image: "/images/hero-bg.jpg"
+    background_overlay: "rgba(0,0,0,0.6)"
+    text_align: "center"
+    min_height: "80vh"
+```
+
+### Available Color Variables
+
+| Variable | Description |
+|----------|-------------|
+| `bg_primary` | Main background |
+| `bg_secondary` | Sidebar, cards |
+| `bg_tertiary` | Nested elements |
+| `bg_code` | Code blocks |
+| `bg_hover` | Hover states |
+| `text_primary` | Main text |
+| `text_secondary` | Secondary text |
+| `text_muted` | Muted text |
+| `border_primary` | Main borders |
+| `accent_primary` | Buttons, links |
+| `accent_hover` | Accent hover |
+| `link_color` | Link text |
+| `link_hover` | Link hover |
+
 ### Code Samples
 
 When `enable_code_samples: true` is set, each endpoint displays auto-generated code examples in a right sidebar:
@@ -527,33 +760,57 @@ Code samples include:
 - Authentication headers based on security schemes (Bearer, API Key, OAuth2)
 - Request body examples generated from schema
 
-## Theme
-
-### Colors
+## Default Theme
 
 The default theme uses soft, eye-friendly colors:
 
-**Light Mode:**
+**Light Mode:** Background `#fafafa`, Text `#1a1a1a`
 
-- Background: `#fafafa` (soft white)
-- Text: `#1a1a1a` (soft black)
+**Dark Mode:** Background `#1a1a1a`, Text `#ffffff`, Secondary `#2a2a2a`
 
-**Dark Mode:**
+For config-based customization, see [Custom Themes](#custom-themes) above.
 
-- Background: `#1a1a1a` (soft black)
-- Text: `#ffffff` (white)
-- Secondary: `#2a2a2a` (cards, sidebars)
+## Analytics
 
-### Customization
+MinimalDoc supports multiple analytics providers that can run simultaneously.
 
-Theme customization via CSS variables:
+### Quick Start
 
-```css
-:root[data-theme="light"] {
-  --bg-primary: #fafafa;
-  --text-primary: #1a1a1a;
-  /* ... */
-}
+```yaml
+analytics:
+  enabled: true
+  providers:
+    - type: plausible
+      enabled: true
+      config:
+        domain: "docs.example.com"
+```
+
+### Supported Providers
+
+| Provider | Type | Required Config |
+|----------|------|-----------------|
+| Google Analytics 4 | `ga4` | `measurement_id` |
+| Plausible | `plausible` | `domain` |
+| Umami | `umami` | `website_id`, `src` |
+| Matomo | `matomo` | `url`, `site_id` |
+| Fathom | `fathom` | `site_id` |
+| Simple Analytics | `simple` | (none) |
+| Custom | `custom` | `src` |
+
+### Custom Provider
+
+For any analytics service, use the `custom` type with arbitrary attributes:
+
+```yaml
+- type: custom
+  enabled: true
+  config:
+    src: "https://analytics.example.com/tracker.js"
+    defer: "true"
+    attrs:
+      data-site-id: "my-site"
+      data-cookieless: "true"
 ```
 
 ## LLM-Friendly Output

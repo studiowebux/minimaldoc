@@ -28,7 +28,7 @@ func NewOpenAPIGenerator(site *core.Site, themeFS embed.FS, version string) (*Op
 	}
 
 	// Create template with shared OpenAPI functions
-	tmpl := template.New("").Funcs(OpenAPIFuncMap())
+	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(AnalyticsFuncMap())
 
 	// Parse OpenAPI templates from common (all structure is shared, themes only provide CSS)
 	tmpl, err := tmpl.ParseFS(

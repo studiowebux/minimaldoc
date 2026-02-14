@@ -1,0 +1,181 @@
+/* ========================================
+   Print Styles
+   Optimized for PDF export via browser print
+   ======================================== */
+
+@media print {
+    /* Hide interactive and navigation elements */
+    .sidebar-left,
+    .sidebar-right,
+    .mobile-menu-toggle,
+    .mobile-menu-backdrop,
+    .search-modal,
+    .search-button,
+    .theme-toggle,
+    .version-selector,
+    .locale-selector,
+    .pdf-export-btn,
+    .claude-assist-btn,
+    .page-title-actions,
+    .page-nav,
+    .code-copy-btn,
+    .stale-warning,
+    .skip-link,
+    .header-anchor,
+    .social-links,
+    .sidebar-footer,
+    .status-page-link,
+    .changelog-page-link,
+    .api-link-separator,
+    .status-link-separator,
+    .changelog-link-separator {
+        display: none !important;
+    }
+
+    /* Reset layout to single column */
+    .container {
+        display: block;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Main content full width */
+    .main-content {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    /* Body styling for print */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+
+    html {
+        background: white !important;
+    }
+
+    /* Page header */
+    .page-header {
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .page-header h1 {
+        font-size: 24pt;
+        color: black;
+    }
+
+    .page-description {
+        color: #444;
+    }
+
+    .page-updated {
+        color: #666;
+    }
+
+    /* Typography */
+    .markdown-body {
+        color: black;
+    }
+
+    .markdown-body h1,
+    .markdown-body h2,
+    .markdown-body h3,
+    .markdown-body h4,
+    .markdown-body h5,
+    .markdown-body h6 {
+        color: black;
+        page-break-after: avoid;
+    }
+
+    .markdown-body h1 { font-size: 20pt; }
+    .markdown-body h2 { font-size: 16pt; border-bottom-color: #ccc; }
+    .markdown-body h3 { font-size: 14pt; }
+    .markdown-body h4 { font-size: 12pt; }
+
+    .markdown-body a {
+        color: black;
+        text-decoration: underline;
+    }
+
+    /* Show link URLs for external links */
+    .markdown-body a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #666;
+        word-break: break-all;
+    }
+
+    /* Code blocks */
+    .markdown-body pre,
+    .chroma,
+    .code-block-wrapper {
+        background: #f5f5f5 !important;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+        overflow-x: visible;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .markdown-body code {
+        background: #f5f5f5;
+        color: black;
+    }
+
+    /* Tables */
+    .markdown-body table {
+        page-break-inside: avoid;
+    }
+
+    .markdown-body table th,
+    .markdown-body table td {
+        border-color: #ccc;
+    }
+
+    .markdown-body table th {
+        background: #f5f5f5;
+    }
+
+    /* Images */
+    .markdown-body img {
+        max-width: 100%;
+        page-break-inside: avoid;
+    }
+
+    /* Blockquotes */
+    .markdown-body blockquote {
+        border-left-color: #ccc;
+        color: #444;
+    }
+
+    /* Admonitions */
+    .admonition {
+        page-break-inside: avoid;
+        border: 1px solid #ccc;
+        background: #f9f9f9 !important;
+    }
+
+    .admonition-title {
+        color: black !important;
+    }
+
+    /* Prevent awkward breaks */
+    p, li, blockquote {
+        orphans: 3;
+        widows: 3;
+    }
+
+    /* Tags */
+    .tag {
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+        color: black;
+    }
+}

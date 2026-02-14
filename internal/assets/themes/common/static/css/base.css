@@ -1597,3 +1597,60 @@ html.no-js .nav-link-parent {
         display: none;
     }
 }
+
+/* ========================================
+   Page Title Row (with PDF Export)
+   ======================================== */
+
+.page-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.page-title-row h1 {
+    margin: 0;
+    flex: 1;
+}
+
+.page-title-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.claude-assist-btn,
+.pdf-export-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.claude-assist-btn:hover,
+.pdf-export-btn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--link-color);
+    color: var(--text-primary);
+}
+
+.claude-assist-btn:active,
+.pdf-export-btn:active {
+    transform: scale(0.98);
+}
+
+.pdf-export-btn.printing {
+    opacity: 0.7;
+    cursor: wait;
+}

@@ -1,47 +1,121 @@
 /**
- * Search Functionality - Inverted Index
+ * Search Functionality - Sharded Inverted Index
  * Client-side search with Cmd+K / Ctrl+K shortcut
+ * Loads manifest once, then fetches shards on-demand
  */
 
 (function() {
-    let searchData = null;
-    let selectedIndex = -1;
-    let indexLoaded = false;
-    let indexLoading = false;
+    var searchData = null;      // Manifest (pages, sections, shard list)
+    var loadedShards = {};      // Cache: prefix -> shard data
+    var selectedIndex = -1;
+    var manifestLoaded = false;
+    var manifestLoading = false;
+    var pendingSearch = null;   // Store pending search while loading
 
-    const modal = document.getElementById('search-modal');
-    const input = document.getElementById('search-input');
-    const results = document.getElementById('search-results');
-    const closeBtn = document.getElementById('search-close');
-    const searchButton = document.getElementById('search-button');
+    var modal = document.getElementById('search-modal');
+    var input = document.getElementById('search-input');
+    var results = document.getElementById('search-results');
+    var closeBtn = document.getElementById('search-close');
+    var searchButton = document.getElementById('search-button');
 
     if (!modal || !input || !results || !closeBtn) {
         console.warn('Search elements not found');
         return;
     }
 
-    const basePath = document.documentElement.getAttribute('data-base-path') || '';
+    var basePath = document.documentElement.getAttribute('data-base-path') || '';
 
-    // Load search index lazily
-    function loadSearchIndex() {
-        if (indexLoaded || indexLoading) return Promise.resolve();
+    // Get shard prefix for a term (first 2 chars)
+    function getShardPrefix(term) {
+        if (term.length < 2) return term;
+        return term.substring(0, 2);
+    }
 
-        indexLoading = true;
+    // Load search manifest (pages + sections + shard list)
+    function loadManifest() {
+        if (manifestLoaded || manifestLoading) {
+            return manifestLoaded ? Promise.resolve() : new Promise(function(resolve) {
+                var check = setInterval(function() {
+                    if (manifestLoaded) {
+                        clearInterval(check);
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+
+        manifestLoading = true;
         results.innerHTML = '<div class="search-no-results">Loading...</div>';
 
-        return fetch(basePath + '/search-index.json')
-            .then(response => response.json())
-            .then(data => {
+        return fetch(basePath + '/search-manifest.json')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
                 searchData = data;
-                indexLoaded = true;
-                indexLoading = false;
+                searchData.idx = {}; // Initialize empty index, will be populated from shards
+                manifestLoaded = true;
+                manifestLoading = false;
                 results.innerHTML = '';
+
+                // Execute pending search if any
+                if (pendingSearch) {
+                    var q = pendingSearch;
+                    pendingSearch = null;
+                    search(q);
+                }
             })
-            .catch(error => {
-                console.error('Failed to load search index:', error);
-                indexLoading = false;
+            .catch(function(error) {
+                console.error('Failed to load search manifest:', error);
+                manifestLoading = false;
                 results.innerHTML = '<div class="search-no-results">Failed to load search index</div>';
             });
+    }
+
+    // Load a specific shard
+    function loadShard(prefix) {
+        if (loadedShards[prefix]) {
+            return Promise.resolve(loadedShards[prefix]);
+        }
+
+        // Check if this shard exists
+        if (searchData && searchData.shards && searchData.shards.indexOf(prefix) === -1) {
+            loadedShards[prefix] = { idx: {} };
+            return Promise.resolve(loadedShards[prefix]);
+        }
+
+        return fetch(basePath + '/search-shards/' + prefix + '.json')
+            .then(function(response) {
+                if (!response.ok) {
+                    loadedShards[prefix] = { idx: {} };
+                    return loadedShards[prefix];
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                loadedShards[prefix] = data;
+                // Merge into searchData.idx for compatibility
+                if (data.idx) {
+                    Object.keys(data.idx).forEach(function(term) {
+                        searchData.idx[term] = data.idx[term];
+                    });
+                }
+                return data;
+            })
+            .catch(function(error) {
+                console.error('Failed to load shard ' + prefix + ':', error);
+                loadedShards[prefix] = { idx: {} };
+                return loadedShards[prefix];
+            });
+    }
+
+    // Load multiple shards in parallel
+    function loadShards(prefixes) {
+        var uniquePrefixes = [];
+        prefixes.forEach(function(p) {
+            if (uniquePrefixes.indexOf(p) === -1) {
+                uniquePrefixes.push(p);
+            }
+        });
+        return Promise.all(uniquePrefixes.map(loadShard));
     }
 
     // Track the element that triggered the modal for focus restoration
@@ -59,7 +133,7 @@
 
         // Trap focus within modal
         document.body.style.overflow = 'hidden';
-        loadSearchIndex();
+        loadManifest();
     }
 
     // Close search modal
@@ -81,61 +155,101 @@
     function tokenize(text) {
         return text.toLowerCase()
             .split(/[^a-z0-9]+/)
-            .filter(w => w.length >= 2);
+            .filter(function(w) { return w.length >= 2; });
     }
 
-    // Search using inverted index
-    // Posting list format: [pageID, score, pageID, score, ...]
+    // Search using sharded inverted index
     function search(query) {
-        if (!query || query.trim() === '' || !searchData) {
+        if (!query || query.trim() === '') {
             results.innerHTML = '';
             return;
         }
 
-        const words = tokenize(query);
+        // Wait for manifest if not loaded
+        if (!manifestLoaded) {
+            pendingSearch = query;
+            if (!manifestLoading) {
+                loadManifest();
+            }
+            return;
+        }
+
+        var words = tokenize(query);
         if (words.length === 0) {
             results.innerHTML = '';
             return;
         }
 
-        // Score accumulator: pageID -> score
-        const scores = new Map();
+        // Determine which shards we need
+        var neededPrefixes = [];
+        words.forEach(function(word) {
+            var prefix = getShardPrefix(word);
+            if (neededPrefixes.indexOf(prefix) === -1) {
+                neededPrefixes.push(prefix);
+            }
+
+            // For prefix matching, we might need adjacent shards
+            // This is a simplification - we only load exact prefix shards
+        });
+
+        // Show loading if shards not yet loaded
+        var allLoaded = neededPrefixes.every(function(p) { return loadedShards[p]; });
+        if (!allLoaded) {
+            results.innerHTML = '<div class="search-no-results">Searching...</div>';
+        }
+
+        // Load needed shards then execute search
+        loadShards(neededPrefixes).then(function() {
+            executeSearch(words);
+        });
+    }
+
+    // Execute search once shards are loaded
+    function executeSearch(words) {
+        var scores = new Map();
 
         // Process posting list (compact array format)
         function addPostings(list, multiplier) {
-            for (let i = 0; i < list.length; i += 2) {
-                const pageID = list[i];
-                const score = list[i + 1] * multiplier;
+            for (var i = 0; i < list.length; i += 2) {
+                var pageID = list[i];
+                var score = list[i + 1] * multiplier;
                 scores.set(pageID, (scores.get(pageID) || 0) + score);
             }
         }
 
-        // Look up each word in inverted index
-        words.forEach(word => {
-            // Exact match
-            if (searchData.idx[word]) {
-                addPostings(searchData.idx[word], 1);
-            }
+        // Look up each word in loaded shards
+        words.forEach(function(word) {
+            var prefix = getShardPrefix(word);
+            var shard = loadedShards[prefix];
 
-            // Prefix match for partial words (autocomplete)
-            if (word.length >= 3) {
-                Object.keys(searchData.idx).forEach(indexWord => {
-                    if (indexWord !== word && indexWord.startsWith(word)) {
-                        addPostings(searchData.idx[indexWord], 0.5);
-                    }
-                });
+            if (shard && shard.idx) {
+                // Exact match
+                if (shard.idx[word]) {
+                    addPostings(shard.idx[word], 1);
+                }
+
+                // Prefix match for partial words (autocomplete)
+                if (word.length >= 3) {
+                    Object.keys(shard.idx).forEach(function(indexWord) {
+                        if (indexWord !== word && indexWord.indexOf(word) === 0) {
+                            addPostings(shard.idx[indexWord], 0.5);
+                        }
+                    });
+                }
             }
         });
 
         // Convert to array and sort by score
-        const matches = Array.from(scores.entries())
-            .map(([pageID, score]) => ({
-                page: searchData.pages[pageID],
-                pageID,
-                score
-            }))
-            .filter(m => m.page)
-            .sort((a, b) => b.score - a.score)
+        var matches = Array.from(scores.entries())
+            .map(function(entry) {
+                return {
+                    page: searchData.pages[entry[0]],
+                    pageID: entry[0],
+                    score: entry[1]
+                };
+            })
+            .filter(function(m) { return m.page; })
+            .sort(function(a, b) { return b.score - a.score; })
             .slice(0, 10);
 
         renderResults(matches);
@@ -145,13 +259,13 @@
     function findMatchingSections(pageID, words) {
         if (!searchData.sections) return [];
 
-        const matchedSections = [];
-        const pageSections = searchData.sections.filter(s => s.p === pageID);
+        var matchedSections = [];
+        var pageSections = searchData.sections.filter(function(s) { return s.p === pageID; });
 
-        pageSections.forEach(section => {
-            const sectionWords = tokenize(section.t);
-            const matchScore = words.reduce((score, word) => {
-                return score + (sectionWords.some(sw => sw.startsWith(word)) ? 1 : 0);
+        pageSections.forEach(function(section) {
+            var sectionWords = tokenize(section.t);
+            var matchScore = words.reduce(function(score, word) {
+                return score + (sectionWords.some(function(sw) { return sw.indexOf(word) === 0; }) ? 1 : 0);
             }, 0);
 
             if (matchScore > 0) {
@@ -163,7 +277,7 @@
             }
         });
 
-        return matchedSections.sort((a, b) => b.score - a.score).slice(0, 3);
+        return matchedSections.sort(function(a, b) { return b.score - a.score; }).slice(0, 3);
     }
 
     // Render search results
@@ -177,16 +291,16 @@
 
         results.innerHTML = '';
         input.setAttribute('aria-expanded', 'true');
-        const query = input.value;
-        const words = tokenize(query);
-        let itemIndex = 0;
+        var query = input.value;
+        var words = tokenize(query);
+        var itemIndex = 0;
 
-        matches.forEach((match) => {
-            const page = match.page;
-            const matchingSections = findMatchingSections(match.pageID, words);
+        matches.forEach(function(match) {
+            var page = match.page;
+            var matchingSections = findMatchingSections(match.pageID, words);
 
             // Main page result
-            const item = document.createElement('div');
+            var item = document.createElement('div');
             item.className = 'search-result-item';
             item.setAttribute('role', 'option');
             item.setAttribute('aria-selected', 'false');
@@ -195,14 +309,14 @@
             item.dataset.index = itemIndex++;
             item.dataset.url = page.u;
 
-            const title = document.createElement('div');
+            var title = document.createElement('div');
             title.className = 'search-result-title';
             title.textContent = page.t;
 
             item.appendChild(title);
 
             if (page.d) {
-                const description = document.createElement('div');
+                var description = document.createElement('div');
                 description.className = 'search-result-description';
                 description.textContent = page.d;
                 item.appendChild(description);
@@ -210,11 +324,11 @@
 
             // Add matching sections as sub-results
             if (matchingSections.length > 0) {
-                const sectionsContainer = document.createElement('div');
+                var sectionsContainer = document.createElement('div');
                 sectionsContainer.className = 'search-result-sections';
 
-                matchingSections.forEach(section => {
-                    const sectionLink = document.createElement('a');
+                matchingSections.forEach(function(section) {
+                    var sectionLink = document.createElement('a');
                     sectionLink.className = 'search-result-section';
                     sectionLink.href = page.u + '#' + section.anchor;
                     sectionLink.textContent = '# ' + section.title;
@@ -242,7 +356,7 @@
 
     // Select result item
     function selectResult(index) {
-        const items = results.querySelectorAll('.search-result-item');
+        var items = results.querySelectorAll('.search-result-item');
         if (index < 0 || index >= items.length) return;
 
         // Remove previous selection
@@ -265,9 +379,9 @@
 
     // Navigate to selected result
     function navigateToSelected() {
-        const items = results.querySelectorAll('.search-result-item');
+        var items = results.querySelectorAll('.search-result-item');
         if (selectedIndex >= 0 && selectedIndex < items.length) {
-            const url = items[selectedIndex].dataset.url;
+            var url = items[selectedIndex].dataset.url;
             if (url) {
                 closeSearch();
                 window.location.href = url;
@@ -297,15 +411,15 @@
 
         if (e.key === 'ArrowDown') {
             e.preventDefault();
-            const items = results.querySelectorAll('.search-result-item');
+            var items = results.querySelectorAll('.search-result-item');
             if (items.length > 0) {
                 selectResult((selectedIndex + 1) % items.length);
             }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const items = results.querySelectorAll('.search-result-item');
-            if (items.length > 0) {
-                selectResult(selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1);
+            var downItems = results.querySelectorAll('.search-result-item');
+            if (downItems.length > 0) {
+                selectResult(selectedIndex <= 0 ? downItems.length - 1 : selectedIndex - 1);
             }
         } else if (e.key === 'Enter') {
             e.preventDefault();

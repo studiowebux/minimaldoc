@@ -102,6 +102,18 @@ seo:
 | `seo.noindex` | bool | Add noindex meta |
 | `seo.nofollow` | bool | Add nofollow meta |
 
+### Version Fields
+
+Used when multi-version documentation is enabled.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `versions` | []string | all | Versions this page appears in |
+| `since` | string | - | Version where feature was introduced |
+| `deprecated_in` | string | - | Version where feature was deprecated |
+| `removed_in` | string | - | Version where feature was removed |
+| `version_note` | string | - | Version to show special note for |
+
 ## Examples
 
 ### Minimal Page
@@ -194,6 +206,30 @@ stale_warning: false
 title: Architecture Overview
 description: System architecture that rarely changes
 stale_threshold_days: 730
+---
+```
+
+### Version-Specific Page
+
+```yaml
+---
+title: New API Endpoint
+description: Available in v2 and later
+versions:
+  - v2
+  - v3
+since: "v2.0"
+---
+```
+
+### Deprecated Feature
+
+```yaml
+---
+title: Legacy Authentication
+description: Use OAuth2 instead
+deprecated_in: "v2.0"
+removed_in: "v3.0"
 ---
 ```
 

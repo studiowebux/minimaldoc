@@ -1,6 +1,7 @@
 title: MinimalDoc
 description: A minimal static site generator for documentation. Fast, clean, and easy to use.
 base_url: https://studiowebux.github.io/minimaldoc
+# base_url: http://localhost:8889
 author: Studio Webux
 theme: default
 dark_mode: false
@@ -176,6 +177,31 @@ legal:
   path: "legal"
   footer_group: "Legal"
 
+knowledgebase:
+  enabled: true
+  title: "Knowledge Base"
+  description: "Find answers, guides, and solutions"
+  path: "kb"
+  search:
+    enabled: true
+    placeholder: "Search articles..."
+  categories:
+    getting-started:
+      name: "Getting Started"
+      description: "Installation, setup, and first steps"
+      icon: "rocket"
+      order: 1
+    features:
+      name: "Features"
+      description: "Search, themes, code blocks, and more"
+      icon: "code"
+      order: 2
+    troubleshooting:
+      name: "Troubleshooting"
+      description: "Common issues and solutions"
+      icon: "wrench"
+      order: 3
+
 footer:
   copyright: "2026 Studio Webux. GPL-3.0 License."
   links:
@@ -209,6 +235,8 @@ footer:
           url: "/guides/deployment.html"
     - title: "Resources"
       items:
+        - text: "Knowledge Base"
+          url: "/kb/"
         - text: "Status"
           url: "/status/"
         - text: "Changelog"
@@ -226,3 +254,55 @@ social_links:
   - name: GitHub
     url: https://github.com/studiowebux/minimaldoc
     icon: github
+
+versions:
+  enabled: true
+  default: "v1.2"
+  list:
+    - name: "v1.2"
+      label: "1.2.x (Latest)"
+      path: ""
+    - name: "v1.1"
+      label: "1.1.x"
+      path: "v1.1"
+    - name: "v1.0"
+      label: "1.0.x (EOL)"
+      path: "v1.0"
+      eol: "2025-06-01"
+  selector:
+    position: "header"
+    show_eol_warning: true
+
+i18n:
+  enabled: true
+  default_locale: "en"
+  hide_default_locale: true
+  show_untranslated: true
+  fallback: "en"
+  locales:
+    - code: "en"
+      name: "English"
+      direction: "ltr"
+    - code: "fr"
+      name: "Francais"
+      direction: "ltr"
+  selector:
+    position: "header"
+    show_flags: false
+
+pdf_export:
+  enabled: true
+  page_break_level: 2 # 0=none, 1=h1 only, 2=h1+h2
+
+claude_assist:
+  enabled: true
+  label: "Ask Claude"
+  # prompt: "Custom prompt prefix (optional)"
+
+# analytics:
+#   enabled: true
+#   providers:
+#     - type: plausible
+#       enabled: true
+#       config:
+#         domain: "docs.example.com"

@@ -30,7 +30,7 @@ func NewChangelogGenerator(site *core.Site, themeFS embed.FS, version string) (*
 	}
 
 	// Create template with shared changelog functions
-	tmpl := template.New("").Funcs(ChangelogFuncMap())
+	tmpl := template.New("").Funcs(ChangelogFuncMap()).Funcs(AnalyticsFuncMap())
 
 	// Parse changelog templates from dedicated subdirectory
 	var err error

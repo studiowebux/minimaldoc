@@ -24,7 +24,7 @@ type HTMLGenerator struct {
 // NewHTMLGenerator creates a new HTML generator
 func NewHTMLGenerator(site *core.Site, themeFS embed.FS, version string) (*HTMLGenerator, error) {
 	// Create template with shared functions (includes OpenAPI helpers for layout compatibility)
-	tmpl := template.New("").Funcs(OpenAPIFuncMap())
+	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(AnalyticsFuncMap())
 
 	// Parse templates from embedded filesystem using configured theme
 	themeName := site.Config.Theme
@@ -79,13 +79,42 @@ func (g *HTMLGenerator) Generate() error {
 
 // generatePage generates a single HTML page
 func (g *HTMLGenerator) generatePage(page *core.Page) error {
+	// Get current version info for template
+	var currentVersion *core.VersionInfo
+	isDefault := true
+	if g.site.Config.Versions.Enabled && len(g.site.Config.Versions.List) > 0 {
+		defaultVersionName := g.site.Config.Versions.Default
+		if defaultVersionName == "" {
+			defaultVersionName = g.site.Config.Versions.List[0].Name
+		}
+		currentVersion = g.site.Config.Versions.GetVersion(defaultVersionName)
+	}
+
+	// Get current locale info for template
+	var currentLocale *core.LocaleInfo
+	if g.site.Config.I18n.Enabled && len(g.site.Config.I18n.Locales) > 0 {
+		currentLocale = g.site.Config.I18n.GetDefaultLocale()
+	}
+
 	// Prepare template data
+	lang := ""
+	dir := ""
+	if currentLocale != nil {
+		lang = currentLocale.Code
+		dir = currentLocale.GetDirection()
+	}
+
 	data := map[string]any{
-		"Site":     g.site,
-		"Page":     page,
-		"Content":  template.HTML(page.HTML),
-		"BasePath": g.getBasePath(),
-		"Version":  g.version,
+		"Site":           g.site,
+		"Page":           page,
+		"Content":        template.HTML(page.HTML),
+		"BasePath":       g.getBasePath(),
+		"Version":        g.version,
+		"CurrentVersion": currentVersion,
+		"IsDefault":      isDefault,
+		"CurrentLocale":  currentLocale,
+		"Lang":           lang,
+		"Dir":            dir,
 	}
 
 	// Execute template

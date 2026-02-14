@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/status.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
 <link rel="alternate" type="application/rss+xml" title="{{.StatusPage.Config.Title}}" href="{{.BasePath}}/{{.StatusPage.Config.Path}}/feed.xml">
 </head>
 <body>

@@ -140,7 +140,90 @@ Themes define CSS variables for light and dark modes:
 | `--shadow-sm` | Subtle elevation |
 | `--shadow-md` | Cards, dropdowns |
 
-## Creating Custom Themes
+## Config-Based Theming
+
+Customize colors, fonts, and hero styling directly in `config.yaml` without creating theme files.
+
+### Theme Configuration
+
+```yaml
+theme_config:
+  name: "custom"
+  colors:
+    light:
+      bg_primary: "#ffffff"
+      bg_secondary: "#f8f9fa"
+      text_primary: "#212529"
+      link_color: "#0066cc"
+    dark:
+      bg_primary: "#0f172a"
+      bg_secondary: "#1e293b"
+      text_primary: "#f8fafc"
+      link_color: "#60a5fa"
+  fonts:
+    heading: "Inter"
+    body: "Inter"
+    code: "JetBrains Mono"
+    google_url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap"
+  hero:
+    background_image: "/images/hero-bg.jpg"
+    background_overlay: "rgba(0,0,0,0.6)"
+    text_align: "center"
+    min_height: "80vh"
+```
+
+### Color Options
+
+| Field | Description |
+|-------|-------------|
+| `bg_primary` | Main page background |
+| `bg_secondary` | Sidebar, cards |
+| `bg_tertiary` | Nested elements |
+| `bg_code` | Code block background |
+| `bg_hover` | Hover states |
+| `text_primary` | Main text |
+| `text_secondary` | Secondary text |
+| `text_tertiary` | Muted text |
+| `text_muted` | Very light text |
+| `border_primary` | Main borders |
+| `border_secondary` | Subtle borders |
+| `accent_primary` | Buttons, highlights |
+| `accent_hover` | Accent hover state |
+| `link_color` | Link text |
+| `link_hover` | Link hover |
+
+### Font Options
+
+| Field | Description |
+|-------|-------------|
+| `heading` | Font family for headings |
+| `body` | Font family for body text |
+| `code` | Font family for code |
+| `google_url` | Google Fonts import URL |
+
+### Hero Options
+
+| Field | Description |
+|-------|-------------|
+| `background_image` | Hero background image URL |
+| `background_overlay` | Overlay color (e.g., `rgba(0,0,0,0.6)`) |
+| `text_align` | Text alignment: `left`, `center`, `right` |
+| `min_height` | Minimum hero height (e.g., `80vh`) |
+
+### Partial Configuration
+
+Only specify values you want to override. Unspecified values use theme defaults:
+
+```yaml
+theme_config:
+  colors:
+    light:
+      link_color: "#ff6600"
+    dark:
+      link_color: "#ff9933"
+```
+
+## Creating Custom Themes (File-Based)
 
 1. Create theme directory:
 
