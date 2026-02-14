@@ -19,9 +19,8 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/server/scheduler"
 	"github.com/studiowebux/minimaldoc/internal/server/storage"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
+	"github.com/studiowebux/minimaldoc/internal/version"
 )
-
-const version = "0.1.0"
 
 func main() {
 	// Print banner
@@ -30,7 +29,7 @@ func main() {
 ║     MinimalDoc Server v%s        ║
 ║       Backend API Service            ║
 ╚══════════════════════════════════════╝
-`, version)
+`, version.Version)
 
 	// Load configuration
 	cfg, err := config.Load()

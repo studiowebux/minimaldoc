@@ -68,9 +68,12 @@ curl -X POST http://localhost:8090/api/bootstrap \
     "email": "admin@example.com",
     "password": "your-password",
     "site_name": "My Docs",
-    "domain": "docs.example.com"
+    "domain": "docs.example.com",
+    "bootstrap_token": "your-token"
   }'
 ```
+
+Note: Include `bootstrap_token` only if `BOOTSTRAP_TOKEN` env var is set on the server.
 
 Save the returned `site_id` and `api_key`.
 

@@ -133,12 +133,12 @@ Create initial site and admin user:
 ```bash
 curl -X POST https://api.example.com/api/bootstrap \
   -H "Content-Type: application/json" \
-  -H "X-Bootstrap-Token: your-bootstrap-secret" \
   -d '{
     "email": "admin@example.com",
     "password": "secure-password",
     "site_name": "My Docs",
-    "domain": "docs.example.com"
+    "domain": "docs.example.com",
+    "bootstrap_token": "your-bootstrap-secret"
   }'
 ```
 
