@@ -23,6 +23,7 @@
 <div class="legal-body">
 {{.LegalPage.HTML | safeHTML}}
 </div>
+{{template "widgets-legal" .}}
 </div>
 </article>
 </main>
@@ -31,5 +32,6 @@
 </div>
 {{template "landing-icons" .}}
 {{template "landing-scripts" .}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

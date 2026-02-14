@@ -836,6 +836,7 @@ MinimalDoc includes an optional self-hosted backend for dynamic features. The CL
 | Analytics | Cookie-free, privacy-first page tracking |
 | Feedback | Page rating widget with comments |
 | Newsletter | Email subscription with double opt-in verification |
+| Blog CMS | Markdown editor with live preview, RBAC, comment moderation |
 | Email | SMTP support with verification and welcome emails |
 | Admin Portal | Web dashboard for all features |
 

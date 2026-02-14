@@ -17,6 +17,8 @@ func AnalyticsFuncMap() template.FuncMap {
 		"hasMinimalDocNewsletter":  hasMinimalDocNewsletter,
 		"minimalDocFeedbackWidget": minimalDocFeedbackWidget,
 		"minimalDocNewsletterForm": minimalDocNewsletterForm,
+		"feedbackWidgetFor":        feedbackWidgetFor,
+		"newsletterFormFor":        newsletterFormFor,
 	}
 }
 
@@ -30,17 +32,27 @@ func hasMinimalDocNewsletter(config core.AnalyticsConfig) bool {
 	return config.HasMinimalDocFeature("newsletter")
 }
 
-// minimalDocFeedbackWidget renders the feedback widget placeholder
+// minimalDocFeedbackWidget renders the feedback widget placeholder (for docs pages - backward compat)
 func minimalDocFeedbackWidget(config core.AnalyticsConfig) template.HTML {
-	if !config.HasMinimalDocFeature("feedback") {
+	return feedbackWidgetFor(config, "docs")
+}
+
+// minimalDocNewsletterForm renders the newsletter form placeholder (for docs pages - backward compat)
+func minimalDocNewsletterForm(config core.AnalyticsConfig) template.HTML {
+	return newsletterFormFor(config, "docs")
+}
+
+// feedbackWidgetFor renders the feedback widget for a specific page type
+func feedbackWidgetFor(config core.AnalyticsConfig, pageType string) template.HTML {
+	if !config.ShouldShowFeedback(pageType) {
 		return ""
 	}
 	return template.HTML(`<div class="minimaldoc-feedback-wrapper" data-minimaldoc-feedback></div>`)
 }
 
-// minimalDocNewsletterForm renders the newsletter form placeholder
-func minimalDocNewsletterForm(config core.AnalyticsConfig) template.HTML {
-	if !config.HasMinimalDocFeature("newsletter") {
+// newsletterFormFor renders the newsletter form for a specific page type
+func newsletterFormFor(config core.AnalyticsConfig, pageType string) template.HTML {
+	if !config.ShouldShowNewsletter(pageType) {
 		return ""
 	}
 	return template.HTML(`<div class="minimaldoc-newsletter-wrapper">

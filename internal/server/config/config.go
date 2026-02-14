@@ -29,6 +29,12 @@ type Config struct {
 
 	// AI settings (Claude)
 	AI AIConfig
+
+	// Storage settings
+	Storage StorageConfig
+
+	// Rate limiting settings
+	RateLimit RateLimitConfig
 }
 
 // ServerConfig holds HTTP server settings.
@@ -41,6 +47,7 @@ type ServerConfig struct {
 	AdminPath    string // Path prefix for admin UI (default: /admin)
 	APIPath      string // Path prefix for API (default: /api)
 	CORSOrigins  []string
+	DocsDir      string // Directory containing static docs (default: public)
 }
 
 // DatabaseConfig holds database connection settings.
@@ -60,8 +67,10 @@ type AuthConfig struct {
 	RefreshExpiry    time.Duration
 	BCryptCost       int
 	SessionCookieKey string
-	EnableLocal      bool // Enable email/password auth
-	EnableOAuth      bool // Enable OAuth providers
+	EnableLocal      bool   // Enable email/password auth
+	EnableOAuth      bool   // Enable OAuth providers
+	BootstrapToken   string // Optional token required to call /api/bootstrap
+	SecureCookies    bool   // Set Secure flag on cookies (requires HTTPS)
 }
 
 // OAuthConfig holds OAuth 2.0 / OIDC provider settings.
@@ -104,6 +113,31 @@ type AIConfig struct {
 	MaxTokens int
 }
 
+// StorageConfig holds file storage settings.
+type StorageConfig struct {
+	Provider     string   // local or s3
+	LocalPath    string   // Local filesystem path for uploads
+	S3Bucket     string   // S3 bucket name
+	S3Region     string   // S3 region
+	S3AccessKey  string   // S3 access key
+	S3SecretKey  string   // S3 secret key
+	S3Endpoint   string   // Custom S3 endpoint (for MinIO, R2)
+	S3PublicURL  string   // Public URL prefix for S3 objects
+	MaxFileSize  int64    // Max upload size in bytes
+	AllowedTypes []string // Allowed MIME types
+}
+
+// RateLimitConfig holds rate limiting settings.
+type RateLimitConfig struct {
+	Enabled      bool          // Enable rate limiting
+	LoginLimit   int           // Max login attempts per window
+	LoginWindow  time.Duration // Login rate limit window
+	APILimit     int           // Max API requests per window
+	APIWindow    time.Duration // API rate limit window
+	SubmitLimit  int           // Max submissions per window (comments, feedback, newsletter)
+	SubmitWindow time.Duration // Submit rate limit window
+}
+
 // Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -116,6 +150,7 @@ func Load() (*Config, error) {
 			AdminPath:    getEnv("SERVER_ADMIN_PATH", "/admin"),
 			APIPath:      getEnv("SERVER_API_PATH", "/api"),
 			CORSOrigins:  getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
+			DocsDir:      getEnv("SERVER_DOCS_DIR", "public"),
 		},
 		Database: DatabaseConfig{
 			Driver:          getEnv("DB_DRIVER", "sqlite"),
@@ -133,6 +168,8 @@ func Load() (*Config, error) {
 			SessionCookieKey: getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
 			EnableLocal:      getEnvBool("AUTH_ENABLE_LOCAL", true),
 			EnableOAuth:      getEnvBool("AUTH_ENABLE_OAUTH", false),
+			BootstrapToken:   getEnv("BOOTSTRAP_TOKEN", ""),
+			SecureCookies:    getEnvBool("AUTH_SECURE_COOKIES", false),
 		},
 		OAuth: loadOAuthConfig(),
 		Email: EmailConfig{
@@ -150,6 +187,27 @@ func Load() (*Config, error) {
 			APIKey:    getEnv("ANTHROPIC_API_KEY", ""),
 			Model:     getEnv("AI_MODEL", "claude-sonnet-4-20250514"),
 			MaxTokens: getEnvInt("AI_MAX_TOKENS", 4096),
+		},
+		Storage: StorageConfig{
+			Provider:     getEnv("STORAGE_PROVIDER", "local"),
+			LocalPath:    getEnv("STORAGE_LOCAL_PATH", "./uploads"),
+			S3Bucket:     getEnv("STORAGE_S3_BUCKET", ""),
+			S3Region:     getEnv("STORAGE_S3_REGION", "us-east-1"),
+			S3AccessKey:  getEnv("STORAGE_S3_ACCESS_KEY", ""),
+			S3SecretKey:  getEnv("STORAGE_S3_SECRET_KEY", ""),
+			S3Endpoint:   getEnv("STORAGE_S3_ENDPOINT", ""),
+			S3PublicURL:  getEnv("STORAGE_S3_PUBLIC_URL", ""),
+			MaxFileSize:  getEnvInt64("STORAGE_MAX_FILE_SIZE", 5*1024*1024), // 5MB
+			AllowedTypes: getEnvSlice("STORAGE_ALLOWED_TYPES", []string{"image/jpeg", "image/png", "image/gif", "image/webp"}),
+		},
+		RateLimit: RateLimitConfig{
+			Enabled:      getEnvBool("RATE_LIMIT_ENABLED", true),
+			LoginLimit:   getEnvInt("RATE_LIMIT_LOGIN_LIMIT", 5),
+			LoginWindow:  getEnvDuration("RATE_LIMIT_LOGIN_WINDOW", 15*time.Minute),
+			APILimit:     getEnvInt("RATE_LIMIT_API_LIMIT", 100),
+			APIWindow:    getEnvDuration("RATE_LIMIT_API_WINDOW", time.Minute),
+			SubmitLimit:  getEnvInt("RATE_LIMIT_SUBMIT_LIMIT", 10),
+			SubmitWindow: getEnvDuration("RATE_LIMIT_SUBMIT_WINDOW", time.Minute),
 		},
 	}
 
@@ -230,6 +288,15 @@ func getEnv(key, defaultVal string) string {
 func getEnvInt(key string, defaultVal int) int {
 	if val := os.Getenv(key); val != "" {
 		if i, err := strconv.Atoi(val); err == nil {
+			return i
+		}
+	}
+	return defaultVal
+}
+
+func getEnvInt64(key string, defaultVal int64) int64 {
+	if val := os.Getenv(key); val != "" {
+		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
 			return i
 		}
 	}

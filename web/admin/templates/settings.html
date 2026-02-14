@@ -1,57 +1,12 @@
+{{define "settings.html"}}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - MinimalDoc Admin</title>
-    <link rel="stylesheet" href="/static/css/admin.css">
-    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-</head>
+{{template "head" .}}
 <body>
     <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1>MinimalDoc</h1>
-                <span class="version">Server</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin" class="nav-item">
-                    <span class="nav-icon">&#9632;</span>
-                    Dashboard
-                </a>
-                <a href="/admin/analytics" class="nav-item">
-                    <span class="nav-icon">&#9650;</span>
-                    Analytics
-                </a>
-                <a href="/admin/feedback" class="nav-item">
-                    <span class="nav-icon">&#9733;</span>
-                    Feedback
-                </a>
-                <a href="/admin/subscribers" class="nav-item">
-                    <span class="nav-icon">&#9993;</span>
-                    Subscribers
-                </a>
-                <a href="/admin/settings" class="nav-item active">
-                    <span class="nav-icon">&#9881;</span>
-                    Settings
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="/admin/logout" class="nav-item">
-                    <span class="nav-icon">&#8594;</span>
-                    Logout
-                </a>
-            </div>
-        </aside>
+        {{template "sidebar" .}}
         <main class="main-content">
-            <header class="content-header">
-                <h2>Settings</h2>
-                {{if .user}}
-                <div class="user-info">
-                    <span>{{.user.Email}}</span>
-                </div>
-                {{end}}
-            </header>
+            {{template "content-header" .}}
             <div class="content-body">
                 <div class="settings-page">
                     <div class="card">
@@ -71,14 +26,14 @@
                             <div class="form-group">
                                 <label>Site ID</label>
                                 <div class="input-group">
-                                    <input type="text" id="site-id" readonly value="{{.site_id}}">
+                                    <input type="text" id="site-id" readonly value="{{.SiteID}}">
                                     <button type="button" class="btn btn-secondary" onclick="copyToClipboard('site-id')">Copy</button>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>API Key</label>
                                 <div class="input-group">
-                                    <input type="password" id="api-key" readonly value="{{.api_key}}">
+                                    <input type="password" id="api-key" readonly value="{{.APIKey}}">
                                     <button type="button" class="btn btn-secondary" onclick="toggleApiKey()">Show</button>
                                     <button type="button" class="btn btn-secondary" onclick="copyToClipboard('api-key')">Copy</button>
                                 </div>
@@ -92,8 +47,8 @@
                         </div>
                         <div class="card-body">
                             <p class="help-text">Add this script to your documentation site:</p>
-                            <pre class="code-block"><code>&lt;script src="{{.server_url}}/minimaldoc.js"
-        data-site-id="{{.site_id}}"
+                            <pre class="code-block"><code>&lt;script src="{{.ServerURL}}/minimaldoc.js"
+        data-site-id="{{.SiteID}}"
         data-features="analytics,feedback,newsletter"&gt;&lt;/script&gt;</code></pre>
                             <button type="button" class="btn btn-secondary" onclick="copyCode()">Copy Code</button>
                         </div>
@@ -127,3 +82,4 @@
     </script>
 </body>
 </html>
+{{end}}

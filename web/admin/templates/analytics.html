@@ -1,57 +1,12 @@
+{{define "analytics.html"}}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - MinimalDoc Admin</title>
-    <link rel="stylesheet" href="/static/css/admin.css">
-    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-</head>
+{{template "head" .}}
 <body>
     <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1>MinimalDoc</h1>
-                <span class="version">Server</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin" class="nav-item">
-                    <span class="nav-icon">&#9632;</span>
-                    Dashboard
-                </a>
-                <a href="/admin/analytics" class="nav-item active">
-                    <span class="nav-icon">&#9650;</span>
-                    Analytics
-                </a>
-                <a href="/admin/feedback" class="nav-item">
-                    <span class="nav-icon">&#9733;</span>
-                    Feedback
-                </a>
-                <a href="/admin/subscribers" class="nav-item">
-                    <span class="nav-icon">&#9993;</span>
-                    Subscribers
-                </a>
-                <a href="/admin/settings" class="nav-item">
-                    <span class="nav-icon">&#9881;</span>
-                    Settings
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="/admin/logout" class="nav-item">
-                    <span class="nav-icon">&#8594;</span>
-                    Logout
-                </a>
-            </div>
-        </aside>
+        {{template "sidebar" .}}
         <main class="main-content">
-            <header class="content-header">
-                <h2>Analytics</h2>
-                {{if .user}}
-                <div class="user-info">
-                    <span>{{.user.Email}}</span>
-                </div>
-                {{end}}
-            </header>
+            {{template "content-header" .}}
             <div class="content-body">
                 <div class="analytics-page">
                     <div class="page-actions">
@@ -102,6 +57,41 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="section-header">
+                        <h2>Custom Events</h2>
+                    </div>
+
+                    <div id="event-stats-container" class="stats-grid stats-grid-2" hx-get="/admin/fragments/event-stats?period=7d" hx-trigger="load">
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Total Events</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Unique Events</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-row">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Events by Name</h3>
+                            </div>
+                            <div class="card-body" id="events-by-name" hx-get="/admin/fragments/events-by-name?period=7d" hx-trigger="load">
+                                <p class="loading">Loading...</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Recent Events</h3>
+                            </div>
+                            <div class="card-body" id="recent-events" hx-get="/admin/fragments/recent-events" hx-trigger="load">
+                                <p class="loading">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -111,7 +101,10 @@
         var period = this.value;
         htmx.ajax('GET', '/admin/fragments/top-pages?period=' + period, '#top-pages');
         htmx.ajax('GET', '/admin/fragments/traffic-sources?period=' + period, '#traffic-sources');
+        htmx.ajax('GET', '/admin/fragments/event-stats?period=' + period, '#event-stats-container');
+        htmx.ajax('GET', '/admin/fragments/events-by-name?period=' + period, '#events-by-name');
     });
     </script>
 </body>
 </html>
+{{end}}

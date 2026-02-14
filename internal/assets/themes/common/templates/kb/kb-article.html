@@ -70,6 +70,7 @@
 </div>
 </section>
 {{end}}
+{{template "widgets-kb" .}}
 </div>
 </article>
 </main>
@@ -79,5 +80,6 @@
 {{template "landing-icons" .}}
 <script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
 {{template "landing-scripts" .}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

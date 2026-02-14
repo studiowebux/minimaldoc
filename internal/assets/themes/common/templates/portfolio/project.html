@@ -51,6 +51,7 @@
 <footer class="project-detail-footer">
 <a href="{{.BasePath}}/{{.PortfolioPage.Config.Path}}/" class="back-to-portfolio">Back to Portfolio</a>
 </footer>
+{{template "widgets-portfolio" .}}
 </article>
 </main>
 
@@ -63,5 +64,6 @@
 </footer>
 </div>
 {{template "landing-scripts" .}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

@@ -1,0 +1,77 @@
+{{define "users.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="users-page">
+                    <div class="stats-grid" id="user-stats" hx-get="/admin/fragments/user-stats" hx-trigger="load">
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Admins</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Editors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Authors + Viewers</div>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Users</h3>
+                            <p class="card-description">Manage user accounts and their roles.</p>
+                            <div class="card-actions">
+                                <select id="role-filter" hx-get="/admin/fragments/user-list" hx-trigger="change" hx-target="#user-list" hx-include="this">
+                                    <option value="">All Roles</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="editor">Editor</option>
+                                    <option value="author">Author</option>
+                                    <option value="viewer">Viewer</option>
+                                </select>
+                                <button class="btn btn-primary" hx-get="/admin/fragments/user-form" hx-target="#user-form-container" hx-swap="innerHTML">
+                                    New User
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="user-form-container"></div>
+                            <div id="user-list" hx-get="/admin/fragments/user-list" hx-trigger="load">
+                                <p class="loading">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Role Hierarchy</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="help-content">
+                                <ul>
+                                    <li><strong>admin</strong> - Full access to all features and settings</li>
+                                    <li><strong>editor</strong> - Can edit all content and moderate comments</li>
+                                    <li><strong>author</strong> - Can create and edit own blog posts</li>
+                                    <li><strong>viewer</strong> - Read-only access to protected documentation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}

@@ -1,61 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
+{{define "head"}}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.title}} - MinimalDoc Admin</title>
+    <title>{{.Title}} - MinimalDoc Admin</title>
     <link rel="stylesheet" href="/static/css/admin.css">
+    <script src="/static/js/theme-toggle.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
 </head>
-<body>
-    <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1>MinimalDoc</h1>
-                <span class="version">Server</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin" class="nav-item {{if eq .active "dashboard"}}active{{end}}">
-                    <span class="nav-icon">&#9632;</span>
-                    Dashboard
-                </a>
-                <a href="/admin/analytics" class="nav-item {{if eq .active "analytics"}}active{{end}}">
-                    <span class="nav-icon">&#9650;</span>
-                    Analytics
-                </a>
-                <a href="/admin/feedback" class="nav-item {{if eq .active "feedback"}}active{{end}}">
-                    <span class="nav-icon">&#9733;</span>
-                    Feedback
-                </a>
-                <a href="/admin/subscribers" class="nav-item {{if eq .active "subscribers"}}active{{end}}">
-                    <span class="nav-icon">&#9993;</span>
-                    Subscribers
-                </a>
-                <a href="/admin/settings" class="nav-item {{if eq .active "settings"}}active{{end}}">
-                    <span class="nav-icon">&#9881;</span>
-                    Settings
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="/admin/logout" class="nav-item">
-                    <span class="nav-icon">&#8594;</span>
-                    Logout
-                </a>
-            </div>
-        </aside>
-        <main class="main-content">
-            <header class="content-header">
-                <h2>{{.title}}</h2>
-                {{if .user}}
-                <div class="user-info">
-                    <span>{{.user.Email}}</span>
-                </div>
-                {{end}}
-            </header>
-            <div class="content-body">
-                {{template "content" .}}
-            </div>
-        </main>
+{{end}}
+
+{{define "sidebar"}}
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h1>MinimalDoc</h1>
+        <span class="version">Server</span>
     </div>
-</body>
-</html>
+    <nav class="sidebar-nav">
+        <a href="/admin" class="nav-item {{if eq .CurrentPage "dashboard"}}active{{end}}">
+            Dashboard
+        </a>
+        <a href="/admin/analytics" class="nav-item {{if eq .CurrentPage "analytics"}}active{{end}}">
+            Analytics
+        </a>
+
+        <div class="nav-section">Content</div>
+        <a href="/admin/blog" class="nav-item {{if eq .CurrentPage "blog"}}active{{end}}">
+            Blog
+        </a>
+        <a href="/admin/comments" class="nav-item {{if eq .CurrentPage "comments"}}active{{end}}">
+            Comments
+        </a>
+
+        <div class="nav-section">Engagement</div>
+        <a href="/admin/feedback" class="nav-item {{if eq .CurrentPage "feedback"}}active{{end}}">
+            Feedback
+        </a>
+        <a href="/admin/subscribers" class="nav-item {{if eq .CurrentPage "subscribers"}}active{{end}}">
+            Subscribers
+        </a>
+
+        <div class="nav-section">Settings</div>
+        <a href="/admin/users" class="nav-item {{if eq .CurrentPage "users"}}active{{end}}">
+            Users
+        </a>
+        <a href="/admin/doc-access" class="nav-item {{if eq .CurrentPage "doc-access"}}active{{end}}">
+            Doc Access
+        </a>
+        <a href="/admin/settings" class="nav-item {{if eq .CurrentPage "settings"}}active{{end}}">
+            Settings
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <button id="theme-toggle" class="nav-item theme-toggle">
+            Toggle Theme
+        </button>
+        <a href="/admin/logout" class="nav-item">
+            Logout
+        </a>
+    </div>
+</aside>
+{{end}}
+
+{{define "content-header"}}
+<header class="content-header">
+    <h2>{{.Title}}</h2>
+    {{if .User}}<div class="user-info"><span>{{.User.Email}}</span></div>{{end}}
+</header>
+{{end}}

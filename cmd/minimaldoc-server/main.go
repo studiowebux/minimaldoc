@@ -16,6 +16,8 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/server/api"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 	"github.com/studiowebux/minimaldoc/internal/server/email"
+	"github.com/studiowebux/minimaldoc/internal/server/scheduler"
+	"github.com/studiowebux/minimaldoc/internal/server/storage"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
@@ -55,9 +57,20 @@ func main() {
 	}
 	log.Printf("Email provider: %s", cfg.Email.Provider)
 
+	// Initialize storage
+	fileStorage, err := storage.New(cfg.Storage)
+	if err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
+	}
+	log.Printf("Storage provider: %s", cfg.Storage.Provider)
+
 	// Initialize routers
 	publicRouter := api.NewPublicRouter(cfg, db, emailSender)
-	adminRouter := api.NewAdminRouter(cfg, db, emailSender)
+	adminRouter := api.NewAdminRouter(cfg, db, emailSender, fileStorage)
+
+	// Initialize and start background scheduler
+	sched := scheduler.New(db, time.Minute)
+	sched.Start()
 
 	// Configure public HTTP server
 	publicAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
@@ -100,6 +113,9 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down servers...")
+
+	// Stop scheduler first
+	sched.Stop()
 
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

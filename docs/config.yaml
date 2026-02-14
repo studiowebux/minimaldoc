@@ -41,6 +41,8 @@ landing:
       url: "/getting-started/installation.html"
     - text: "Features"
       url: "/features/overview.html"
+    - text: "Blog"
+      url: "/blog.html"
     - text: "Status"
       url: "/status/"
   hero:
@@ -235,6 +237,8 @@ footer:
           url: "/guides/deployment.html"
     - title: "Resources"
       items:
+        - text: "Blog"
+          url: "/blog.html"
         - text: "Knowledge Base"
           url: "/kb/"
         - text: "Status"
@@ -307,5 +311,5 @@ analytics:
       config:
         endpoint: "http://localhost:8080"
         site_id: "R0WxUG7qefQDOTZnJ-16Qi8X0SjLYFdxD7AKFkQPI7c="
-        features: "analytics,feedback,newsletter"
+        features: "analytics,feedback,newsletter,blog"
         debug: "true"

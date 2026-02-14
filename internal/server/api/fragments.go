@@ -2,8 +2,7 @@ package api
 
 import (
 	"fmt"
-	"html/template"
-	"net/http"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,85 +13,83 @@ import (
 // Dashboard fragments
 
 func (r *Router) fragmentDashboardStats(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	since := time.Now().Add(-24 * time.Hour)
 
-	totalViews, uniqueSessions, _ := r.db.GetPageViewStats(c.Request.Context(), siteID.(string), since)
-	avgRating, totalRatings, _ := r.db.GetRatingStats(c.Request.Context(), siteID.(string))
-	subscriberCount, _ := r.db.CountSubscribers(c.Request.Context(), siteID.(string), true)
+	totalViews, uniqueSessions, err := r.db.GetPageViewStats(c.Request.Context(), siteID, since)
+	if err != nil {
+		log.Printf("Failed to get page view stats: %v", err)
+	}
+	avgRating, totalRatings, err := r.db.GetRatingStats(c.Request.Context(), siteID)
+	if err != nil {
+		log.Printf("Failed to get rating stats: %v", err)
+	}
+	subscriberCount, err := r.db.CountSubscribers(c.Request.Context(), siteID, true)
+	if err != nil {
+		log.Printf("Failed to count subscribers: %v", err)
+	}
 
-	html := fmt.Sprintf(`
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Page Views (Today)</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Unique Visitors</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%.1f</div>
-			<div class="stat-label">Avg. Rating (%d)</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Subscribers</div>
-		</div>
-	`, totalViews, uniqueSessions, avgRating, totalRatings, subscriberCount)
+	html := buildStatCards([]StatCard{
+		{Value: totalViews, Label: "Page Views (Today)"},
+		{Value: uniqueSessions, Label: "Unique Visitors"},
+		{Value: fmt.Sprintf("%.1f", avgRating), Label: fmt.Sprintf("Avg. Rating (%d)", totalRatings)},
+		{Value: subscriberCount, Label: "Subscribers"},
+	})
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentRecentPages(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	since := time.Now().Add(-24 * time.Hour)
 
-	pages, err := r.db.GetTopPages(c.Request.Context(), siteID.(string), since, 10)
+	pages, err := r.db.GetTopPages(c.Request.Context(), siteID, since, 10)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load pages</p>`)
+		respondHTMLError(c, "Failed to load pages")
 		return
 	}
 
 	if len(pages) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No page views recorded yet</p>`)
+		respondHTMLEmpty(c, "No page views recorded yet")
 		return
 	}
 
-	html := `<table class="data-table">
-		<thead>
-			<tr>
-				<th>Page</th>
-				<th>Views</th>
-			</tr>
-		</thead>
-		<tbody>`
-
-	for _, page := range pages {
-		html += fmt.Sprintf(`
-			<tr>
-				<td class="path">%s</td>
-				<td class="count">%d</td>
-			</tr>`, template.HTMLEscapeString(page.Path), page.Views)
+	rows := make([]TableRow, len(pages))
+	for i, page := range pages {
+		rows[i] = TableRow{Cells: []string{escapeHTML(page.Path), fmt.Sprintf("%d", page.Views)}}
 	}
 
-	html += `</tbody></table>`
+	html := buildDataTable([]TableColumn{
+		{Header: "Page", Class: "path"},
+		{Header: "Views", Class: "count"},
+	}, rows)
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentRecentFeedback(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
-
-	ratings, err := r.db.ListRatings(c.Request.Context(), siteID.(string), 5, 0)
+	siteID, err := getSiteID(c)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load feedback</p>`)
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
+
+	ratings, err := r.db.ListRatings(c.Request.Context(), siteID, 5, 0)
+	if err != nil {
+		respondHTMLError(c, "Failed to load feedback")
 		return
 	}
 
 	if len(ratings) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No feedback received yet</p>`)
+		respondHTMLEmpty(c, "No feedback received yet")
 		return
 	}
 
@@ -110,22 +107,32 @@ func (r *Router) fragmentRecentFeedback(c *gin.Context) {
 					<span class="path">%s</span>
 				</div>
 				<p class="feedback-text">%s</p>
-			</div>`, stars, template.HTMLEscapeString(rating.Path), template.HTMLEscapeString(feedback))
+			</div>`, stars, escapeHTML(rating.Path), escapeHTML(feedback))
 	}
 	html += `</div>`
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 // Analytics fragments
 
 func (r *Router) fragmentAnalyticsStats(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	period := c.DefaultQuery("period", "7d")
 
 	since := parsePeriod(period)
-	totalViews, uniqueSessions, avgDuration, _ := r.db.GetPageViewStatsExtended(c.Request.Context(), siteID.(string), since)
+	totalViews, uniqueSessions, avgDuration, err := r.db.GetPageViewStatsExtended(c.Request.Context(), siteID, since)
+	if err != nil {
+		log.Printf("Failed to get page view stats: %v", err)
+	}
+	bounceRate, err := r.db.GetBounceRate(c.Request.Context(), siteID, since)
+	if err != nil {
+		log.Printf("Failed to get bounce rate: %v", err)
+	}
 
 	// Format avg duration as mm:ss
 	avgTimeStr := "--"
@@ -135,81 +142,72 @@ func (r *Router) fragmentAnalyticsStats(c *gin.Context) {
 		avgTimeStr = fmt.Sprintf("%d:%02d", mins, secs)
 	}
 
-	html := fmt.Sprintf(`
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Page Views</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Unique Visitors</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%s</div>
-			<div class="stat-label">Avg. Time on Page</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">--</div>
-			<div class="stat-label">Bounce Rate</div>
-		</div>
-	`, totalViews, uniqueSessions, avgTimeStr)
+	// Format bounce rate
+	bounceStr := "--"
+	if bounceRate > 0 {
+		bounceStr = fmt.Sprintf("%.1f%%", bounceRate)
+	}
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	html := buildStatCards([]StatCard{
+		{Value: totalViews, Label: "Page Views"},
+		{Value: uniqueSessions, Label: "Unique Visitors"},
+		{Value: avgTimeStr, Label: "Avg. Time on Page"},
+		{Value: bounceStr, Label: "Bounce Rate"},
+	})
+
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentTopPages(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	period := c.DefaultQuery("period", "7d")
 
 	since := parsePeriod(period)
-	pages, err := r.db.GetTopPages(c.Request.Context(), siteID.(string), since, 20)
+	pages, err := r.db.GetTopPages(c.Request.Context(), siteID, since, 20)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load pages</p>`)
+		respondHTMLError(c, "Failed to load pages")
 		return
 	}
 
 	if len(pages) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No page views recorded</p>`)
+		respondHTMLEmpty(c, "No page views recorded")
 		return
 	}
 
-	html := `<table class="data-table">
-		<thead>
-			<tr>
-				<th>Page</th>
-				<th>Views</th>
-			</tr>
-		</thead>
-		<tbody>`
-
-	for _, page := range pages {
-		html += fmt.Sprintf(`
-			<tr>
-				<td class="path">%s</td>
-				<td class="count">%d</td>
-			</tr>`, template.HTMLEscapeString(page.Path), page.Views)
+	rows := make([]TableRow, len(pages))
+	for i, page := range pages {
+		rows[i] = TableRow{Cells: []string{escapeHTML(page.Path), fmt.Sprintf("%d", page.Views)}}
 	}
 
-	html += `</tbody></table>`
+	html := buildDataTable([]TableColumn{
+		{Header: "Page", Class: "path"},
+		{Header: "Views", Class: "count"},
+	}, rows)
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentTrafficSources(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	period := c.DefaultQuery("period", "7d")
 
 	since := parsePeriod(period)
-	sources, err := r.db.GetTrafficSources(c.Request.Context(), siteID.(string), since, 10)
+	sources, err := r.db.GetTrafficSources(c.Request.Context(), siteID, since, 10)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load traffic sources</p>`)
+		respondHTMLError(c, "Failed to load traffic sources")
 		return
 	}
 
 	if len(sources) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No traffic data recorded</p>`)
+		respondHTMLEmpty(c, "No traffic data recorded")
 		return
 	}
 
@@ -232,16 +230,19 @@ func (r *Router) fragmentTrafficSources(c *gin.Context) {
 					<div class="source-bar" style="width: %.1f%%"></div>
 				</div>
 				<span class="source-count">%d</span>
-			</div>`, template.HTMLEscapeString(s.Source), pct, s.Visits)
+			</div>`, escapeHTML(s.Source), pct, s.Visits)
 	}
 	html += `</div>`
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentViewsChart(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	period := c.DefaultQuery("period", "7d")
 
 	days := 7
@@ -252,14 +253,14 @@ func (r *Router) fragmentViewsChart(c *gin.Context) {
 		days = 30
 	}
 
-	dailyViews, err := r.db.GetDailyViews(c.Request.Context(), siteID.(string), days)
+	dailyViews, err := r.db.GetDailyViews(c.Request.Context(), siteID, days)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load chart data</p>`)
+		respondHTMLError(c, "Failed to load chart data")
 		return
 	}
 
 	if len(dailyViews) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No data available for chart</p>`)
+		respondHTMLEmpty(c, "No data available for chart")
 		return
 	}
 
@@ -286,222 +287,184 @@ func (r *Router) fragmentViewsChart(c *gin.Context) {
 			<div class="chart-bar-wrapper" title="%s: %d views">
 				<div class="chart-bar" style="height: %.1f%%"></div>
 				<span class="chart-label">%s</span>
-			</div>`, template.HTMLEscapeString(d.Date), d.Views, height, dateShort)
+			</div>`, escapeHTML(d.Date), d.Views, height, dateShort)
 	}
 	html += `</div>`
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 // Feedback fragments
 
 func (r *Router) fragmentFeedbackStats(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 
-	avgRating, totalRatings, withComments, thisWeek, _ := r.db.GetRatingStatsExtended(c.Request.Context(), siteID.(string))
+	avgRating, totalRatings, withComments, thisWeek, err := r.db.GetRatingStatsExtended(c.Request.Context(), siteID)
+	if err != nil {
+		log.Printf("Failed to get rating stats: %v", err)
+	}
 
-	html := fmt.Sprintf(`
-		<div class="stat-card">
-			<div class="stat-value">%.1f</div>
-			<div class="stat-label">Average Rating</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Total Feedback</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">With Comments</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">This Week</div>
-		</div>
-	`, avgRating, totalRatings, withComments, thisWeek)
+	html := buildStatCards([]StatCard{
+		{Value: fmt.Sprintf("%.1f", avgRating), Label: "Average Rating"},
+		{Value: totalRatings, Label: "Total Feedback"},
+		{Value: withComments, Label: "With Comments"},
+		{Value: thisWeek, Label: "This Week"},
+	})
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentFeedbackList(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
-
-	ratings, err := r.db.ListRatings(c.Request.Context(), siteID.(string), 50, 0)
+	siteID, err := getSiteID(c)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load feedback</p>`)
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
+
+	ratings, err := r.db.ListRatings(c.Request.Context(), siteID, 50, 0)
+	if err != nil {
+		respondHTMLError(c, "Failed to load feedback")
 		return
 	}
 
 	if len(ratings) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No feedback found</p>`)
+		respondHTMLEmpty(c, "No feedback found")
 		return
 	}
 
-	html := `<table class="data-table">
-		<thead>
-			<tr>
-				<th>Page</th>
-				<th>Rating</th>
-				<th>Comment</th>
-				<th>Date</th>
-			</tr>
-		</thead>
-		<tbody>`
-
-	for _, rating := range ratings {
+	rows := make([]TableRow, len(ratings))
+	for i, rating := range ratings {
 		comment := "-"
 		if rating.Feedback.Valid && rating.Feedback.String != "" {
 			comment = rating.Feedback.String
 		}
-		html += fmt.Sprintf(`
-			<tr>
-				<td class="path">%s</td>
-				<td class="rating">%s</td>
-				<td class="comment">%s</td>
-				<td class="date">%s</td>
-			</tr>`, template.HTMLEscapeString(rating.Path), renderStars(rating.Rating),
-			template.HTMLEscapeString(comment), rating.CreatedAt)
+		rows[i] = TableRow{Cells: []string{
+			escapeHTML(rating.Path),
+			renderStars(rating.Rating),
+			escapeHTML(comment),
+			rating.CreatedAt,
+		}}
 	}
 
-	html += `</tbody></table>`
+	html := buildDataTable([]TableColumn{
+		{Header: "Page", Class: "path"},
+		{Header: "Rating", Class: "rating"},
+		{Header: "Comment", Class: "comment"},
+		{Header: "Date", Class: "date"},
+	}, rows)
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 // Subscriber fragments
 
 func (r *Router) fragmentSubscriberStats(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 
-	total, verified, pending, thisMonth, _ := r.db.GetSubscriberStatsExtended(c.Request.Context(), siteID.(string))
+	total, verified, pending, thisMonth, err := r.db.GetSubscriberStatsExtended(c.Request.Context(), siteID)
+	if err != nil {
+		log.Printf("Failed to get subscriber stats: %v", err)
+	}
 
-	html := fmt.Sprintf(`
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Total Subscribers</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Verified</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">Pending</div>
-		</div>
-		<div class="stat-card">
-			<div class="stat-value">%d</div>
-			<div class="stat-label">This Month</div>
-		</div>
-	`, total, verified, pending, thisMonth)
+	html := buildStatCards([]StatCard{
+		{Value: total, Label: "Total Subscribers"},
+		{Value: verified, Label: "Verified"},
+		{Value: pending, Label: "Pending"},
+		{Value: thisMonth, Label: "This Month"},
+	})
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 func (r *Router) fragmentSubscriberList(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 	statusFilter := c.Query("status-filter")
 
 	verifiedOnly := statusFilter == "verified"
 
-	subscribers, err := r.db.ListSubscribers(c.Request.Context(), siteID.(string), verifiedOnly)
+	subscribers, err := r.db.ListSubscribers(c.Request.Context(), siteID, verifiedOnly)
 	if err != nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load subscribers</p>`)
+		respondHTMLError(c, "Failed to load subscribers")
 		return
 	}
 
 	// Filter pending if needed
 	if statusFilter == "pending" {
-		var filtered []struct {
-			Email       string
-			Verified    bool
-			SubscribedAt string
-		}
+		var rows []TableRow
 		for _, s := range subscribers {
 			if !s.Verified {
-				filtered = append(filtered, struct {
-					Email       string
-					Verified    bool
-					SubscribedAt string
-				}{s.Email, s.Verified, s.SubscribedAt})
+				rows = append(rows, TableRow{Cells: []string{
+					escapeHTML(s.Email),
+					`<span class="status-pending">Pending</span>`,
+					s.SubscribedAt,
+				}})
 			}
 		}
-		if len(filtered) == 0 {
-			c.String(http.StatusOK, `<p class="empty">No pending subscribers</p>`)
+		if len(rows) == 0 {
+			respondHTMLEmpty(c, "No pending subscribers")
 			return
 		}
 
-		html := `<table class="data-table">
-			<thead>
-				<tr>
-					<th>Email</th>
-					<th>Status</th>
-					<th>Subscribed</th>
-				</tr>
-			</thead>
-			<tbody>`
-
-		for _, s := range filtered {
-			html += fmt.Sprintf(`
-				<tr>
-					<td class="email">%s</td>
-					<td class="status"><span class="status-pending">Pending</span></td>
-					<td class="date">%s</td>
-				</tr>`, template.HTMLEscapeString(s.Email), s.SubscribedAt)
-		}
-
-		html += `</tbody></table>`
-		c.Header("Content-Type", "text/html")
-		c.String(http.StatusOK, html)
+		html := buildDataTable([]TableColumn{
+			{Header: "Email", Class: "email"},
+			{Header: "Status", Class: "status"},
+			{Header: "Subscribed", Class: "date"},
+		}, rows)
+		respondHTML(c, html)
 		return
 	}
 
 	if len(subscribers) == 0 {
-		c.String(http.StatusOK, `<p class="empty">No subscribers found</p>`)
+		respondHTMLEmpty(c, "No subscribers found")
 		return
 	}
 
-	html := `<table class="data-table">
-		<thead>
-			<tr>
-				<th>Email</th>
-				<th>Status</th>
-				<th>Subscribed</th>
-			</tr>
-		</thead>
-		<tbody>`
-
-	for _, s := range subscribers {
-		status := "Pending"
-		statusClass := "status-pending"
+	rows := make([]TableRow, len(subscribers))
+	for i, s := range subscribers {
+		status := `<span class="status-pending">Pending</span>`
 		if s.Verified {
-			status = "Verified"
-			statusClass = "status-verified"
+			status = `<span class="status-verified">Verified</span>`
 		}
-		html += fmt.Sprintf(`
-			<tr>
-				<td class="email">%s</td>
-				<td class="status"><span class="%s">%s</span></td>
-				<td class="date">%s</td>
-			</tr>`, template.HTMLEscapeString(s.Email), statusClass, status, s.SubscribedAt)
+		rows[i] = TableRow{Cells: []string{
+			escapeHTML(s.Email),
+			status,
+			s.SubscribedAt,
+		}}
 	}
 
-	html += `</tbody></table>`
+	html := buildDataTable([]TableColumn{
+		{Header: "Email", Class: "email"},
+		{Header: "Status", Class: "status"},
+		{Header: "Subscribed", Class: "date"},
+	}, rows)
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 // Settings fragments
 
 func (r *Router) fragmentSiteInfo(c *gin.Context) {
-	siteID, _ := c.Get("site_id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
 
-	site, err := r.db.GetSiteByID(c.Request.Context(), siteID.(string))
+	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
 	if err != nil || site == nil {
-		c.String(http.StatusOK, `<p class="error">Failed to load site info</p>`)
+		respondHTMLError(c, "Failed to load site info")
 		return
 	}
 
@@ -523,10 +486,9 @@ func (r *Router) fragmentSiteInfo(c *gin.Context) {
 			<label>Created</label>
 			<input type="text" value="%s" readonly>
 		</div>
-	`, template.HTMLEscapeString(site.Name), template.HTMLEscapeString(domain), site.CreatedAt)
+	`, escapeHTML(site.Name), escapeHTML(domain), site.CreatedAt)
 
-	c.Header("Content-Type", "text/html")
-	c.String(http.StatusOK, html)
+	respondHTML(c, html)
 }
 
 // Helper functions
@@ -554,4 +516,117 @@ func renderStars(rating int) string {
 		}
 	}
 	return stars
+}
+
+// Event fragments
+
+func (r *Router) fragmentEventStats(c *gin.Context) {
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
+	period := c.DefaultQuery("period", "7d")
+
+	since := parsePeriod(period)
+	totalEvents, err := r.db.GetTotalEventCount(c.Request.Context(), siteID, since)
+	if err != nil {
+		log.Printf("Failed to get total event count: %v", err)
+	}
+	uniqueNames, err := r.db.GetUniqueEventNames(c.Request.Context(), siteID, since)
+	if err != nil {
+		log.Printf("Failed to get unique event names: %v", err)
+	}
+
+	html := buildStatCards([]StatCard{
+		{Value: totalEvents, Label: "Total Events"},
+		{Value: uniqueNames, Label: "Unique Events"},
+	})
+
+	respondHTML(c, html)
+}
+
+func (r *Router) fragmentEventsByName(c *gin.Context) {
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
+	period := c.DefaultQuery("period", "7d")
+
+	since := parsePeriod(period)
+	stats, err := r.db.GetEventStats(c.Request.Context(), siteID, since)
+	if err != nil {
+		respondHTMLError(c, "Failed to load event stats")
+		return
+	}
+
+	if len(stats) == 0 {
+		respondHTMLEmpty(c, "No events recorded")
+		return
+	}
+
+	rows := make([]TableRow, len(stats))
+	for i, stat := range stats {
+		rows[i] = TableRow{Cells: []string{escapeHTML(stat.Name), fmt.Sprintf("%d", stat.Count)}}
+	}
+
+	html := buildDataTable([]TableColumn{
+		{Header: "Event Name", Class: "name"},
+		{Header: "Count", Class: "count"},
+	}, rows)
+
+	respondHTML(c, html)
+}
+
+func (r *Router) fragmentRecentEvents(c *gin.Context) {
+	siteID, err := getSiteID(c)
+	if err != nil {
+		respondHTMLError(c, "Unauthorized")
+		return
+	}
+
+	events, err := r.db.ListRecentEvents(c.Request.Context(), siteID, 20)
+	if err != nil {
+		respondHTMLError(c, "Failed to load recent events")
+		return
+	}
+
+	if len(events) == 0 {
+		respondHTMLEmpty(c, "No events recorded yet")
+		return
+	}
+
+	rows := make([]TableRow, len(events))
+	for i, event := range events {
+		category := "-"
+		if event.Category.Valid && event.Category.String != "" {
+			category = event.Category.String
+		}
+		path := "-"
+		if event.Path.Valid && event.Path.String != "" {
+			path = event.Path.String
+		}
+		value := "-"
+		if event.Value.Valid && event.Value.String != "" {
+			value = event.Value.String
+		}
+		rows[i] = TableRow{Cells: []string{
+			escapeHTML(event.Name),
+			escapeHTML(category),
+			escapeHTML(path),
+			escapeHTML(value),
+			event.CreatedAt,
+		}}
+	}
+
+	html := buildDataTable([]TableColumn{
+		{Header: "Event", Class: "name"},
+		{Header: "Category", Class: "category"},
+		{Header: "Path", Class: "path"},
+		{Header: "Value", Class: "value"},
+		{Header: "Date", Class: "date"},
+	}, rows)
+
+	respondHTML(c, html)
 }

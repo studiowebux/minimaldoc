@@ -1,57 +1,12 @@
+{{define "feedback.html"}}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feedback - MinimalDoc Admin</title>
-    <link rel="stylesheet" href="/static/css/admin.css">
-    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-</head>
+{{template "head" .}}
 <body>
     <div class="admin-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1>MinimalDoc</h1>
-                <span class="version">Server</span>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="/admin" class="nav-item">
-                    <span class="nav-icon">&#9632;</span>
-                    Dashboard
-                </a>
-                <a href="/admin/analytics" class="nav-item">
-                    <span class="nav-icon">&#9650;</span>
-                    Analytics
-                </a>
-                <a href="/admin/feedback" class="nav-item active">
-                    <span class="nav-icon">&#9733;</span>
-                    Feedback
-                </a>
-                <a href="/admin/subscribers" class="nav-item">
-                    <span class="nav-icon">&#9993;</span>
-                    Subscribers
-                </a>
-                <a href="/admin/settings" class="nav-item">
-                    <span class="nav-icon">&#9881;</span>
-                    Settings
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <a href="/admin/logout" class="nav-item">
-                    <span class="nav-icon">&#8594;</span>
-                    Logout
-                </a>
-            </div>
-        </aside>
+        {{template "sidebar" .}}
         <main class="main-content">
-            <header class="content-header">
-                <h2>Feedback</h2>
-                {{if .user}}
-                <div class="user-info">
-                    <span>{{.user.Email}}</span>
-                </div>
-                {{end}}
-            </header>
+            {{template "content-header" .}}
             <div class="content-body">
                 <div class="feedback-page">
                     <div class="stats-grid" id="feedback-stats" hx-get="/admin/fragments/feedback-stats" hx-trigger="load">
@@ -99,3 +54,4 @@
     </div>
 </body>
 </html>
+{{end}}

@@ -1,0 +1,54 @@
+{{define "blog.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="blog-page">
+                    <div class="stats-grid" hx-get="/admin/fragments/blog-stats" hx-trigger="load" hx-swap="innerHTML">
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Total Posts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Published</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Drafts</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Pending Comments</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Posts</h3>
+                            <div class="card-actions">
+                                <select id="status-filter" hx-get="/admin/fragments/blog-post-list" hx-trigger="change" hx-target="#post-list" hx-include="this">
+                                    <option value="">All Status</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="published">Published</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                                <a href="/admin/blog/new" class="btn btn-primary">New Post</a>
+                            </div>
+                        </div>
+                        <div class="card-body" id="post-list" hx-get="/admin/fragments/blog-post-list" hx-trigger="load">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}
