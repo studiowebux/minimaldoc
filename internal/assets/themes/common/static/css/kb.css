@@ -529,6 +529,35 @@
     margin: 1.5rem 0;
 }
 
+.kb-article-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.kb-article-body table th,
+.kb-article-body table td {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.kb-article-body table th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+}
+
+.kb-article-body table tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+@media (max-width: 640px) {
+    .kb-article-body table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
 /* Article Navigation */
 .kb-article-nav {
     display: grid;

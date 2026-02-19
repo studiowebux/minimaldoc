@@ -17,6 +17,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 | **SEO** | Sitemap, Open Graph, Twitter Cards, llms.txt |
 | **Analytics** | GA4, Plausible, Umami, Matomo, MinimalDoc Backend |
 | **Backend** | Optional server: analytics, feedback, newsletter, blog CMS |
+| **Forum** | Community discussions: categories, topics, replies, reputation, moderation |
 
 ## Quick Start
 
@@ -39,6 +40,7 @@ minimaldoc init my-docs && cd my-docs && minimaldoc build
 | OpenAPI | [docs/openapi/](docs/openapi/) |
 | Status Page | [docs/status-page/](docs/status-page/) |
 | Backend Server | [docs/features/12-backend.md](docs/features/12-backend.md) |
+| Forum | [docs/features/13-forum.md](docs/features/13-forum.md) |
 | Deployment | [deploy/](deploy/) |
 
 ## License

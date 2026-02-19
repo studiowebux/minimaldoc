@@ -56,6 +56,10 @@
         this.initBlog();
       }
 
+      if (this.hasFeature('forum')) {
+        this.initForum();
+      }
+
       this.log('Initialized with features:', this.config.features);
     },
 
@@ -207,31 +211,6 @@
 
       this.log('Duration sent:', duration, 'seconds for', this.currentPath);
       this.pageStartTime = Date.now(); // Reset for next measurement
-    },
-
-    // Custom Events
-    trackEvent: function(name, category, value) {
-      if (!name) {
-        this.log('Event name is required');
-        return;
-      }
-
-      var data = {
-        site_id: this.config.siteId,
-        name: name,
-        path: window.location.pathname,
-        session_hash: this.sessionHash
-      };
-
-      if (category) {
-        data.category = category;
-      }
-      if (value !== undefined && value !== null) {
-        data.value = String(value);
-      }
-
-      this.post('/api/analytics/event', data);
-      this.log('Event tracked:', name, category || '', value || '');
     },
 
     // Feedback Widget
@@ -402,7 +381,7 @@
           : '  <p>Your account does not have permission to view this content. Required role: <strong>' + requiredRole + '</strong></p>',
         '  <div class="minimaldoc-access-actions">',
         reason === 'authentication_required'
-          ? '    <a href="' + self.config.endpoint + '/admin/login?redirect=' + encodeURIComponent(window.location.href) + '" class="btn btn-primary">Log In</a>'
+          ? '    <a href="' + self.config.endpoint + '/login?site_id=' + encodeURIComponent(self.config.siteId) + '&redirect=' + encodeURIComponent(window.location.href) + '" class="btn btn-primary">Log In</a>'
           : '    <a href="/" class="btn">Go to Home</a>',
         '  </div>',
         '</div>'
@@ -428,7 +407,7 @@
       list: function(options) {
         var self = this;
         options = options || {};
-        var params = ['site_id=' + encodeURIComponent(self.parent.config.siteId)];
+        var params = [];
 
         if (options.limit) params.push('limit=' + options.limit);
         if (options.offset) params.push('offset=' + options.offset);
@@ -436,7 +415,7 @@
         if (options.tag) params.push('tag=' + encodeURIComponent(options.tag));
         if (options.search) params.push('q=' + encodeURIComponent(options.search));
 
-        var query = '?' + params.join('&');
+        var query = params.length ? '?' + params.join('&') : '';
 
         return new Promise(function(resolve, reject) {
           self.parent.get('/api/blog/posts' + query, function(response) {
@@ -451,9 +430,8 @@
 
       get: function(slug) {
         var self = this;
-        var query = '?site_id=' + encodeURIComponent(self.parent.config.siteId);
         return new Promise(function(resolve, reject) {
-          self.parent.get('/api/blog/posts/' + encodeURIComponent(slug) + query, function(response) {
+          self.parent.get('/api/blog/posts/' + encodeURIComponent(slug), function(response) {
             if (response) {
               resolve(response);
             } else {
@@ -465,9 +443,7 @@
 
       related: function(slug, limit) {
         var self = this;
-        var params = ['site_id=' + encodeURIComponent(self.parent.config.siteId)];
-        if (limit) params.push('limit=' + limit);
-        var query = '?' + params.join('&');
+        var query = limit ? '?limit=' + limit : '';
         return new Promise(function(resolve, reject) {
           self.parent.get('/api/blog/posts/' + encodeURIComponent(slug) + '/related' + query, function(response) {
             if (response) {
@@ -525,14 +501,9 @@
         });
       } else {
         this.blog.list({ limit: limit, category: category, tag: tag }).then(function(response) {
-          // Use custom render function if available
-          if (window.renderBlogCards) {
-            window.renderBlogCards(container, response.posts || []);
-          } else {
-            container.innerHTML = self.renderPostList(response.posts || [], template, false, compact);
-            if (response.total > limit && !compact) {
-              container.innerHTML += self.renderPagination(response.total, limit, 0);
-            }
+          container.innerHTML = self.renderPostList(response.posts || [], template, false, compact);
+          if (response.total > limit && !compact) {
+            container.innerHTML += self.renderPagination(response.total, limit, 0);
           }
         }).catch(function() {
           container.innerHTML = '<div class="minimaldoc-blog-error">Failed to load posts</div>';
@@ -647,6 +618,394 @@
       return div.innerHTML;
     },
 
+    // Forum API
+    forum: {
+      parent: null,
+
+      categories: function() {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/categories', function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch categories'));
+            }
+          });
+        });
+      },
+
+      topics: function(options) {
+        var self = this;
+        options = options || {};
+        var params = [];
+
+        if (options.limit) params.push('limit=' + options.limit);
+        if (options.offset) params.push('offset=' + options.offset);
+        if (options.category) params.push('category_id=' + encodeURIComponent(options.category));
+        if (options.search) params.push('q=' + encodeURIComponent(options.search));
+        if (options.status) params.push('status=' + options.status);
+
+        var query = params.length ? '?' + params.join('&') : '';
+
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/topics' + query, function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch topics'));
+            }
+          });
+        });
+      },
+
+      getTopic: function(slug) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/topics/by-slug/' + encodeURIComponent(slug), function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Topic not found'));
+            }
+          });
+        });
+      },
+
+      getPosts: function(topicSlug, options) {
+        var self = this;
+        options = options || {};
+        var params = [];
+
+        if (options.limit) params.push('limit=' + options.limit);
+        if (options.offset) params.push('offset=' + options.offset);
+
+        var query = params.length ? '?' + params.join('&') : '';
+
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/topics/by-slug/' + encodeURIComponent(topicSlug) + '/posts' + query, function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch posts'));
+            }
+          });
+        });
+      },
+
+      createTopic: function(data) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.post('/api/forum/topics', data, function(success) {
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Failed to create topic'));
+            }
+          });
+        });
+      },
+
+      createPost: function(topicSlug, data) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.post('/api/forum/topics/by-slug/' + encodeURIComponent(topicSlug) + '/posts', data, function(success) {
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Failed to create post'));
+            }
+          });
+        });
+      },
+
+      likeTopic: function(id) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.post('/api/forum/topics/' + id + '/like', {}, function(success) {
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Failed to like topic'));
+            }
+          });
+        });
+      },
+
+      likePost: function(id) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.post('/api/forum/posts/' + id + '/like', {}, function(success) {
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Failed to like post'));
+            }
+          });
+        });
+      },
+
+      bookmark: function(topicId) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.post('/api/forum/topics/' + topicId + '/bookmark', {}, function(success) {
+            if (success) {
+              resolve();
+            } else {
+              reject(new Error('Failed to bookmark'));
+            }
+          });
+        });
+      },
+
+      search: function(query, limit) {
+        var self = this;
+        var params = ['q=' + encodeURIComponent(query)];
+        if (limit) params.push('limit=' + limit);
+
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/search?' + params.join('&'), function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Search failed'));
+            }
+          });
+        });
+      },
+
+      notifications: function(options) {
+        var self = this;
+        options = options || {};
+        var params = [];
+
+        if (options.unread) params.push('unread=true');
+        if (options.limit) params.push('limit=' + options.limit);
+
+        var query = params.length ? '?' + params.join('&') : '';
+
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/notifications' + query, function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch notifications'));
+            }
+          });
+        });
+      },
+
+      tags: function() {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/tags', function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch tags'));
+            }
+          });
+        });
+      },
+
+      leaderboard: function(limit) {
+        var self = this;
+        var query = limit ? '?limit=' + limit : '';
+        return new Promise(function(resolve, reject) {
+          self.parent.get('/api/forum/leaderboard' + query, function(response) {
+            if (response) {
+              resolve(response);
+            } else {
+              reject(new Error('Failed to fetch leaderboard'));
+            }
+          });
+        });
+      }
+    },
+
+    initForum: function() {
+      var self = this;
+      this.forum.parent = this;
+
+      var containers = document.querySelectorAll('[data-minimaldoc-forum]');
+      this.log('Found', containers.length, 'forum container(s)');
+
+      containers.forEach(function(container) {
+        self.renderForumContainer(container);
+      });
+    },
+
+    renderForumContainer: function(container) {
+      var self = this;
+      var type = container.getAttribute('data-minimaldoc-forum') || 'latest';
+      var limit = parseInt(container.getAttribute('data-limit'), 10) || 10;
+      var category = container.getAttribute('data-category');
+      var topicSlug = container.getAttribute('data-topic');
+
+      container.innerHTML = '<div class="minimaldoc-forum-loading">Loading...</div>';
+
+      if (type === 'categories') {
+        this.forum.categories().then(function(response) {
+          container.innerHTML = self.renderForumCategories(response.categories || []);
+        }).catch(function() {
+          container.innerHTML = '<div class="minimaldoc-forum-error">Failed to load categories</div>';
+        });
+      } else if (type === 'topics') {
+        this.forum.topics({ category: category, limit: limit }).then(function(response) {
+          container.innerHTML = self.renderForumTopics(response.topics || []);
+        }).catch(function() {
+          container.innerHTML = '<div class="minimaldoc-forum-error">Failed to load topics</div>';
+        });
+      } else if (type === 'topic' && topicSlug) {
+        Promise.all([
+          this.forum.getTopic(topicSlug),
+          this.forum.getPosts(topicSlug)
+        ]).then(function(results) {
+          container.innerHTML = self.renderForumTopic(results[0].topic, results[1].posts || []);
+        }).catch(function() {
+          container.innerHTML = '<div class="minimaldoc-forum-error">Topic not found</div>';
+        });
+      } else if (type === 'latest') {
+        this.forum.topics({ limit: limit }).then(function(response) {
+          container.innerHTML = self.renderForumTopics(response.topics || []);
+        }).catch(function() {
+          container.innerHTML = '<div class="minimaldoc-forum-error">Failed to load topics</div>';
+        });
+      } else if (type === 'search') {
+        container.innerHTML = self.renderForumSearch();
+      }
+    },
+
+    renderForumCategories: function(categories) {
+      if (!categories.length) {
+        return '<div class="minimaldoc-forum-empty">No categories</div>';
+      }
+
+      var html = '<div class="minimaldoc-forum-categories">';
+      categories.forEach(function(cat) {
+        html += '<div class="minimaldoc-forum-category">';
+        html += '<div class="minimaldoc-forum-category-color" style="background:' + (cat.Color || '#3b82f6') + '"></div>';
+        html += '<div class="minimaldoc-forum-category-info">';
+        html += '<h3><a href="/forum/category/' + this.escapeHtml(cat.Slug) + '">' + this.escapeHtml(cat.Name) + '</a></h3>';
+        if (cat.Description) {
+          html += '<p>' + this.escapeHtml(cat.Description) + '</p>';
+        }
+        html += '</div>';
+        html += '<div class="minimaldoc-forum-category-stats">';
+        html += '<span>' + (cat.TopicCount || 0) + ' topics</span>';
+        html += '</div>';
+        html += '</div>';
+      }, this);
+      html += '</div>';
+      return html;
+    },
+
+    renderForumTopics: function(topics) {
+      if (!topics.length) {
+        return '<div class="minimaldoc-forum-empty">No topics yet</div>';
+      }
+
+      var html = '<div class="minimaldoc-forum-topics">';
+      topics.forEach(function(topic) {
+        var badges = '';
+        if (topic.is_pinned) badges += '<span class="minimaldoc-forum-badge minimaldoc-forum-badge--pinned">Pinned</span>';
+        if (topic.is_solved) badges += '<span class="minimaldoc-forum-badge minimaldoc-forum-badge--solved">Solved</span>';
+
+        html += '<div class="minimaldoc-forum-topic">';
+        html += '<div class="minimaldoc-forum-topic-main">';
+        html += '<h4><a href="/forum/topic/' + this.escapeHtml(topic.slug) + '">' + this.escapeHtml(topic.title) + '</a></h4>';
+        html += badges;
+        html += '<div class="minimaldoc-forum-topic-meta">';
+        html += '<span>' + this.escapeHtml(topic.author_name || 'Anonymous') + '</span>';
+        if (topic.category_name) {
+          html += '<span class="minimaldoc-forum-topic-category">' + this.escapeHtml(topic.category_name) + '</span>';
+        }
+        html += '<span>' + this.formatDate(topic.created_at) + '</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="minimaldoc-forum-topic-stats">';
+        html += '<span>' + topic.post_count + ' replies</span>';
+        html += '<span>' + topic.view_count + ' views</span>';
+        html += '<span>' + topic.like_count + ' likes</span>';
+        html += '</div>';
+        html += '</div>';
+      }, this);
+      html += '</div>';
+      return html;
+    },
+
+    renderForumTopic: function(topic, posts) {
+      var html = '<div class="minimaldoc-forum-topic-full">';
+
+      // Topic header
+      html += '<div class="minimaldoc-forum-topic-header">';
+      html += '<h1>' + this.escapeHtml(topic.title) + '</h1>';
+      html += '<div class="minimaldoc-forum-topic-meta">';
+      html += '<span>by ' + this.escapeHtml(topic.author_name || 'Anonymous') + '</span>';
+      html += '<span>' + this.formatDate(topic.created_at) + '</span>';
+      html += '<span>' + topic.view_count + ' views</span>';
+      html += '</div>';
+      html += '</div>';
+
+      // Topic content
+      html += '<div class="minimaldoc-forum-topic-content">';
+      html += topic.content_html || this.escapeHtml(topic.content);
+      html += '</div>';
+
+      // Posts
+      html += '<div class="minimaldoc-forum-posts">';
+      html += '<h3>' + posts.length + ' Replies</h3>';
+      posts.forEach(function(post) {
+        html += '<div class="minimaldoc-forum-post' + (post.is_solution ? ' minimaldoc-forum-post--solution' : '') + '">';
+        if (post.is_solution) {
+          html += '<div class="minimaldoc-forum-solution-badge">Solution</div>';
+        }
+        html += '<div class="minimaldoc-forum-post-author">';
+        html += '<strong>' + this.escapeHtml(post.author_name || 'Anonymous') + '</strong>';
+        html += '<span>' + this.formatDate(post.created_at) + '</span>';
+        html += '</div>';
+        html += '<div class="minimaldoc-forum-post-content">';
+        html += post.content_html || this.escapeHtml(post.content);
+        html += '</div>';
+        html += '<div class="minimaldoc-forum-post-actions">';
+        html += '<button onclick="MinimalDoc.forum.likePost(\'' + post.id + '\')">' + post.like_count + ' Likes</button>';
+        html += '</div>';
+        html += '</div>';
+      }, this);
+      html += '</div>';
+
+      html += '</div>';
+      return html;
+    },
+
+    renderForumSearch: function() {
+      var html = '<div class="minimaldoc-forum-search">';
+      html += '<form onsubmit="MinimalDoc.handleForumSearch(event)">';
+      html += '<input type="search" name="q" placeholder="Search forum..." class="minimaldoc-forum-search-input">';
+      html += '<button type="submit">Search</button>';
+      html += '</form>';
+      html += '<div id="minimaldoc-forum-search-results"></div>';
+      html += '</div>';
+      return html;
+    },
+
+    handleForumSearch: function(e) {
+      e.preventDefault();
+      var self = this;
+      var form = e.target;
+      var query = form.querySelector('input[name="q"]').value.trim();
+      if (!query) return;
+
+      var resultsDiv = document.getElementById('minimaldoc-forum-search-results');
+      resultsDiv.innerHTML = '<div class="minimaldoc-forum-loading">Searching...</div>';
+
+      this.forum.search(query, 20).then(function(response) {
+        resultsDiv.innerHTML = self.renderForumTopics(response.topics || []);
+      }).catch(function() {
+        resultsDiv.innerHTML = '<div class="minimaldoc-forum-error">Search failed</div>';
+      });
+    },
+
     getAuthToken: function() {
       // Check for session cookie or stored token
       var cookies = document.cookie.split(';');
@@ -664,6 +1023,7 @@
       var xhr = new XMLHttpRequest();
       xhr.open('POST', this.config.endpoint + path, true);
       xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('X-API-Key', this.config.siteId);
       var token = this.getAuthToken();
       if (token) {
         xhr.setRequestHeader('Authorization', 'Bearer ' + token);

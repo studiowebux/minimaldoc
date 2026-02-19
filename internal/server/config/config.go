@@ -8,7 +8,29 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
+
+// DocsConfig holds configuration loaded from the static site's config.yaml.
+type DocsConfig struct {
+	Title   string `yaml:"title"`
+	BaseURL string `yaml:"base_url"`
+	SiteID  string `yaml:"site_id"`
+}
+
+// LoadDocsConfig loads the docs config.yaml from the specified path.
+func LoadDocsConfig(path string) (*DocsConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var cfg DocsConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
 
 // Config holds all server configuration.
 type Config struct {
@@ -35,19 +57,26 @@ type Config struct {
 
 	// Rate limiting settings
 	RateLimit RateLimitConfig
+
+	// Forum settings
+	Forum ForumConfig
+
+	// Docs config (loaded from docs/config.yaml)
+	Docs *DocsConfig
 }
 
 // ServerConfig holds HTTP server settings.
 type ServerConfig struct {
-	Host         string
-	Port         int // Public API port (tracking, feedback, newsletter)
-	AdminPort    int // Admin UI and management API port
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	AdminPath    string // Path prefix for admin UI (default: /admin)
-	APIPath      string // Path prefix for API (default: /api)
-	CORSOrigins  []string
-	DocsDir      string // Directory containing static docs (default: public)
+	Host           string
+	Port           int // Public API port (tracking, feedback, newsletter)
+	AdminPort      int // Admin UI and management API port
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
+	AdminPath      string // Path prefix for admin UI (default: /admin)
+	APIPath        string // Path prefix for API (default: /api)
+	CORSOrigins    []string
+	DocsDir        string // Directory containing static docs (default: public)
+	DocsConfigPath string // Path to docs config.yaml (default: docs/config.yaml)
 }
 
 // DatabaseConfig holds database connection settings.
@@ -138,6 +167,26 @@ type RateLimitConfig struct {
 	SubmitWindow time.Duration // Submit rate limit window
 }
 
+// ForumConfig holds forum feature settings.
+type ForumConfig struct {
+	Enabled            bool          // Enable forum feature
+	AllowAnonymous     bool          // Allow viewing without auth
+	RequireAuth        bool          // Require auth to post
+	MaxTopicsPerDay    int           // Rate limit for topic creation
+	MaxPostsPerDay     int           // Rate limit for post creation
+	EditWindow         time.Duration // Time window for editing posts
+	ModerationMode     string        // none, first_post, all
+	EmailEnabled       bool          // Enable email notifications
+	EmailDigest        string        // daily, weekly, none
+	EmailOnReply       bool          // Send email on reply
+	EmailOnMention     bool          // Send email on @mention
+	ReputationEnabled  bool          // Enable reputation system
+	RepTopicCreate     int           // Points for creating topic
+	RepPostCreate      int           // Points for posting reply
+	RepLikeReceived    int           // Points when liked
+	RepSolutionMarked  int           // Points for accepted solution
+}
+
 // Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{
@@ -150,7 +199,8 @@ func Load() (*Config, error) {
 			AdminPath:    getEnv("SERVER_ADMIN_PATH", "/admin"),
 			APIPath:      getEnv("SERVER_API_PATH", "/api"),
 			CORSOrigins:  getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
-			DocsDir:      getEnv("SERVER_DOCS_DIR", "public"),
+			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
+			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
 		},
 		Database: DatabaseConfig{
 			Driver:          getEnv("DB_DRIVER", "sqlite"),
@@ -209,6 +259,29 @@ func Load() (*Config, error) {
 			SubmitLimit:  getEnvInt("RATE_LIMIT_SUBMIT_LIMIT", 10),
 			SubmitWindow: getEnvDuration("RATE_LIMIT_SUBMIT_WINDOW", time.Minute),
 		},
+		Forum: ForumConfig{
+			Enabled:           getEnvBool("FORUM_ENABLED", true),
+			AllowAnonymous:    getEnvBool("FORUM_ALLOW_ANONYMOUS", true),
+			RequireAuth:       getEnvBool("FORUM_REQUIRE_AUTH", true),
+			MaxTopicsPerDay:   getEnvInt("FORUM_MAX_TOPICS_PER_DAY", 10),
+			MaxPostsPerDay:    getEnvInt("FORUM_MAX_POSTS_PER_DAY", 50),
+			EditWindow:        getEnvDuration("FORUM_EDIT_WINDOW", time.Hour),
+			ModerationMode:    getEnv("FORUM_MODERATION_MODE", "none"),
+			EmailEnabled:      getEnvBool("FORUM_EMAIL_ENABLED", true),
+			EmailDigest:       getEnv("FORUM_EMAIL_DIGEST", "daily"),
+			EmailOnReply:      getEnvBool("FORUM_EMAIL_ON_REPLY", true),
+			EmailOnMention:    getEnvBool("FORUM_EMAIL_ON_MENTION", true),
+			ReputationEnabled: getEnvBool("FORUM_REPUTATION_ENABLED", true),
+			RepTopicCreate:    getEnvInt("FORUM_REP_TOPIC_CREATE", 5),
+			RepPostCreate:     getEnvInt("FORUM_REP_POST_CREATE", 2),
+			RepLikeReceived:   getEnvInt("FORUM_REP_LIKE_RECEIVED", 1),
+			RepSolutionMarked: getEnvInt("FORUM_REP_SOLUTION_MARKED", 10),
+		},
+	}
+
+	// Load docs config (optional - don't fail if not found)
+	if docsConfig, err := LoadDocsConfig(cfg.Server.DocsConfigPath); err == nil {
+		cfg.Docs = docsConfig
 	}
 
 	// Validate required settings

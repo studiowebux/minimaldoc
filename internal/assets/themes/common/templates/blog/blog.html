@@ -63,6 +63,50 @@
     color: var(--text-muted);
     pointer-events: none;
 }
+.blog-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    margin-top: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    display: none;
+}
+.blog-search-dropdown:not(:empty) {
+    display: block;
+}
+.blog-search-result {
+    display: block;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-primary);
+    transition: background 0.15s;
+}
+.blog-search-result:last-child {
+    border-bottom: none;
+}
+.blog-search-result:hover {
+    background: var(--bg-secondary);
+}
+.blog-search-result-title {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.blog-search-result-meta {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+.blog-search-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
 .blog-content {
     padding: 3rem 2rem;
     max-width: 1200px;
@@ -158,6 +202,14 @@
     padding: 4rem 2rem;
     color: var(--text-muted);
 }
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
 @media (max-width: 768px) {
     .blog-hero {
         padding: 3rem 1rem 2rem;
@@ -185,18 +237,31 @@
 <h1>Blog</h1>
 <p class="blog-hero-description">Latest news and updates</p>
 <div class="blog-search-container">
-<input type="text" id="blog-search-input" class="blog-search-input" placeholder="Search posts..." autocomplete="off">
+<input type="text"
+       id="blog-search-input"
+       class="blog-search-input"
+       name="q"
+       placeholder="Search posts..."
+       autocomplete="off"
+       hx-get="{{.APIEndpoint}}/api/blog/fragments/search"
+       hx-trigger="input changed delay:300ms, search"
+       hx-target="#blog-search-dropdown">
 <svg class="blog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 <circle cx="11" cy="11" r="8"/>
 <path d="m21 21-4.35-4.35"/>
 </svg>
+<div id="blog-search-dropdown" class="blog-search-dropdown"></div>
 </div>
 </div>
 </section>
 
 <section class="blog-content">
-<div class="blog-grid" id="blog-posts" data-minimaldoc-blog="list" data-limit="12">
-<div class="blog-loading">Loading posts...</div>
+<div class="blog-grid"
+     id="blog-posts"
+     hx-get="{{.APIEndpoint}}/api/blog/fragments/posts"
+     hx-trigger="load"
+     hx-indicator=".blog-loading">
+<div class="blog-loading htmx-indicator">Loading posts...</div>
 </div>
 </section>
 </main>
@@ -205,72 +270,28 @@
 </div>
 {{template "landing-scripts" .}}
 <script>
-(function() {
-    var searchInput = document.getElementById('blog-search-input');
-    if (searchInput) {
-        var timeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(function() {
-                if (window.MinimalDoc && window.MinimalDoc.blog) {
-                    var container = document.getElementById('blog-posts');
-                    var query = searchInput.value.trim();
-                    container.innerHTML = '<div class="blog-loading">Searching...</div>';
-                    window.MinimalDoc.blog.list({ limit: 12, search: query }).then(function(response) {
-                        window.renderBlogCards(container, response.posts || []);
-                    }).catch(function() {
-                        container.innerHTML = '<div class="blog-empty"><div class="blog-empty-icon">:(</div>Failed to search posts</div>';
-                    });
-                }
-            }, 300);
-        });
-    }
-
-    function renderPosts(container, posts) {
-        if (!posts.length) {
-            container.innerHTML = '<div class="blog-empty"><div class="blog-empty-icon">:(</div>No posts found</div>';
-            return;
+// Handle search filtering of main grid when user presses Enter
+document.getElementById('blog-search-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        var query = this.value.trim();
+        var grid = document.getElementById('blog-posts');
+        var url = '{{.APIEndpoint}}/api/blog/fragments/posts';
+        if (query) {
+            url += '?q=' + encodeURIComponent(query);
         }
-        var html = '';
-        posts.forEach(function(post) {
-            html += '<article class="blog-card">';
-            if (post.featured_image) {
-                html += '<img src="' + escapeHtml(post.featured_image) + '" alt="" class="blog-card-image" loading="lazy">';
-            }
-            html += '<div class="blog-card-body">';
-            if (post.category) {
-                html += '<span class="blog-card-category">' + escapeHtml(post.category) + '</span>';
-            }
-            html += '<h2 class="blog-card-title"><a href="/blog/' + escapeHtml(post.slug) + '">' + escapeHtml(post.title) + '</a></h2>';
-            if (post.description) {
-                html += '<p class="blog-card-excerpt">' + escapeHtml(post.description) + '</p>';
-            }
-            html += '<div class="blog-card-meta">';
-            if (post.published_at) {
-                html += '<span class="blog-card-date">' + formatDate(post.published_at) + '</span>';
-            }
-            if (post.reading_time) {
-                html += '<span class="blog-card-reading">' + post.reading_time + ' min read</span>';
-            }
-            html += '</div></div></article>';
-        });
-        container.innerHTML = html;
+        htmx.ajax('GET', url, {target: grid, swap: 'innerHTML'});
+        document.getElementById('blog-search-dropdown').innerHTML = '';
     }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+});
+// Hide dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    var container = document.querySelector('.blog-search-container');
+    var dropdown = document.getElementById('blog-search-dropdown');
+    if (!container.contains(e.target)) {
+        dropdown.innerHTML = '';
     }
-
-    function formatDate(dateStr) {
-        var date = new Date(dateStr);
-        return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-
-    window.renderBlogCards = renderPosts;
-})();
+});
 </script>
 </body>
 </html>

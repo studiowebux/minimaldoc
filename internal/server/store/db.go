@@ -7,6 +7,7 @@ import (
 	"embed"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 
 	_ "github.com/lib/pq"
@@ -162,6 +163,11 @@ func (db *DB) loadMigrations() ([]migration, error) {
 			sql:     string(content),
 		})
 	}
+
+	// Sort migrations by version number
+	sort.Slice(migrations, func(i, j int) bool {
+		return migrations[i].version < migrations[j].version
+	})
 
 	return migrations, nil
 }

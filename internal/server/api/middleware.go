@@ -153,6 +153,50 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+// OptionalAuthMiddleware tries to authenticate the user but doesn't require it.
+// If a valid token is present, it sets user info in context.
+// If not, it continues without setting user info (for anonymous access).
+func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var token string
+
+		// Check Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+
+		// Check session cookie
+		if token == "" {
+			if sessionCookie, err := c.Cookie(cfg.Auth.SessionCookieKey); err == nil && sessionCookie != "" {
+				token = sessionCookie
+			}
+		}
+
+		// If no token, continue as anonymous
+		if token == "" {
+			c.Next()
+			return
+		}
+
+		// Try to validate JWT
+		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
+		if err != nil {
+			// Invalid token, continue as anonymous
+			c.Next()
+			return
+		}
+
+		// Set user info in context
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Set("site_id", claims.SiteID)
+
+		c.Next()
+	}
+}
+
 // wantsHTML checks if the request prefers HTML response.
 func wantsHTML(c *gin.Context) bool {
 	accept := c.GetHeader("Accept")

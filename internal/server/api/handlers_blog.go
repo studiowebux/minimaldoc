@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/xml"
 	"fmt"
-	"html"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -26,7 +25,7 @@ func sanitizeComment(s string) string {
 	// Remove HTML tags
 	s = htmlTagRegex.ReplaceAllString(s, "")
 	// Escape HTML entities
-	s = html.EscapeString(s)
+	s = escapeHTML(s)
 	// Trim whitespace
 	s = strings.TrimSpace(s)
 	return s
@@ -135,11 +134,12 @@ type RSSItem struct {
 }
 
 // BlogCommentRequest represents a comment submission.
+// AuthorName and AuthorEmail are optional for authenticated users (auto-filled from profile).
 type BlogCommentRequest struct {
-	AuthorName  string `json:"author_name" binding:"required,max=100"`
-	AuthorEmail string `json:"author_email" binding:"required,email,max=255"`
-	Content     string `json:"content" binding:"required,min=1,max=5000"`
-	ParentID    string `json:"parent_id"`
+	AuthorName  string `json:"author_name" form:"author_name"`
+	AuthorEmail string `json:"author_email" form:"author_email"`
+	Content     string `json:"content" form:"content" binding:"required,min=1,max=5000"`
+	ParentID    string `json:"parent_id" form:"parent_id"`
 }
 
 // Public handlers
@@ -252,8 +252,9 @@ func (r *Router) listApprovedCommentsPublic(c *gin.Context) {
 }
 
 // submitCommentPublic allows visitors to submit comments.
+// Authenticated users auto-fill name/email from their profile.
 func (r *Router) submitCommentPublic(c *gin.Context) {
-	siteID := c.Query("site_id")
+	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
 		return
@@ -271,13 +272,47 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 	}
 
 	var req BlogCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	var authorName, authorEmail string
+	var isAuthenticated bool
+
+	// Check if user is authenticated (set by OptionalAuthMiddleware)
+	userID, exists := c.Get("user_id")
+	if exists && userID != "" {
+		// Fetch user from database to get name and email
+		user, err := r.db.GetUserByID(c.Request.Context(), userID.(string))
+		if err == nil && user != nil {
+			isAuthenticated = true
+			authorEmail = user.Email
+			if user.Name.Valid && user.Name.String != "" {
+				authorName = user.Name.String
+			} else {
+				// Fall back to email prefix if no name set
+				authorName = strings.Split(user.Email, "@")[0]
+			}
+		}
+	}
+
+	// For anonymous users, require name and email from form
+	if !isAuthenticated {
+		if req.AuthorName == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+			return
+		}
+		if req.AuthorEmail == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+			return
+		}
+		authorName = req.AuthorName
+		authorEmail = req.AuthorEmail
+	}
+
 	// Sanitize user input to prevent XSS
-	authorName := sanitizeComment(req.AuthorName)
+	authorName = sanitizeComment(authorName)
 	content := sanitizeComment(req.Content)
 
 	// Validate sanitized content isn't empty
@@ -291,9 +326,72 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 	userAgent := c.Request.UserAgent()
 
 	_, err = r.db.CreateBlogComment(c.Request.Context(), id, siteID, post.ID, req.ParentID,
-		authorName, req.AuthorEmail, content, ipAddress, userAgent)
+		authorName, authorEmail, content, ipAddress, userAgent)
 	if err != nil {
+		if c.GetHeader("HX-Request") == "true" {
+			c.Header("Content-Type", "text/html")
+			c.String(http.StatusInternalServerError, `<div class="blog-comment-error">Failed to submit comment. Please try again.</div>`)
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit comment"})
+		return
+	}
+
+	// Return HTML for HTMX requests
+	if c.GetHeader("HX-Request") == "true" {
+		// Re-render comments section with success message
+		comments, _ := r.db.ListApprovedComments(c.Request.Context(), post.ID, 50, 0)
+		html := fmt.Sprintf(`<section class="blog-comments" id="comments"><h3>Comments (%d)</h3>`, len(comments))
+		html += `<div class="blog-comment-success">Thank you! Your comment has been submitted and is awaiting moderation.</div>`
+
+		if len(comments) == 0 {
+			html += `<p class="blog-comments-empty">No comments yet. Be the first to share your thoughts!</p>`
+		} else {
+			for _, comment := range comments {
+				avatar := blogGetInitials(comment.AuthorName)
+				html += fmt.Sprintf(`
+					<div class="blog-comment">
+						<div class="blog-comment-avatar">%s</div>
+						<div class="blog-comment-body">
+							<div class="blog-comment-header">
+								<span class="blog-comment-author">%s</span>
+								<span class="blog-comment-date">%s</span>
+							</div>
+							<div class="blog-comment-content">%s</div>
+						</div>
+					</div>`,
+					avatar,
+					escapeHTML(comment.AuthorName),
+					blogFormatTimeAgo(comment.CreatedAt),
+					escapeHTML(comment.Content),
+				)
+			}
+		}
+
+		// Comment form - show simplified form for authenticated users
+		html += fmt.Sprintf(`
+			<form class="blog-comment-form" hx-post="/api/blog/posts/%s/comments" hx-target="#comments" hx-swap="outerHTML" hx-on::after-request="this.reset()">
+				<h4>Leave a Comment</h4>`, escapeHTML(slug))
+
+		if isAuthenticated {
+			html += fmt.Sprintf(`<p class="blog-comment-logged-in">Commenting as <strong>%s</strong></p>`, escapeHTML(authorName))
+		} else {
+			html += `
+				<div class="blog-comment-form-row">
+					<input type="text" name="author_name" placeholder="Your name" required>
+					<input type="email" name="author_email" placeholder="Your email" required>
+				</div>`
+		}
+
+		html += `
+				<textarea name="content" placeholder="Write your comment..." required></textarea>
+				<button type="submit" class="blog-btn blog-btn-primary">Post Comment</button>
+				<p class="blog-comment-notice">Comments are moderated and may take a moment to appear.</p>
+			</form>
+		</section>`
+
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, html)
 		return
 	}
 
@@ -362,6 +460,9 @@ func (r *Router) createPost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create post"})
 		return
 	}
+
+	// Audit log: blog post created
+	r.logAuditAction(c, "create", "blog_post", post.ID, req.Title, "")
 
 	c.JSON(http.StatusCreated, gin.H{"post": post})
 }
@@ -446,6 +547,9 @@ func (r *Router) updatePost(c *gin.Context) {
 		return
 	}
 
+	// Audit log: blog post updated
+	r.logAuditAction(c, "update", "blog_post", id, req.Title, "")
+
 	c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
 
@@ -453,11 +557,21 @@ func (r *Router) updatePost(c *gin.Context) {
 func (r *Router) deletePost(c *gin.Context) {
 	id := c.Param("id")
 
+	// Get post info for audit log before deletion
+	post, _ := r.db.GetBlogPostByID(c.Request.Context(), id)
+	postTitle := ""
+	if post != nil {
+		postTitle = post.Title
+	}
+
 	err := r.db.DeleteBlogPost(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete post"})
 		return
 	}
+
+	// Audit log: blog post deleted
+	r.logAuditAction(c, "delete", "blog_post", id, postTitle, "")
 
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
@@ -487,6 +601,9 @@ func (r *Router) publishPost(c *gin.Context) {
 		return
 	}
 
+	// Audit log: blog post published
+	r.logAuditAction(c, "publish", "blog_post", id, post.Title, "")
+
 	c.JSON(http.StatusOK, gin.H{"status": "published"})
 }
 
@@ -514,6 +631,9 @@ func (r *Router) unpublishPost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unpublish post"})
 		return
 	}
+
+	// Audit log: blog post unpublished
+	r.logAuditAction(c, "unpublish", "blog_post", id, post.Title, "")
 
 	c.JSON(http.StatusOK, gin.H{"status": "unpublished"})
 }
@@ -624,6 +744,9 @@ func (r *Router) approveComment(c *gin.Context) {
 		return
 	}
 
+	// Audit log: comment approved
+	r.logAuditAction(c, "approve", "blog_comment", id, "", "")
+
 	c.JSON(http.StatusOK, gin.H{"status": "approved"})
 }
 
@@ -637,6 +760,9 @@ func (r *Router) rejectComment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reject comment"})
 		return
 	}
+
+	// Audit log: comment rejected
+	r.logAuditAction(c, "reject", "blog_comment", id, "", "")
 
 	c.JSON(http.StatusOK, gin.H{"status": "rejected"})
 }
@@ -664,6 +790,9 @@ func (r *Router) deleteComment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete comment"})
 		return
 	}
+
+	// Audit log: comment deleted
+	r.logAuditAction(c, "delete", "blog_comment", id, "", "")
 
 	c.JSON(http.StatusOK, gin.H{"status": "deleted"})
 }
@@ -1005,7 +1134,7 @@ func (r *Router) getSitemap(c *gin.Context) {
 
 	// Add blog list page
 	urlset.URLs = append(urlset.URLs, URL{
-		Loc:        baseURL + "/blog.html",
+		Loc:        baseURL + "/blog/",
 		ChangeFreq: "daily",
 	})
 
@@ -1025,7 +1154,7 @@ func (r *Router) getSitemap(c *gin.Context) {
 			}
 
 			urlset.URLs = append(urlset.URLs, URL{
-				Loc:        baseURL + "/blog.html?article=" + post.Slug,
+				Loc:        baseURL + "/blog/?article=" + post.Slug,
 				LastMod:    lastMod,
 				ChangeFreq: "monthly",
 			})

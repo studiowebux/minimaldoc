@@ -34,8 +34,11 @@ type Router struct {
 func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender) *Router {
 	gin.SetMode(gin.ReleaseMode)
 
+	engine := gin.New()
+	engine.RedirectTrailingSlash = true
+
 	r := &Router{
-		Engine: gin.New(),
+		Engine: engine,
 		config: cfg,
 		db:     db,
 		email:  emailSender,
@@ -43,6 +46,7 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 
 	// Initialize rate limiters if enabled
 	if cfg.RateLimit.Enabled {
+		r.loginLimiter = ratelimit.New(cfg.RateLimit.LoginLimit, cfg.RateLimit.LoginWindow)
 		r.apiLimiter = ratelimit.New(cfg.RateLimit.APILimit, cfg.RateLimit.APIWindow)
 		r.submitLimiter = ratelimit.New(cfg.RateLimit.SubmitLimit, cfg.RateLimit.SubmitWindow)
 	}
@@ -66,6 +70,37 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 
 	{
 		api.GET("/health", r.healthCheck)
+
+		// Public auth endpoints (for forum users, etc.)
+		auth := api.Group("/auth")
+		{
+			// Login with rate limiting
+			if r.loginLimiter != nil {
+				auth.POST("/login", r.loginLimiter.Middleware(ratelimit.IPKeyFunc), r.login)
+			} else {
+				auth.POST("/login", r.login)
+			}
+			auth.POST("/logout", r.logout)
+			auth.POST("/refresh", r.refreshToken)
+			auth.GET("/me", AuthMiddleware(cfg), r.getCurrentUser)
+
+			// Registration (if local auth enabled)
+			if cfg.Auth.EnableLocal {
+				if r.loginLimiter != nil {
+					auth.POST("/register", r.loginLimiter.Middleware(ratelimit.IPKeyFunc), r.register)
+				} else {
+					auth.POST("/register", r.register)
+				}
+				auth.GET("/verify", r.verifyEmail)
+			}
+
+			// OAuth (if enabled)
+			if cfg.Auth.EnableOAuth {
+				auth.GET("/providers", r.listOAuthProviders)
+				auth.GET("/oauth/:provider/login", r.publicOAuthLogin)
+				auth.GET("/oauth/:provider/callback", r.publicOAuthCallback)
+			}
+		}
 
 		// Analytics - public tracking only (uses general API limit)
 		api.POST("/analytics/track", r.trackPageView)
@@ -97,15 +132,25 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 			blog.GET("/posts", r.listPublishedPosts)
 			blog.GET("/posts/:slug", r.getPublishedPost)
 			blog.GET("/posts/:slug/comments", r.listApprovedCommentsPublic)
-			// Stricter rate limit for comment submissions
+			// Stricter rate limit for comment submissions (with optional auth for logged-in users)
 			if r.submitLimiter != nil {
-				blog.POST("/posts/:slug/comments", r.submitLimiter.Middleware(ratelimit.IPKeyFunc), r.submitCommentPublic)
+				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.submitLimiter.Middleware(ratelimit.IPKeyFunc), r.submitCommentPublic)
 			} else {
-				blog.POST("/posts/:slug/comments", r.submitCommentPublic)
+				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.submitCommentPublic)
 			}
 			blog.GET("/posts/:slug/meta", r.getPostMeta)
 			blog.GET("/posts/:slug/related", r.getRelatedPosts)
 			blog.GET("/feed.xml", r.getRSSFeed)
+
+			// Blog HTML fragments for HTMX
+			fragments := blog.Group("/fragments")
+			{
+				fragments.GET("/posts", r.fragmentBlogPostCards)
+				fragments.GET("/search", r.fragmentBlogSearchDropdown)
+				fragments.GET("/posts/:slug", r.fragmentBlogArticle)
+				fragments.GET("/posts/:slug/related", r.fragmentBlogRelated)
+				fragments.GET("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.fragmentBlogComments)
+			}
 		}
 
 		// Private docs - public access check (optionally authenticated)
@@ -118,11 +163,107 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 
 		// Sitemap with blog posts
 		api.GET("/sitemap.xml", r.getSitemap)
+
+		// Forum - public reading
+		forum := api.Group("/forum")
+		{
+			forum.GET("/categories", r.listForumCategories)
+			forum.GET("/categories/:slug", r.getForumCategory)
+			forum.GET("/topics", r.listForumTopics)
+			forum.GET("/topics/by-slug/:slug", r.getForumTopic)
+			forum.GET("/topics/by-slug/:slug/posts", r.getForumTopicPosts)
+			forum.GET("/search", r.searchForum)
+			forum.GET("/tags", r.listForumTags)
+			forum.GET("/tags/:slug/topics", r.getForumTopicsByTag)
+			forum.GET("/leaderboard", r.getForumLeaderboard)
+
+			// Authenticated forum actions
+			authForum := forum.Group("")
+			authForum.Use(AuthMiddleware(cfg))
+			{
+				authForum.POST("/topics", r.createForumTopic)
+				authForum.POST("/topics/by-slug/:slug/posts", r.createForumPost)
+				authForum.PUT("/topics/:id", r.updateForumTopic)
+				authForum.PUT("/posts/:id", r.updateForumPost)
+				authForum.DELETE("/topics/:id", r.deleteForumTopic)
+				authForum.DELETE("/posts/:id", r.deleteForumPost)
+				authForum.POST("/topics/:id/like", r.likeForumTopic)
+				authForum.POST("/posts/:id/like", r.likeForumPost)
+				authForum.POST("/topics/:id/bookmark", r.bookmarkForumTopic)
+				authForum.POST("/flag", r.flagForumContent)
+				authForum.GET("/notifications", r.getForumNotifications)
+				authForum.PUT("/notifications/:id/read", r.markNotificationRead)
+				authForum.PUT("/notifications/read-all", r.markAllNotificationsRead)
+				authForum.GET("/bookmarks", r.getUserBookmarks)
+			}
+
+			// Forum HTML fragments for HTMX (with optional auth to show user-specific UI)
+			fragments := forum.Group("/fragments")
+			fragments.Use(OptionalAuthMiddleware(cfg))
+			{
+				fragments.GET("/categories", r.fragmentForumCategories)
+				fragments.GET("/category/:slug/header", r.fragmentForumCategoryHeader)
+				fragments.GET("/category-options", r.fragmentForumCategoryOptions)
+				fragments.GET("/category-select", r.fragmentForumCategorySelect)
+				fragments.GET("/topics", r.fragmentForumTopics)
+				fragments.GET("/topics/:slug/detail", r.fragmentForumTopicDetail)
+				fragments.GET("/search", r.fragmentForumSearchDropdown)
+				fragments.GET("/leaderboard", r.fragmentForumLeaderboard)
+				fragments.GET("/tags", r.fragmentForumTags)
+				fragments.GET("/tag-buttons", r.fragmentForumTagButtons)
+				fragments.GET("/stats", r.fragmentForumStats)
+				fragments.GET("/topics/:slug/posts", r.fragmentForumPosts)
+				fragments.GET("/topics/:slug/reply-form", r.fragmentForumReplyForm)
+			}
+		}
 	}
 
 	// Client JS/CSS for static sites integration
 	r.StaticFile("/minimaldoc.js", "web/client/minimaldoc-client.js")
 	r.StaticFile("/minimaldoc.css", "web/client/minimaldoc-client.css")
+
+	// Static files for public pages
+	r.Static("/static", "web/admin/static")
+
+	// Load public templates
+	tmpl := template.Must(template.ParseGlob("web/public/templates/*.html"))
+	r.SetHTMLTemplate(tmpl)
+
+	// Public blog and forum pages
+	r.GET("/blog/", r.publicBlogPage)
+	r.GET("/blog", func(c *gin.Context) { c.Redirect(http.StatusMovedPermanently, "/blog/") })
+	r.GET("/blog/:slug/", r.publicBlogArticlePage)
+	r.GET("/blog/:slug", r.publicBlogArticlePage)
+	r.GET("/forum", r.publicForumPage)
+	r.GET("/forum/", r.publicForumPage)
+	r.GET("/forum/new", r.publicForumNewTopicPage)
+	r.GET("/forum/new/", r.publicForumNewTopicPage)
+	r.GET("/forum/topic/:slug", r.publicForumTopicPage)
+	r.GET("/forum/category/:slug", r.publicForumCategoryPage)
+
+	// Public auth UI pages (if local auth enabled)
+	if cfg.Auth.EnableLocal || cfg.Auth.EnableOAuth {
+		// Login page
+		r.GET("/login", r.publicLoginPage)
+		if r.loginLimiter != nil {
+			r.POST("/login", r.loginLimiter.Middleware(ratelimit.IPKeyFunc), r.publicLoginSubmit)
+		} else {
+			r.POST("/login", r.publicLoginSubmit)
+		}
+
+		// Registration page (only if local auth enabled)
+		if cfg.Auth.EnableLocal {
+			r.GET("/register", r.publicRegisterPage)
+			if r.loginLimiter != nil {
+				r.POST("/register", r.loginLimiter.Middleware(ratelimit.IPKeyFunc), r.publicRegisterSubmit)
+			} else {
+				r.POST("/register", r.publicRegisterSubmit)
+			}
+		}
+
+		// Logout
+		r.GET("/logout", r.publicLogout)
+	}
 
 	return r
 }
@@ -262,6 +403,46 @@ func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, 
 			docs.DELETE("/rules/:id", r.deleteDocAccessRule)
 		}
 
+		// Forum management
+		forum := api.Group("/forum")
+		forum.Use(AuthMiddleware(cfg))
+		{
+			forum.GET("/stats", r.getForumStats)
+			forum.GET("/topics", r.adminListForumTopics)
+			forum.GET("/categories", r.adminListForumCategories)
+			forum.GET("/categories/:id", r.adminGetForumCategory)
+
+			// Category management (editor+)
+			forum.POST("/categories", EditorOrAboveMiddleware(), r.adminCreateForumCategory)
+			forum.PUT("/categories/:id", EditorOrAboveMiddleware(), r.adminUpdateForumCategory)
+			forum.DELETE("/categories/:id", AdminMiddleware(), r.adminDeleteForumCategory)
+
+			// Moderation (editor+)
+			forum.POST("/topics/:id/pin", EditorOrAboveMiddleware(), r.adminPinForumTopic)
+			forum.POST("/topics/:id/lock", EditorOrAboveMiddleware(), r.adminLockForumTopic)
+			forum.POST("/topics/:id/close", EditorOrAboveMiddleware(), r.adminCloseForumTopic)
+			forum.POST("/topics/:id/open", EditorOrAboveMiddleware(), r.adminOpenForumTopic)
+			forum.POST("/posts/:id/solution", EditorOrAboveMiddleware(), r.adminMarkSolution)
+			forum.DELETE("/topics/:id", EditorOrAboveMiddleware(), r.adminDeleteForumTopic)
+			forum.DELETE("/posts/:id", EditorOrAboveMiddleware(), r.adminDeleteForumPost)
+
+			// Flags (editor+)
+			forum.GET("/flags", EditorOrAboveMiddleware(), r.adminListForumFlags)
+			forum.PUT("/flags/:id", EditorOrAboveMiddleware(), r.adminResolveForumFlag)
+
+			// Bans (admin only)
+			forum.POST("/users/ban", AdminMiddleware(), r.adminBanUser)
+			forum.DELETE("/users/:id/ban", AdminMiddleware(), r.adminUnbanUser)
+			forum.GET("/bans", AdminMiddleware(), r.adminListForumBans)
+
+			// Tags (editor+)
+			forum.GET("/tags", r.adminListForumTags)
+			forum.GET("/tags/:id", r.adminGetForumTag)
+			forum.POST("/tags", EditorOrAboveMiddleware(), r.adminCreateForumTag)
+			forum.PUT("/tags/:id", EditorOrAboveMiddleware(), r.adminUpdateForumTag)
+			forum.DELETE("/tags/:id", AdminMiddleware(), r.adminDeleteForumTag)
+		}
+
 		// Upload management
 		uploads := api.Group("/uploads")
 		uploads.Use(AuthMiddleware(cfg), AuthorOrAboveMiddleware())
@@ -270,6 +451,9 @@ func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, 
 			uploads.GET("", r.listUploads)
 			uploads.DELETE("/:id", r.deleteImage)
 		}
+
+		// Audit log API (admin only)
+		api.GET("/audit-logs", AuthMiddleware(cfg), AdminMiddleware(), r.listAuditLogsAPI)
 	}
 
 	// Admin UI routes
@@ -298,8 +482,19 @@ func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, 
 		// Doc access UI routes
 		admin.GET("/doc-access", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminDocAccess)
 
+		// Forum UI routes
+		admin.GET("/forum", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForum)
+		admin.GET("/forum/categories", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumCategories)
+		admin.GET("/forum/topics", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumTopics)
+		admin.GET("/forum/flags", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumFlags)
+		admin.GET("/forum/bans", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminForumBans)
+		admin.GET("/forum/tags", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumTags)
+
 		// User management UI routes (admin only)
 		admin.GET("/users", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminUsers)
+
+		// Audit log UI routes (admin only)
+		admin.GET("/audit-log", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminAuditLog)
 
 		// HTMX fragment endpoints
 		fragments := admin.Group("/fragments")
@@ -340,6 +535,10 @@ func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, 
 			fragments.GET("/user-list", AdminMiddleware(), r.fragmentUserList)
 			fragments.GET("/user-form", AdminMiddleware(), r.fragmentUserForm)
 			fragments.GET("/user-form/:id", AdminMiddleware(), r.fragmentUserForm)
+
+			// Audit log fragments (admin only)
+			fragments.GET("/audit-stats", AdminMiddleware(), r.fragmentAuditStats)
+			fragments.GET("/audit-log-list", AdminMiddleware(), r.fragmentAuditLogList)
 		}
 	}
 

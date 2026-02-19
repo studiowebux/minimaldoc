@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
@@ -154,4 +155,78 @@ func buildDataTable(columns []TableColumn, rows []TableRow) string {
 // escapeHTML is a shorthand for template.HTMLEscapeString.
 func escapeHTML(s string) string {
 	return template.HTMLEscapeString(s)
+}
+
+// getDocsURL returns the base URL from docs config, or "/" as fallback.
+func (r *Router) getDocsURL() string {
+	if r.config.Docs != nil && r.config.Docs.BaseURL != "" {
+		return strings.TrimSuffix(r.config.Docs.BaseURL, "/")
+	}
+	return "/"
+}
+
+// getDocsTitle returns the title from docs config, or the fallback value.
+func (r *Router) getDocsTitle(fallback string) string {
+	if r.config.Docs != nil && r.config.Docs.Title != "" {
+		return r.config.Docs.Title
+	}
+	return fallback
+}
+
+// getPublicPageData returns common template data for public pages (blog, forum).
+func (r *Router) getPublicPageData(c *gin.Context, currentPage string) gin.H {
+	// Try context first, then query param, then config default
+	siteID, _ := getSiteID(c)
+	if siteID == "" {
+		siteID = c.Query("site_id")
+	}
+	if siteID == "" && r.config.Docs != nil {
+		siteID = r.config.Docs.SiteID
+	}
+
+	siteName := "MinimalDoc"
+	if siteID != "" {
+		if site, err := r.db.GetSiteByID(c.Request.Context(), siteID); err == nil && site != nil {
+			siteName = site.Name
+		}
+	}
+
+	// Check if user is authenticated via cookie
+	var user map[string]interface{}
+	if token, err := c.Cookie(r.config.Auth.SessionCookieKey); err == nil && token != "" {
+		if claims, err := auth.ValidateToken(token, r.config.Auth.JWTSecret); err == nil {
+			user = map[string]interface{}{
+				"id":    claims.UserID,
+				"email": claims.Email,
+				"name":  claims.Email, // Use email as name fallback
+				"role":  claims.Role,
+			}
+		}
+	}
+
+	return gin.H{
+		"site_id":       siteID,
+		"site_name":     r.getDocsTitle(siteName),
+		"current_page":  currentPage,
+		"docs_url":      r.getDocsURL(),
+		"user":          user,
+		"authenticated": user != nil,
+	}
+}
+
+// getSiteIDWithFallback gets site ID from context, query param, or config.
+func (r *Router) getSiteIDWithFallback(c *gin.Context) string {
+	// Try context first (set by auth middleware)
+	if siteID, err := getSiteID(c); err == nil && siteID != "" {
+		return siteID
+	}
+	// Try query param
+	if siteID := c.Query("site_id"); siteID != "" {
+		return siteID
+	}
+	// Fallback to config
+	if r.config.Docs != nil && r.config.Docs.SiteID != "" {
+		return r.config.Docs.SiteID
+	}
+	return ""
 }

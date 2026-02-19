@@ -1,0 +1,168 @@
+{{define "forum-flags.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="forum-flags-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Content Flags</h3>
+                            <div class="card-actions">
+                                <select id="status-filter" onchange="loadFlags()">
+                                    <option value="pending">Pending</option>
+                                    <option value="">All</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body" id="flag-list">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div id="resolve-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Resolve Flag</h3>
+                                <button class="modal-close" onclick="closeResolveModal()">&times;</button>
+                            </div>
+                            <form id="resolve-form" onsubmit="resolveFlag(event)">
+                                <input type="hidden" id="resolve-flag-id" value="">
+                                <div class="form-group">
+                                    <label for="resolution-status">Resolution</label>
+                                    <select id="resolution-status" required>
+                                        <option value="resolved">Resolved (Action Taken)</option>
+                                        <option value="rejected">Rejected (No Action)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="resolution-note">Note</label>
+                                    <textarea id="resolution-note" rows="3" placeholder="Optional note about resolution"></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="closeResolveModal()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        async function loadFlags() {
+            const status = document.getElementById('status-filter').value;
+            let url = '/api/forum/flags?limit=50';
+            if (status) url += '&status=' + status;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                renderFlags(data.flags || []);
+            } catch (e) {
+                document.getElementById('flag-list').innerHTML = '<p class="error">Failed to load flags</p>';
+            }
+        }
+
+        function renderFlags(flags) {
+            if (!flags.length) {
+                document.getElementById('flag-list').innerHTML = '<p>No flags found.</p>';
+                return;
+            }
+            let html = '<table class="data-table"><thead><tr><th>Reason</th><th>Content</th><th>Reporter</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+            for (const flag of flags) {
+                const content = flag.TopicTitle?.String || flag.PostContent?.String?.substring(0, 100) || 'N/A';
+                const type = flag.TopicID?.Valid ? 'Topic' : 'Post';
+                html += `<tr>
+                    <td>
+                        <span class="badge badge-${getReasonClass(flag.Reason)}">${flag.Reason}</span>
+                        <br><small>${type}</small>
+                    </td>
+                    <td>${escapeHtml(content)}${content.length >= 100 ? '...' : ''}</td>
+                    <td>${escapeHtml(flag.ReporterName?.String || 'Anonymous')}</td>
+                    <td><span class="badge badge-${getStatusClass(flag.Status)}">${flag.Status}</span></td>
+                    <td>${formatDate(flag.CreatedAt)}</td>
+                    <td>
+                        ${flag.Status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="showResolveModal('${flag.ID}')">Resolve</button>` : ''}
+                        ${flag.TopicID?.Valid ? `<a href="/admin/forum/topics?id=${flag.TopicID.String}" class="btn btn-sm btn-secondary">View</a>` : ''}
+                    </td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+            document.getElementById('flag-list').innerHTML = html;
+        }
+
+        function getReasonClass(reason) {
+            switch (reason) {
+                case 'spam': return 'warning';
+                case 'harassment': return 'danger';
+                case 'inappropriate': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'pending': return 'warning';
+                case 'resolved': return 'success';
+                case 'rejected': return 'secondary';
+                default: return 'secondary';
+            }
+        }
+
+        function showResolveModal(flagId) {
+            document.getElementById('resolve-flag-id').value = flagId;
+            document.getElementById('resolution-status').value = 'resolved';
+            document.getElementById('resolution-note').value = '';
+            document.getElementById('resolve-modal').style.display = 'flex';
+        }
+
+        function closeResolveModal() {
+            document.getElementById('resolve-modal').style.display = 'none';
+        }
+
+        async function resolveFlag(e) {
+            e.preventDefault();
+            const flagId = document.getElementById('resolve-flag-id').value;
+            const data = {
+                status: document.getElementById('resolution-status').value,
+                resolution_note: document.getElementById('resolution-note').value
+            };
+            try {
+                const res = await fetch('/api/forum/flags/' + flagId, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Failed');
+                closeResolveModal();
+                loadFlags();
+            } catch (e) {
+                alert('Failed to resolve flag');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        loadFlags();
+    </script>
+</body>
+</html>
+{{end}}

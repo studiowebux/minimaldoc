@@ -1,3 +1,3 @@
-DROP INDEX IF EXISTS idx_events_name;
-DROP INDEX IF EXISTS idx_events_site_created;
-DROP TABLE IF EXISTS events;
+-- SQLite doesn't support DROP COLUMN
+-- These columns will remain but be unused if rolled back
+-- To fully rollback, recreate the events table without category/value columns

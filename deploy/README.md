@@ -168,6 +168,20 @@ Both on same domain with path-based routing:
 
 Use `nginx/minimaldoc-single-domain.conf`.
 
+### Hybrid Setup (Static + Backend)
+
+Static site generator as core, with optional backend for blog/forum:
+
+| Path | Source | Purpose |
+|------|--------|---------|
+| `/` | nginx (static) | Landing, docs, changelog, kb, etc. |
+| `/blog/*` | backend:8080 | Blog pages |
+| `/forum/*` | backend:8080 | Forum pages |
+| `/api/*` | backend:8080 | Public API |
+| `/admin/*` | backend:8090 | Admin portal (IP restricted) |
+
+Use `nginx/minimaldoc-hybrid.conf`.
+
 ## Security Checklist
 
 | Item | Status |

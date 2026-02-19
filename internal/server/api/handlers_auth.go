@@ -2,10 +2,13 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
+	"github.com/studiowebux/minimaldoc/internal/server/email"
 )
 
 // BootstrapRequest represents bootstrap parameters.
@@ -115,6 +118,12 @@ func (r *Router) login(c *gin.Context) {
 	// Update last login
 	_ = r.db.UpdateUserLastLogin(c.Request.Context(), user.ID)
 
+	// Audit log: login (set context manually since auth middleware hasn't run)
+	c.Set("site_id", user.SiteID)
+	c.Set("user_id", user.ID)
+	c.Set("user_email", user.Email)
+	r.logAuditAction(c, "login", "session", "", user.Email, "")
+
 	// Set cookie for admin UI with SameSite protection
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(r.config.Auth.SessionCookieKey, accessToken, int(r.config.Auth.JWTExpiry.Seconds()), "/", "", r.config.Auth.SecureCookies, true)
@@ -133,6 +142,9 @@ func (r *Router) login(c *gin.Context) {
 }
 
 func (r *Router) logout(c *gin.Context) {
+	// Audit log: logout (best effort - user may not be authenticated)
+	r.logAuditAction(c, "logout", "session", "", "", "")
+
 	// Clear cookie
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(r.config.Auth.SessionCookieKey, "", -1, "/", "", r.config.Auth.SecureCookies, true)
@@ -306,4 +318,635 @@ func (r *Router) oauthCallback(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(r.config.Auth.SessionCookieKey, accessToken, int(r.config.Auth.JWTExpiry.Seconds()), "/", "", r.config.Auth.SecureCookies, true)
 	c.Redirect(http.StatusTemporaryRedirect, r.config.Server.AdminPath)
+}
+
+// RegisterRequest represents public registration parameters.
+type RegisterRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+	Name     string `json:"name"`
+	SiteID   string `json:"site_id" binding:"required"`
+}
+
+// register handles public user registration.
+func (r *Router) register(c *gin.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate site exists
+	site, err := r.db.GetSiteByID(c.Request.Context(), req.SiteID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if site == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site"})
+		return
+	}
+
+	// Check if email already exists
+	existing, err := r.db.GetUserByEmail(c.Request.Context(), req.SiteID, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if existing != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := auth.HashPassword(req.Password, r.config.Auth.BCryptCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		return
+	}
+
+	// Generate verification token
+	verifyToken, err := auth.GenerateSessionToken()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Create user with role=viewer, email_verified=false
+	userID := uuid.New().String()
+	name := req.Name
+	if name == "" {
+		name = strings.Split(req.Email, "@")[0]
+	}
+
+	_, err = r.db.CreateUserWithVerification(c.Request.Context(), userID, req.SiteID, req.Email, hashedPassword, "viewer", name, verifyToken)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		return
+	}
+
+	// Send verification email
+	if r.email != nil {
+		verifyURL := r.config.Email.BaseURL + r.config.Server.APIPath + "/auth/verify?token=" + verifyToken
+		msg := &email.Message{
+			To:      req.Email,
+			Subject: "Verify your email address",
+			HTMLBody: `<h2>Welcome!</h2>
+<p>Hi ` + name + `,</p>
+<p>Please verify your email address by clicking the link below:</p>
+<p><a href="` + verifyURL + `">Verify Email</a></p>
+<p>Or copy this URL: ` + verifyURL + `</p>
+<p>This link will expire in 24 hours.</p>`,
+			TextBody: "Hi " + name + ",\n\nPlease verify your email address by visiting:\n" + verifyURL + "\n\nThis link will expire in 24 hours.",
+		}
+		_ = r.email.Send(c.Request.Context(), msg)
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Registration successful. Please check your email to verify your account.",
+		"user_id": userID,
+	})
+}
+
+// verifyEmail handles email verification.
+func (r *Router) verifyEmail(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		// Check if request wants HTML
+		if wantsHTML(c) {
+			c.HTML(http.StatusBadRequest, "verify.html", gin.H{
+				"success": false,
+				"error":   "Verification token required.",
+			})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "verification token required"})
+		return
+	}
+
+	// Find user by verification token
+	user, err := r.db.GetUserByVerifyToken(c.Request.Context(), token)
+	if err != nil {
+		if wantsHTML(c) {
+			c.HTML(http.StatusInternalServerError, "verify.html", gin.H{
+				"success": false,
+				"error":   "An error occurred. Please try again.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if user == nil {
+		if wantsHTML(c) {
+			c.HTML(http.StatusBadRequest, "verify.html", gin.H{
+				"success": false,
+				"error":   "Invalid or expired verification token.",
+			})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired verification token"})
+		return
+	}
+
+	// Mark email as verified
+	err = r.db.VerifyUserEmail(c.Request.Context(), user.ID)
+	if err != nil {
+		if wantsHTML(c) {
+			c.HTML(http.StatusInternalServerError, "verify.html", gin.H{
+				"success": false,
+				"error":   "Failed to verify email. Please try again.",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify email"})
+		return
+	}
+
+	// Return success
+	if wantsHTML(c) {
+		c.HTML(http.StatusOK, "verify.html", gin.H{
+			"success": true,
+			"site_id": user.SiteID,
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Email verified successfully. You can now log in.",
+	})
+}
+
+// publicOAuthLogin initiates OAuth flow for public users.
+func (r *Router) publicOAuthLogin(c *gin.Context) {
+	provider := c.Param("provider")
+	siteID := c.Query("site_id")
+
+	if siteID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		return
+	}
+
+	// Validate site exists
+	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
+	if err != nil || site == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site"})
+		return
+	}
+
+	// Find provider config
+	var providerCfg *auth.OAuthProvider
+	for _, p := range r.config.OAuth.Providers {
+		if p.Name == provider {
+			op := auth.NewOAuthProvider(p)
+			providerCfg = op
+			break
+		}
+	}
+
+	if providerCfg == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		return
+	}
+
+	// Generate state token with site_id embedded
+	state, err := auth.GenerateSessionToken()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
+		return
+	}
+
+	// Store state and site_id in cookies
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("oauth_state", state, 600, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_site_id", siteID, 600, "/", "", r.config.Auth.SecureCookies, true)
+
+	// Redirect to provider
+	authURL := providerCfg.GetAuthURL(state)
+	c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// publicOAuthCallback handles OAuth callback for public users (creates accounts).
+func (r *Router) publicOAuthCallback(c *gin.Context) {
+	provider := c.Param("provider")
+	code := c.Query("code")
+	state := c.Query("state")
+
+	// Verify state
+	savedState, err := c.Cookie("oauth_state")
+	if err != nil || savedState != state {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid state"})
+		return
+	}
+
+	// Get site_id from cookie
+	siteID, err := c.Cookie("oauth_site_id")
+	if err != nil || siteID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing site context"})
+		return
+	}
+
+	// Clear cookies
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("oauth_state", "", -1, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_site_id", "", -1, "/", "", r.config.Auth.SecureCookies, true)
+
+	// Find provider
+	var providerCfg *auth.OAuthProvider
+	for _, p := range r.config.OAuth.Providers {
+		if p.Name == provider {
+			op := auth.NewOAuthProvider(p)
+			providerCfg = op
+			break
+		}
+	}
+
+	if providerCfg == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		return
+	}
+
+	// Exchange code for user info
+	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Find existing user by OAuth or email
+	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+
+	if user == nil {
+		// Try to find by email
+		user, err = r.db.GetUserByEmail(c.Request.Context(), siteID, userInfo.Email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+			return
+		}
+
+		if user == nil {
+			// Create new user with OAuth
+			userID := uuid.New().String()
+			name := userInfo.Name
+			if name == "" {
+				name = strings.Split(userInfo.Email, "@")[0]
+			}
+
+			user, err = r.db.CreateUserWithOAuth(c.Request.Context(), userID, siteID, userInfo.Email, provider, userInfo.ProviderID, name, userInfo.AvatarURL, "viewer")
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+				return
+			}
+		} else {
+			// Link OAuth to existing account
+			err = r.db.LinkOAuthToUser(c.Request.Context(), user.ID, provider, userInfo.ProviderID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to link OAuth"})
+				return
+			}
+		}
+	}
+
+	// Generate token
+	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Update last login
+	_ = r.db.UpdateUserLastLogin(c.Request.Context(), user.ID)
+
+	// Set cookie and redirect
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(r.config.Auth.SessionCookieKey, accessToken, int(r.config.Auth.JWTExpiry.Seconds()), "/", "", r.config.Auth.SecureCookies, true)
+
+	// Redirect to forum or home (could use a redirect_uri cookie for flexibility)
+	c.Redirect(http.StatusTemporaryRedirect, "/forum/")
+}
+
+// Public Auth UI Handlers
+
+// publicLoginPage renders the public login page.
+func (r *Router) publicLoginPage(c *gin.Context) {
+	siteID := c.Query("site_id")
+	if siteID == "" {
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{
+			"error": "Site ID required. Add ?site_id=... to the URL.",
+		})
+		return
+	}
+
+	// Get site info
+	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
+	if err != nil || site == nil {
+		c.HTML(http.StatusBadRequest, "login.html", gin.H{
+			"error": "Invalid site.",
+		})
+		return
+	}
+
+	// Get OAuth providers if enabled
+	var providers []string
+	if r.config.Auth.EnableOAuth {
+		for _, p := range r.config.OAuth.Providers {
+			providers = append(providers, p.Name)
+		}
+	}
+
+	c.HTML(http.StatusOK, "login.html", gin.H{
+		"site_id":             siteID,
+		"site_name":           site.Name,
+		"oauth_providers":     providers,
+		"enable_registration": r.config.Auth.EnableLocal,
+		"message":             c.Query("message"),
+		"redirect":            c.Query("redirect"),
+	})
+}
+
+// publicLoginSubmit handles the login form submission.
+func (r *Router) publicLoginSubmit(c *gin.Context) {
+	siteID := c.PostForm("site_id")
+	emailAddr := c.PostForm("email")
+	password := c.PostForm("password")
+
+	if siteID == "" || emailAddr == "" || password == "" {
+		r.renderLoginError(c, siteID, "All fields are required.")
+		return
+	}
+
+	// Get user
+	user, err := r.db.GetUserByEmail(c.Request.Context(), siteID, emailAddr)
+	if err != nil {
+		r.renderLoginError(c, siteID, "An error occurred. Please try again.")
+		return
+	}
+	if user == nil {
+		r.renderLoginError(c, siteID, "Invalid email or password.")
+		return
+	}
+
+	// Verify password
+	passwordHash := user.PasswordHash.String
+	if !user.PasswordHash.Valid {
+		passwordHash = "$2a$12$000000000000000000000.0000000000000000000000000000000"
+	}
+	if !auth.VerifyPassword(password, passwordHash) {
+		r.renderLoginError(c, siteID, "Invalid email or password.")
+		return
+	}
+
+	// Check if email is verified
+	if !user.EmailVerified {
+		r.renderLoginError(c, siteID, "Please verify your email before logging in.")
+		return
+	}
+
+	// Generate token
+	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
+	if err != nil {
+		r.renderLoginError(c, siteID, "An error occurred. Please try again.")
+		return
+	}
+
+	// Update last login
+	_ = r.db.UpdateUserLastLogin(c.Request.Context(), user.ID)
+
+	// Set cookie
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(r.config.Auth.SessionCookieKey, accessToken, int(r.config.Auth.JWTExpiry.Seconds()), "/", "", r.config.Auth.SecureCookies, true)
+
+	// Redirect to specified URL or forum
+	redirectURL := c.PostForm("redirect")
+	if redirectURL == "" {
+		redirectURL = "/forum/"
+	}
+	c.Redirect(http.StatusFound, redirectURL)
+}
+
+func (r *Router) renderLoginError(c *gin.Context, siteID, errMsg string) {
+	site, _ := r.db.GetSiteByID(c.Request.Context(), siteID)
+	siteName := "Site"
+	if site != nil {
+		siteName = site.Name
+	}
+
+	var providers []string
+	if r.config.Auth.EnableOAuth {
+		for _, p := range r.config.OAuth.Providers {
+			providers = append(providers, p.Name)
+		}
+	}
+
+	c.HTML(http.StatusOK, "login.html", gin.H{
+		"site_id":             siteID,
+		"site_name":           siteName,
+		"oauth_providers":     providers,
+		"enable_registration": r.config.Auth.EnableLocal,
+		"error":               errMsg,
+	})
+}
+
+// publicRegisterPage renders the public registration page.
+func (r *Router) publicRegisterPage(c *gin.Context) {
+	siteID := c.Query("site_id")
+	if siteID == "" {
+		c.HTML(http.StatusBadRequest, "register.html", gin.H{
+			"error": "Site ID required. Add ?site_id=... to the URL.",
+		})
+		return
+	}
+
+	// Get site info
+	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
+	if err != nil || site == nil {
+		c.HTML(http.StatusBadRequest, "register.html", gin.H{
+			"error": "Invalid site.",
+		})
+		return
+	}
+
+	// Get OAuth providers if enabled
+	var providers []string
+	if r.config.Auth.EnableOAuth {
+		for _, p := range r.config.OAuth.Providers {
+			providers = append(providers, p.Name)
+		}
+	}
+
+	c.HTML(http.StatusOK, "register.html", gin.H{
+		"site_id":         siteID,
+		"site_name":       site.Name,
+		"oauth_providers": providers,
+	})
+}
+
+// publicRegisterSubmit handles the registration form submission.
+func (r *Router) publicRegisterSubmit(c *gin.Context) {
+	siteID := c.PostForm("site_id")
+	name := c.PostForm("name")
+	emailAddr := c.PostForm("email")
+	password := c.PostForm("password")
+
+	if siteID == "" || emailAddr == "" || password == "" {
+		r.renderRegisterError(c, siteID, "Email and password are required.")
+		return
+	}
+
+	if len(password) < 8 {
+		r.renderRegisterError(c, siteID, "Password must be at least 8 characters.")
+		return
+	}
+
+	// Validate site
+	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
+	if err != nil || site == nil {
+		r.renderRegisterError(c, siteID, "Invalid site.")
+		return
+	}
+
+	// Check if email exists
+	existing, err := r.db.GetUserByEmail(c.Request.Context(), siteID, emailAddr)
+	if err != nil {
+		r.renderRegisterError(c, siteID, "An error occurred. Please try again.")
+		return
+	}
+	if existing != nil {
+		r.renderRegisterError(c, siteID, "This email is already registered.")
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := auth.HashPassword(password, r.config.Auth.BCryptCost)
+	if err != nil {
+		r.renderRegisterError(c, siteID, "An error occurred. Please try again.")
+		return
+	}
+
+	// Generate verification token
+	verifyToken, err := auth.GenerateSessionToken()
+	if err != nil {
+		r.renderRegisterError(c, siteID, "An error occurred. Please try again.")
+		return
+	}
+
+	// Create user
+	userID := uuid.New().String()
+	if name == "" {
+		name = strings.Split(emailAddr, "@")[0]
+	}
+
+	_, err = r.db.CreateUserWithVerification(c.Request.Context(), userID, siteID, emailAddr, hashedPassword, "viewer", name, verifyToken)
+	if err != nil {
+		r.renderRegisterError(c, siteID, "Failed to create account. Please try again.")
+		return
+	}
+
+	// Send verification email
+	if r.email != nil {
+		verifyURL := r.config.Email.BaseURL + r.config.Server.APIPath + "/auth/verify?token=" + verifyToken
+		msg := &email.Message{
+			To:      emailAddr,
+			Subject: "Verify your email address",
+			HTMLBody: `<h2>Welcome!</h2>
+<p>Hi ` + name + `,</p>
+<p>Please verify your email address by clicking the link below:</p>
+<p><a href="` + verifyURL + `">Verify Email</a></p>
+<p>Or copy this URL: ` + verifyURL + `</p>
+<p>This link will expire in 24 hours.</p>`,
+			TextBody: "Hi " + name + ",\n\nPlease verify your email address by visiting:\n" + verifyURL + "\n\nThis link will expire in 24 hours.",
+		}
+		_ = r.email.Send(c.Request.Context(), msg)
+	}
+
+	// Redirect to login with success message
+	c.Redirect(http.StatusFound, "/login?site_id="+siteID+"&message=Registration+successful.+Please+check+your+email+to+verify+your+account.")
+}
+
+func (r *Router) renderRegisterError(c *gin.Context, siteID, errMsg string) {
+	site, _ := r.db.GetSiteByID(c.Request.Context(), siteID)
+	siteName := "Site"
+	if site != nil {
+		siteName = site.Name
+	}
+
+	var providers []string
+	if r.config.Auth.EnableOAuth {
+		for _, p := range r.config.OAuth.Providers {
+			providers = append(providers, p.Name)
+		}
+	}
+
+	c.HTML(http.StatusOK, "register.html", gin.H{
+		"site_id":         siteID,
+		"site_name":       siteName,
+		"oauth_providers": providers,
+		"error":           errMsg,
+	})
+}
+
+// publicLogout handles logout and redirects.
+func (r *Router) publicLogout(c *gin.Context) {
+	siteID := c.Query("site_id")
+
+	// Clear cookie
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(r.config.Auth.SessionCookieKey, "", -1, "/", "", r.config.Auth.SecureCookies, true)
+
+	// Redirect to login or home
+	if siteID != "" {
+		c.Redirect(http.StatusFound, "/login?site_id="+siteID)
+	} else {
+		c.Redirect(http.StatusFound, "/")
+	}
+}
+
+// publicBlogPage serves the public blog page.
+func (r *Router) publicBlogPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "blog.html", r.getPublicPageData(c, "blog"))
+}
+
+// publicForumPage serves the public forum page.
+func (r *Router) publicForumPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "forum.html", r.getPublicPageData(c, "forum"))
+}
+
+// publicForumNewTopicPage serves the new topic form page.
+func (r *Router) publicForumNewTopicPage(c *gin.Context) {
+	data := r.getPublicPageData(c, "forum")
+	// Require authentication
+	if data["authenticated"] != true {
+		siteID, _ := data["site_id"].(string)
+		c.Redirect(http.StatusFound, "/login?site_id="+siteID)
+		return
+	}
+	// Load categories server-side
+	siteID, _ := data["site_id"].(string)
+	categories, _ := r.db.ListForumCategories(c.Request.Context(), siteID)
+	data["categories"] = categories
+	c.HTML(http.StatusOK, "forum-new.html", data)
+}
+
+// publicForumTopicPage serves a single topic view page.
+func (r *Router) publicForumTopicPage(c *gin.Context) {
+	data := r.getPublicPageData(c, "forum")
+	data["slug"] = c.Param("slug")
+	c.HTML(http.StatusOK, "forum-topic.html", data)
+}
+
+// publicBlogArticlePage serves a single blog article page.
+func (r *Router) publicBlogArticlePage(c *gin.Context) {
+	data := r.getPublicPageData(c, "blog")
+	data["slug"] = c.Param("slug")
+	c.HTML(http.StatusOK, "blog-article.html", data)
+}
+
+// publicForumCategoryPage serves a forum category page.
+func (r *Router) publicForumCategoryPage(c *gin.Context) {
+	data := r.getPublicPageData(c, "forum")
+	data["slug"] = c.Param("slug")
+	c.HTML(http.StatusOK, "forum-category.html", data)
 }

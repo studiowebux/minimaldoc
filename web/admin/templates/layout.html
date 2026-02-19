@@ -5,8 +5,8 @@
     <title>{{.Title}} - MinimalDoc Admin</title>
     <link rel="stylesheet" href="/static/css/admin.css">
     <script src="/static/js/theme-toggle.js"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
+    <script src="/static/js/htmx.min.js"></script>
+    <script src="/static/js/htmx-json-enc.js"></script>
 </head>
 {{end}}
 
@@ -31,6 +31,9 @@
         <a href="/admin/comments" class="nav-item {{if eq .CurrentPage "comments"}}active{{end}}">
             Comments
         </a>
+        <a href="/admin/forum" class="nav-item {{if eq .CurrentPage "forum"}}active{{end}}">
+            Forum
+        </a>
 
         <div class="nav-section">Engagement</div>
         <a href="/admin/feedback" class="nav-item {{if eq .CurrentPage "feedback"}}active{{end}}">
@@ -46,6 +49,9 @@
         </a>
         <a href="/admin/doc-access" class="nav-item {{if eq .CurrentPage "doc-access"}}active{{end}}">
             Doc Access
+        </a>
+        <a href="/admin/audit-log" class="nav-item {{if eq .CurrentPage "audit-log"}}active{{end}}">
+            Audit Log
         </a>
         <a href="/admin/settings" class="nav-item {{if eq .CurrentPage "settings"}}active{{end}}">
             Settings

@@ -102,6 +102,9 @@ func (r *Router) createUser(c *gin.Context) {
 		return
 	}
 
+	// Audit log: user created
+	r.logAuditAction(c, "create", "user", user.ID, user.Email, "role: "+req.Role)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"id":    user.ID,
 		"email": user.Email,
@@ -230,6 +233,9 @@ func (r *Router) updateUser(c *gin.Context) {
 		}
 	}
 
+	// Audit log: user updated
+	r.logAuditAction(c, "update", "user", id, user.Email, "")
+
 	c.JSON(http.StatusOK, gin.H{"message": "user updated"})
 }
 
@@ -269,11 +275,17 @@ func (r *Router) deleteUser(c *gin.Context) {
 		return
 	}
 
+	// Capture user email before deletion for audit log
+	userEmail := user.Email
+
 	// Delete user
 	if err := r.db.DeleteUser(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
 		return
 	}
+
+	// Audit log: user deleted
+	r.logAuditAction(c, "delete", "user", id, userEmail, "")
 
 	c.JSON(http.StatusOK, gin.H{"message": "user deleted"})
 }

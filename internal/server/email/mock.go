@@ -25,6 +25,9 @@ func (s *MockSender) Send(ctx context.Context, msg *Message) error {
 	defer s.mu.Unlock()
 
 	log.Printf("[MockEmail] To: %s, Subject: %s", msg.To, msg.Subject)
+	if msg.TextBody != "" {
+		log.Printf("[MockEmail] Body:\n%s", msg.TextBody)
+	}
 	s.messages = append(s.messages, msg)
 
 	return nil

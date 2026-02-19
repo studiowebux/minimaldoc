@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>Forum | {{.Site.Config.Title}}</title>
+<meta name="description" content="Community discussions and support">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+<style>
+.forum-hero {
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+}
+.forum-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.forum-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+}
+.forum-hero-description {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin: 0 0 2rem;
+}
+.forum-search-container {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto 1.5rem;
+}
+.forum-search-input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3rem;
+    font-size: 1rem;
+    border: 2px solid var(--border-primary);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.forum-search-input:focus {
+    outline: none;
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.forum-search-input::placeholder {
+    color: var(--text-muted);
+}
+.forum-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+.forum-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.forum-search-dropdown:empty {
+    display: none;
+}
+.forum-search-result {
+    display: block;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-primary);
+}
+.forum-search-result:last-child {
+    border-bottom: none;
+}
+.forum-search-result:hover {
+    background: var(--bg-secondary);
+}
+.forum-search-result-title {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.forum-search-result-meta {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+.forum-search-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+.forum-hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 1.5rem;
+}
+.forum-hero-stat {
+    text-align: center;
+}
+.forum-hero-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.forum-hero-stat span:last-child {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+.forum-content {
+    padding: 3rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.forum-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 3rem;
+}
+.forum-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+.forum-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+.forum-section-link {
+    font-size: 0.875rem;
+    color: var(--link-color);
+    text-decoration: none;
+}
+.forum-section-link:hover {
+    text-decoration: underline;
+}
+.forum-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.forum-category {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.forum-category:hover {
+    border-color: var(--link-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.forum-category-color {
+    width: 4px;
+    height: 48px;
+    border-radius: 4px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+.forum-category-info {
+    flex: 1;
+    min-width: 0;
+}
+.forum-category-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    color: var(--text-primary);
+}
+.forum-category-name a {
+    color: inherit;
+    text-decoration: none;
+}
+.forum-category-name a:hover {
+    color: var(--link-color);
+}
+.forum-category-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+.forum-category-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-left: 1rem;
+}
+.forum-category-stat {
+    text-align: center;
+    min-width: 50px;
+}
+.forum-category-stat-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.forum-category-stat-label {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.forum-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+.forum-topic {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    transition: border-color 0.2s, background 0.2s;
+}
+.forum-topic:hover {
+    border-color: var(--link-color);
+    background: var(--bg-secondary);
+}
+.forum-topic--pinned {
+    border-color: var(--link-color);
+    background: rgba(37, 99, 235, 0.05);
+}
+.forum-topic-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    overflow: hidden;
+}
+.forum-topic-main {
+    flex: 1;
+    min-width: 0;
+}
+.forum-topic-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    color: var(--text-primary);
+}
+.forum-topic-title a {
+    color: inherit;
+    text-decoration: none;
+}
+.forum-topic-title a:hover {
+    color: var(--link-color);
+}
+.forum-topic-badges {
+    display: inline-flex;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+}
+.forum-topic-badge {
+    display: inline-flex;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 4px;
+}
+.forum-topic-badge--pinned {
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--link-color);
+}
+.forum-topic-badge--solved {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+}
+.forum-topic-badge--locked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+.forum-topic-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+.forum-topic-category {
+    padding: 0.125rem 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+.forum-topic-stats {
+    display: flex;
+    gap: 1rem;
+    margin-left: 1rem;
+}
+.forum-topic-stat {
+    text-align: center;
+    min-width: 50px;
+}
+.forum-topic-stat-value {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.forum-topic-stat-label {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.forum-sidebar-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-primary);
+}
+.forum-sidebar-section h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin: 0 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+.forum-new-topic-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: white;
+    background: var(--link-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    text-decoration: none;
+}
+.forum-new-topic-btn:hover {
+    filter: brightness(1.1);
+}
+.forum-new-topic-btn svg {
+    width: 18px;
+    height: 18px;
+}
+.forum-leaderboard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.forum-leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.forum-leaderboard-rank {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg-tertiary, var(--bg-primary));
+    border-radius: 50%;
+}
+.forum-leaderboard-rank--gold { background: #fbbf24; color: #78350f; }
+.forum-leaderboard-rank--silver { background: #d1d5db; color: #374151; }
+.forum-leaderboard-rank--bronze { background: #d97706; color: #fff; }
+.forum-leaderboard-user {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+.forum-leaderboard-reputation {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--link-color);
+}
+.forum-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.forum-tag-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.forum-tag-btn:hover {
+    background: var(--bg-tertiary, var(--bg-secondary));
+    border-color: var(--text-muted);
+}
+.forum-loading {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+}
+.forum-empty {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+}
+.forum-error {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 8px;
+}
+.htmx-request .forum-loading {
+    display: block;
+}
+@media (max-width: 900px) {
+    .forum-layout {
+        grid-template-columns: 1fr;
+    }
+    .forum-sidebar-section {
+        margin-bottom: 1rem;
+    }
+}
+@media (max-width: 768px) {
+    .forum-hero {
+        padding: 3rem 1rem 2rem;
+    }
+    .forum-hero h1 {
+        font-size: 2rem;
+    }
+    .forum-content {
+        padding: 2rem 1rem;
+    }
+    .forum-hero-stats {
+        gap: 1.5rem;
+    }
+    .forum-category {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .forum-category-stats {
+        margin-left: 0;
+    }
+    .forum-topic {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .forum-topic-stats {
+        margin-left: 0;
+    }
+}
+</style>
+</head>
+<body hx-headers='{"X-API-Key": "{{.SiteID}}"}'>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main" style="max-width: none; padding: 0;">
+<section class="forum-hero">
+<div class="forum-hero-content">
+<h1>Forum</h1>
+<p class="forum-hero-description">Community discussions and support</p>
+<div class="forum-search-container">
+<input type="text"
+       name="q"
+       class="forum-search-input"
+       placeholder="Search discussions..."
+       autocomplete="off"
+       hx-get="{{.APIEndpoint}}/api/forum/fragments/search"
+       hx-trigger="input changed delay:300ms, search"
+       hx-target="#forum-search-dropdown">
+<svg class="forum-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="11" cy="11" r="8"/>
+<path d="m21 21-4.35-4.35"/>
+</svg>
+<div class="forum-search-dropdown" id="forum-search-dropdown"></div>
+</div>
+<div class="forum-hero-stats"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/stats"
+     hx-trigger="load">
+<div class="forum-loading">Loading stats...</div>
+</div>
+</div>
+</section>
+
+<section class="forum-content">
+<div class="forum-layout">
+<div class="forum-main">
+<div class="forum-section-header">
+<h2 class="forum-section-title">Categories</h2>
+</div>
+<div id="forum-categories"
+     class="forum-categories"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/categories"
+     hx-trigger="load">
+<div class="forum-loading">Loading categories...</div>
+</div>
+
+<div class="forum-section-header" style="margin-top: 2rem;">
+<h2 class="forum-section-title">Recent Discussions</h2>
+<a href="{{.BasePath}}/forum/topics/" class="forum-section-link">View all</a>
+</div>
+<div id="forum-topics"
+     class="forum-topics"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/topics"
+     hx-trigger="load">
+<div class="forum-loading">Loading topics...</div>
+</div>
+</div>
+
+<aside class="forum-sidebar">
+<div class="forum-sidebar-section">
+<h3>Start a Discussion</h3>
+<a href="{{.BasePath}}/forum/new/" class="forum-new-topic-btn">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<line x1="12" y1="5" x2="12" y2="19"/>
+<line x1="5" y1="12" x2="19" y2="12"/>
+</svg>
+New Topic
+</a>
+</div>
+
+<div class="forum-sidebar-section">
+<h3>Top Contributors</h3>
+<div id="forum-leaderboard"
+     class="forum-leaderboard"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/leaderboard"
+     hx-trigger="load">
+<div class="forum-loading" style="padding: 1rem 0;">Loading...</div>
+</div>
+</div>
+
+<div class="forum-sidebar-section">
+<h3>Popular Tags</h3>
+<div id="forum-tags"
+     class="forum-tags-list"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/tags"
+     hx-trigger="load">
+<div class="forum-loading" style="padding: 0.5rem 0;">Loading...</div>
+</div>
+</div>
+</aside>
+</div>
+</section>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-scripts" .}}
+</body>
+</html>

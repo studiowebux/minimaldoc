@@ -141,3 +141,63 @@ func (u *User) ToAuthInfo() *auth.UserInfo {
 		Role:          u.Role,
 	}
 }
+
+// CreateUserWithVerification creates a new user with a verification token.
+func (db *DB) CreateUserWithVerification(ctx context.Context, id, siteID, email, passwordHash, role, name, verifyToken string) (*User, error) {
+	query := `
+		INSERT INTO users (id, site_id, email, password_hash, role, name, email_verified, verify_token)
+		VALUES ($1, $2, $3, $4, $5, $6, false, $7)
+		RETURNING id, site_id, email, password_hash, role, name, email_verified, verify_token, created_at, updated_at
+	`
+	var u User
+	err := db.QueryRowContext(ctx, query, id, siteID, email, nullString(passwordHash), role, nullString(name), nullString(verifyToken)).Scan(
+		&u.ID, &u.SiteID, &u.Email, &u.PasswordHash, &u.Role, &u.Name, &u.EmailVerified, &u.VerifyToken, &u.CreatedAt, &u.UpdatedAt,
+	)
+	return &u, err
+}
+
+// GetUserByVerifyToken finds a user by their verification token.
+func (db *DB) GetUserByVerifyToken(ctx context.Context, token string) (*User, error) {
+	query := `
+		SELECT id, site_id, email, password_hash, role, oauth_provider, oauth_id, name, avatar_url, email_verified, verify_token, created_at, updated_at, last_login_at
+		FROM users WHERE verify_token = $1
+	`
+	var u User
+	err := db.QueryRowContext(ctx, query, token).Scan(
+		&u.ID, &u.SiteID, &u.Email, &u.PasswordHash, &u.Role, &u.OAuthProvider, &u.OAuthID,
+		&u.Name, &u.AvatarURL, &u.EmailVerified, &u.VerifyToken, &u.CreatedAt, &u.UpdatedAt, &u.LastLoginAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &u, err
+}
+
+// VerifyUserEmail marks a user's email as verified and clears the token.
+func (db *DB) VerifyUserEmail(ctx context.Context, userID string) error {
+	query := `UPDATE users SET email_verified = true, verify_token = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
+	_, err := db.ExecContext(ctx, query, userID)
+	return err
+}
+
+// CreateUserWithOAuth creates a new user with OAuth credentials.
+func (db *DB) CreateUserWithOAuth(ctx context.Context, id, siteID, email, oauthProvider, oauthID, name, avatarURL, role string) (*User, error) {
+	query := `
+		INSERT INTO users (id, site_id, email, oauth_provider, oauth_id, name, avatar_url, role, email_verified)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+		RETURNING id, site_id, email, password_hash, role, oauth_provider, oauth_id, name, avatar_url, email_verified, created_at, updated_at
+	`
+	var u User
+	err := db.QueryRowContext(ctx, query, id, siteID, email, nullString(oauthProvider), nullString(oauthID), nullString(name), nullString(avatarURL), role).Scan(
+		&u.ID, &u.SiteID, &u.Email, &u.PasswordHash, &u.Role, &u.OAuthProvider, &u.OAuthID,
+		&u.Name, &u.AvatarURL, &u.EmailVerified, &u.CreatedAt, &u.UpdatedAt,
+	)
+	return &u, err
+}
+
+// LinkOAuthToUser links OAuth credentials to an existing user.
+func (db *DB) LinkOAuthToUser(ctx context.Context, userID, oauthProvider, oauthID string) error {
+	query := `UPDATE users SET oauth_provider = $1, oauth_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3`
+	_, err := db.ExecContext(ctx, query, oauthProvider, oauthID, userID)
+	return err
+}

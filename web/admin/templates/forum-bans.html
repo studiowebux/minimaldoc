@@ -1,0 +1,170 @@
+{{define "forum-bans.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="forum-bans-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Banned Users</h3>
+                            <div class="card-actions">
+                                <button class="btn btn-primary" onclick="showBanForm()">Ban User</button>
+                            </div>
+                        </div>
+                        <div class="card-body" id="ban-list">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div id="ban-modal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Ban User</h3>
+                                <button class="modal-close" onclick="closeBanForm()">&times;</button>
+                            </div>
+                            <form id="ban-form" onsubmit="banUser(event)">
+                                <div class="form-group">
+                                    <label for="ban-user-id">User ID</label>
+                                    <input type="text" id="ban-user-id" name="user_id" required placeholder="Enter user UUID">
+                                </div>
+                                <div class="form-group">
+                                    <label for="ban-reason">Reason</label>
+                                    <textarea id="ban-reason" name="reason" rows="3" required placeholder="Reason for ban"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="ban-permanent" name="is_permanent" onchange="toggleExpiry()">
+                                        Permanent ban
+                                    </label>
+                                </div>
+                                <div class="form-group" id="expiry-group">
+                                    <label for="ban-expires">Expires At</label>
+                                    <input type="datetime-local" id="ban-expires" name="expires_at">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="closeBanForm()">Cancel</button>
+                                    <button type="submit" class="btn btn-danger">Ban User</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        async function loadBans() {
+            try {
+                const res = await fetch('/api/forum/bans?limit=50');
+                const data = await res.json();
+                renderBans(data.bans || []);
+            } catch (e) {
+                document.getElementById('ban-list').innerHTML = '<p class="error">Failed to load bans</p>';
+            }
+        }
+
+        function renderBans(bans) {
+            if (!bans.length) {
+                document.getElementById('ban-list').innerHTML = '<p>No banned users.</p>';
+                return;
+            }
+            let html = '<table class="data-table"><thead><tr><th>User</th><th>Reason</th><th>Banned By</th><th>Expires</th><th>Actions</th></tr></thead><tbody>';
+            for (const ban of bans) {
+                const expiry = ban.IsPermanent ?
+                    '<span class="badge badge-danger">Permanent</span>' :
+                    (ban.ExpiresAt?.Valid ? formatDate(ban.ExpiresAt.String) : 'Never');
+                html += `<tr>
+                    <td>
+                        ${escapeHtml(ban.UserName?.String || 'Unknown')}
+                        <br><small>${escapeHtml(ban.UserEmail?.String || '')}</small>
+                    </td>
+                    <td>${escapeHtml(ban.Reason)}</td>
+                    <td>${escapeHtml(ban.BannerName?.String || 'System')}</td>
+                    <td>${expiry}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="unbanUser('${ban.UserID}')">Unban</button>
+                    </td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+            document.getElementById('ban-list').innerHTML = html;
+        }
+
+        function showBanForm() {
+            document.getElementById('ban-user-id').value = '';
+            document.getElementById('ban-reason').value = '';
+            document.getElementById('ban-permanent').checked = false;
+            document.getElementById('ban-expires').value = '';
+            toggleExpiry();
+            document.getElementById('ban-modal').style.display = 'flex';
+        }
+
+        function closeBanForm() {
+            document.getElementById('ban-modal').style.display = 'none';
+        }
+
+        function toggleExpiry() {
+            const permanent = document.getElementById('ban-permanent').checked;
+            document.getElementById('expiry-group').style.display = permanent ? 'none' : 'block';
+        }
+
+        async function banUser(e) {
+            e.preventDefault();
+            const data = {
+                user_id: document.getElementById('ban-user-id').value,
+                reason: document.getElementById('ban-reason').value,
+                is_permanent: document.getElementById('ban-permanent').checked
+            };
+            if (!data.is_permanent) {
+                const expires = document.getElementById('ban-expires').value;
+                if (expires) {
+                    data.expires_at = new Date(expires).toISOString();
+                }
+            }
+            try {
+                const res = await fetch('/api/forum/users/ban', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Failed');
+                closeBanForm();
+                loadBans();
+            } catch (e) {
+                alert('Failed to ban user');
+            }
+        }
+
+        async function unbanUser(userId) {
+            if (!confirm('Unban this user?')) return;
+            try {
+                const res = await fetch('/api/forum/users/' + userId + '/ban', {method: 'DELETE'});
+                if (!res.ok) throw new Error('Failed');
+                loadBans();
+            } catch (e) {
+                alert('Failed to unban user');
+            }
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        loadBans();
+    </script>
+</body>
+</html>
+{{end}}

@@ -115,6 +115,174 @@
 .blog-article-error {
     color: var(--text-secondary);
 }
+.blog-related {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-primary);
+}
+.blog-related h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem;
+    color: var(--text-primary);
+}
+.blog-related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+.blog-related-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+}
+.blog-related-card:hover {
+    border-color: var(--link-color);
+    transform: translateY(-2px);
+}
+.blog-related-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+.blog-related-card h4 {
+    padding: 1rem;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+.blog-related-card h4 a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+.blog-related-card h4 a:hover {
+    color: var(--link-color);
+}
+.blog-comments {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-primary);
+}
+.blog-comments h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem;
+    color: var(--text-primary);
+}
+.blog-comments-empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem 0;
+}
+.blog-comment {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border-primary);
+}
+.blog-comment:last-of-type {
+    border-bottom: none;
+}
+.blog-comment-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+.blog-comment-body {
+    flex: 1;
+    min-width: 0;
+}
+.blog-comment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.blog-comment-author {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.blog-comment-date {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+.blog-comment-content {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+.blog-comment-form {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+.blog-comment-form h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+}
+.blog-comment-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.blog-comment-form input,
+.blog-comment-form textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 2px solid var(--border-primary);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+.blog-comment-form input:focus,
+.blog-comment-form textarea:focus {
+    outline: none;
+    border-color: var(--link-color);
+}
+.blog-comment-form textarea {
+    min-height: 120px;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+.blog-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+.blog-btn-primary {
+    background: var(--link-color);
+    color: white;
+}
+.blog-btn-primary:hover {
+    filter: brightness(1.1);
+}
+.blog-comment-notice {
+    margin-top: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
 @media (max-width: 768px) {
     .blog-article {
         padding: 2rem 1rem;
@@ -125,6 +293,12 @@
     .blog-article-content {
         font-size: 1rem;
     }
+    .blog-comment-form-row {
+        grid-template-columns: 1fr;
+    }
+    .blog-related-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 </head>
@@ -134,7 +308,7 @@
 {{template "landing-header" .}}
 
 <main id="main" class="landing-main" style="max-width: none; padding: 0;">
-<article class="blog-article" id="blog-article" data-minimaldoc-blog="single">
+<article class="blog-article" id="blog-article">
     <div class="blog-article-loading">Loading article...</div>
 </article>
 </main>
@@ -144,6 +318,7 @@
 {{template "landing-scripts" .}}
 <script>
 (function() {
+    var apiEndpoint = '{{.APIEndpoint}}';
     var slug = window.location.pathname.replace(/^\/blog\//, '').replace(/\/$/, '');
     var container = document.getElementById('blog-article');
 
@@ -152,66 +327,29 @@
         return;
     }
 
-    function renderArticle(post) {
-        var html = '<header class="blog-article-header">';
-        html += '<a href="/blog/" class="blog-article-back">&larr; Back to Blog</a>';
-        if (post.category) {
-            html += '<span class="blog-article-category">' + escapeHtml(post.category) + '</span>';
-        }
-        html += '<h1 class="blog-article-title">' + escapeHtml(post.title) + '</h1>';
-        html += '<div class="blog-article-meta">';
-        if (post.published_at) {
-            html += '<time datetime="' + post.published_at + '">' + formatDate(post.published_at) + '</time>';
-        }
-        if (post.reading_time) {
-            html += '<span>' + post.reading_time + ' min read</span>';
-        }
-        html += '</div></header>';
+    // Load article content via HTMX
+    htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug), {
+        target: container,
+        swap: 'innerHTML'
+    }).then(function() {
+        // After article loads, load related posts
+        var relatedContainer = document.createElement('div');
+        relatedContainer.id = 'blog-related';
+        container.appendChild(relatedContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug) + '/related', {
+            target: relatedContainer,
+            swap: 'innerHTML'
+        });
 
-        if (post.featured_image) {
-            html += '<img src="' + escapeHtml(post.featured_image) + '" alt="" class="blog-article-featured">';
-        }
-
-        html += '<div class="blog-article-content">';
-        html += post.content_html || '<p>' + escapeHtml(post.description || '') + '</p>';
-        html += '</div>';
-
-        container.innerHTML = html;
-
-        // Update page title
-        document.title = post.title + ' | Blog';
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function formatDate(dateStr) {
-        var date = new Date(dateStr);
-        return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    // Wait for MinimalDoc to be ready
-    function loadArticle() {
-        if (window.MinimalDoc && window.MinimalDoc.blog) {
-            window.MinimalDoc.blog.get(slug).then(function(response) {
-                if (response.post) {
-                    renderArticle(response.post);
-                } else {
-                    container.innerHTML = '<div class="blog-article-error">Article not found</div>';
-                }
-            }).catch(function(err) {
-                container.innerHTML = '<div class="blog-article-error">Failed to load article</div>';
-            });
-        } else {
-            setTimeout(loadArticle, 100);
-        }
-    }
-
-    loadArticle();
+        // Load comments section
+        var commentsContainer = document.createElement('div');
+        commentsContainer.id = 'blog-comments-section';
+        container.appendChild(commentsContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug) + '/comments', {
+            target: commentsContainer,
+            swap: 'innerHTML'
+        });
+    });
 })();
 </script>
 </body>
