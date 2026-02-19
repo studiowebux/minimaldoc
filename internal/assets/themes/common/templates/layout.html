@@ -56,6 +56,12 @@ a{color:var(--link-color)}
 </div>
 </div>
 <div class="container{{if .Page.Metadata.FullWidth}} full-width-layout{{end}}">
+{{if .Page.Metadata.FullWidth}}<div class="full-width-header">
+<a href="{{.BasePath}}/" class="full-width-logo">{{.Site.Config.Title}}</a>
+<button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+<span class="theme-icon"></span>
+</button>
+</div>{{end}}
 {{if not .Page.Metadata.FullWidth}}<aside class="sidebar sidebar-left" id="sidebar-left" aria-label="Site navigation">
 <div class="sidebar-header">
 <p class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></p>
@@ -156,6 +162,7 @@ a{color:var(--link-color)}
 </div>
 {{end}}
 <div class="sidebar-footer">
+{{if .Site.Config.EnableLLMS}}<a href="{{.BasePath}}/llms.txt" class="sidebar-footer-link">llms.txt</a>{{end}}
 <a href="https://minimaldoc.com" target="_blank" rel="noopener noreferrer">minimaldoc v{{.Version}}</a>
 </div>
 </aside>
@@ -193,6 +200,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 <div class="page-title-actions">
 {{if $.Site.Config.ClaudeAssist.Enabled}}<button class="claude-assist-btn" id="claude-assist-btn" aria-label="{{$.Site.Config.ClaudeAssist.Label}}"{{if $.Site.Config.ClaudeAssist.Prompt}} data-prompt="{{$.Site.Config.ClaudeAssist.Prompt}}"{{end}}>{{$.Site.Config.ClaudeAssist.Label}}</button>{{end}}
 {{if $.Site.Config.PDFExport.Enabled}}<button class="pdf-export-btn" id="pdf-export-btn" aria-label="Export to PDF">Export PDF</button>{{end}}
+{{if $.Site.Config.EnableLLMS}}<button class="copy-md-btn" id="copy-md-btn" aria-label="Copy as Markdown" data-slug="{{$.Page.Slug}}">Copy MD</button>{{end}}
 </div>
 </div>
 {{if .Page.Metadata.Description}}<p class="page-description">{{.Page.Metadata.Description}}</p>{{end}}
@@ -243,6 +251,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 {{if .Site.Config.I18n.Enabled}}<script defer src="{{.BasePath}}/js/locale-selector.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.PDFExport.Enabled}}<script defer src="{{.BasePath}}/js/pdf-export.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.ClaudeAssist.Enabled}}<script defer src="{{.BasePath}}/js/claude-assist.js?v={{.Version}}"></script>{{end}}
+{{if .Site.Config.EnableLLMS}}<script defer src="{{.BasePath}}/js/copy-markdown.js?v={{.Version}}"></script>{{end}}
 {{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

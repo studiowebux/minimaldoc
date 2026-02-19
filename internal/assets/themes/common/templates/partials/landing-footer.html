@@ -26,7 +26,7 @@
 </div>
 {{end}}
 {{if .Footer.Copyright}}
-<p class="footer-copyright">{{.Footer.Copyright}}</p>
+<p class="footer-copyright">{{.Footer.Copyright}}{{if .Site.Config.EnableLLMS}} <a href="{{.BasePath}}/llms.txt" class="footer-llms-link">llms.txt</a>{{end}}</p>
 {{end}}
 {{if .Footer.Badges}}
 <div class="footer-badges">

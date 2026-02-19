@@ -630,6 +630,17 @@
     margin: 0;
 }
 
+.footer-llms-link {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    margin-inline-start: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.footer-llms-link:hover {
+    color: var(--link-color);
+}
+
 .footer-badges {
     display: flex;
     justify-content: center;
