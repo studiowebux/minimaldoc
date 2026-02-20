@@ -62,7 +62,7 @@ func canAuthorEditPost(c *gin.Context, post *store.BlogPost) bool {
 
 // denyAuthorEdit sends a forbidden response for author trying to edit others' posts.
 func denyAuthorEdit(c *gin.Context, action string) {
-	c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("can only %s own posts", action)})
+	respondError(c, http.StatusForbidden, ErrOwnPostsOnly, fmt.Sprintf("can only %s own posts", action))
 }
 
 // HTML generation helpers

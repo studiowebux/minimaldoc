@@ -4,6 +4,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -311,7 +312,8 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// Validate checks that required configuration is present.
+// Validate checks that required configuration is present and logs
+// warnings for production misconfigurations.
 func (c *Config) Validate() error {
 	if c.Auth.JWTSecret == "" {
 		return fmt.Errorf("AUTH_JWT_SECRET is required")
@@ -322,7 +324,69 @@ func (c *Config) Validate() error {
 	if c.Database.URL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
 	}
+
+	c.warnProductionConfig()
 	return nil
+}
+
+// warnProductionConfig logs warnings for settings that are unsafe in production.
+func (c *Config) warnProductionConfig() {
+	isProd := c.Server.Environment == "production"
+
+	// CORS wildcard is unsafe in production
+	for _, origin := range c.Server.CORSOrigins {
+		if origin == "*" {
+			if isProd {
+				slog.Warn("CORS wildcard origin is unsafe in production, set SERVER_CORS_ORIGINS to specific domains")
+			}
+			break
+		}
+	}
+
+	// Insecure cookies in production
+	if isProd && !c.Auth.SecureCookies {
+		slog.Warn("AUTH_SECURE_COOKIES is false in production, cookies will be sent over HTTP")
+	}
+
+	// Email base URL pointing to localhost or HTTP in production
+	if isProd {
+		if strings.Contains(c.Email.BaseURL, "localhost") || strings.Contains(c.Email.BaseURL, "127.0.0.1") {
+			slog.Warn("EMAIL_BASE_URL contains localhost in production", "url", c.Email.BaseURL)
+		}
+		if strings.HasPrefix(c.Email.BaseURL, "http://") {
+			slog.Warn("EMAIL_BASE_URL uses HTTP in production, use HTTPS", "url", c.Email.BaseURL)
+		}
+	}
+
+	// SMTP credentials missing when provider is smtp
+	if c.Email.Provider == "smtp" && (c.Email.SMTPUser == "" || c.Email.SMTPPass == "") {
+		slog.Warn("EMAIL_PROVIDER is smtp but SMTP_USER or SMTP_PASS is empty")
+	}
+
+	// S3 credentials missing when storage provider is s3
+	if c.Storage.Provider == "s3" && (c.Storage.S3AccessKey == "" || c.Storage.S3SecretKey == "") {
+		slog.Warn("STORAGE_PROVIDER is s3 but S3 access key or secret key is empty")
+	}
+
+	// OAuth enabled but no providers configured
+	if c.Auth.EnableOAuth && len(c.OAuth.Providers) == 0 {
+		slog.Warn("AUTH_ENABLE_OAUTH is true but no OAuth providers are configured")
+	}
+
+	// AI enabled without API key
+	if c.AI.Enabled && c.AI.APIKey == "" {
+		slog.Warn("AI_ENABLED is true but ANTHROPIC_API_KEY is empty")
+	}
+
+	// Mock email provider in production
+	if isProd && c.Email.Provider == "mock" {
+		slog.Warn("EMAIL_PROVIDER is mock in production, emails will not be sent")
+	}
+
+	// SQLite in production
+	if isProd && c.Database.Driver == "sqlite" {
+		slog.Warn("DB_DRIVER is sqlite in production, consider using PostgreSQL")
+	}
 }
 
 // loadOAuthConfig loads OAuth provider configurations from environment.

@@ -590,7 +590,7 @@ func (r *Router) liveness(c *gin.Context) {
 // readiness returns 200 if the server can serve requests (DB is reachable).
 func (r *Router) readiness(c *gin.Context) {
 	if err := r.db.Ping(c.Request.Context()); err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready", "error": "database unreachable"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready", "error": "database unreachable", "code": ErrDBUnreachable})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "ready"})

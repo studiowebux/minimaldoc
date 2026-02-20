@@ -32,31 +32,31 @@ type LoginRequest struct {
 func (r *Router) bootstrap(c *gin.Context) {
 	var req BootstrapRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Check bootstrap token if configured
 	if r.config.Auth.BootstrapToken != "" {
 		if req.BootstrapToken != r.config.Auth.BootstrapToken {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid bootstrap token"})
+			respondUnauthorized(c, ErrInvalidBootstrapToken, "invalid bootstrap token")
 			return
 		}
 	}
 
 	// Require password to be provided (never auto-generate and return)
 	if req.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "password is required"})
+		respondBadRequest(c, ErrPasswordRequired, "password is required")
 		return
 	}
 	if len(req.Password) < 8 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "password must be at least 8 characters"})
+		respondBadRequest(c, ErrPasswordTooShort, "password must be at least 8 characters")
 		return
 	}
 
 	result, err := Bootstrap(c.Request.Context(), r.db, r.config, req.SiteName, req.Domain, req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -75,18 +75,18 @@ func (r *Router) bootstrap(c *gin.Context) {
 func (r *Router) login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Get user from database
 	user, err := r.db.GetUserByEmail(c.Request.Context(), req.SiteID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		respondUnauthorized(c, ErrInvalidCredentials, "invalid credentials")
 		return
 	}
 
@@ -98,20 +98,20 @@ func (r *Router) login(c *gin.Context) {
 		passwordHash = "$2a$12$000000000000000000000.0000000000000000000000000000000"
 	}
 	if !auth.VerifyPassword(req.Password, passwordHash) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		respondUnauthorized(c, ErrInvalidCredentials, "invalid credentials")
 		return
 	}
 
 	// Generate tokens
 	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
 	refreshToken, err := auth.GenerateRefreshToken(user.ID, r.config.Auth.JWTSecret, r.config.Auth.RefreshExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate refresh token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate refresh token")
 		return
 	}
 
@@ -156,28 +156,28 @@ func (r *Router) refreshToken(c *gin.Context) {
 		RefreshToken string `json:"refresh_token" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Validate refresh token
 	userID, err := auth.ValidateRefreshToken(req.RefreshToken, r.config.Auth.JWTSecret)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+		respondUnauthorized(c, ErrInvalidRefreshToken, "invalid refresh token")
 		return
 	}
 
 	// Get user
 	user, err := r.db.GetUserByID(c.Request.Context(), userID)
 	if err != nil || user == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		respondUnauthorized(c, ErrUserNotFound, "user not found")
 		return
 	}
 
 	// Generate new access token
 	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
@@ -190,13 +190,13 @@ func (r *Router) refreshToken(c *gin.Context) {
 func (r *Router) getCurrentUser(c *gin.Context) {
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	user, err := r.db.GetUserByID(c.Request.Context(), userID)
 	if err != nil || user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		respondNotFound(c, ErrUserNotFound, "user not found")
 		return
 	}
 
@@ -233,14 +233,14 @@ func (r *Router) oauthLogin(c *gin.Context) {
 	}
 
 	if providerCfg == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		respondBadRequest(c, ErrUnknownProvider, "unknown provider")
 		return
 	}
 
 	// Generate state token
 	state, err := auth.GenerateSessionToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate state")
 		return
 	}
 
@@ -261,7 +261,7 @@ func (r *Router) oauthCallback(c *gin.Context) {
 	// Verify state
 	savedState, err := c.Cookie("oauth_state")
 	if err != nil || savedState != state {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid state"})
+		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
 
@@ -280,34 +280,34 @@ func (r *Router) oauthCallback(c *gin.Context) {
 	}
 
 	if providerCfg == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		respondBadRequest(c, ErrUnknownProvider, "unknown provider")
 		return
 	}
 
 	// Exchange code for user info
 	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Find or create user
 	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
 	if user == nil {
 		// Create new user (would need site_id from somewhere - could be in state)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user not found, registration required"})
+		respondBadRequest(c, ErrRegistrationRequired, "user not found, registration required")
 		return
 	}
 
 	// Generate token
 	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
@@ -332,43 +332,43 @@ type RegisterRequest struct {
 func (r *Router) register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Validate site exists
 	site, err := r.db.GetSiteByID(c.Request.Context(), req.SiteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if site == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site"})
+		respondBadRequest(c, ErrSiteInvalid, "invalid site")
 		return
 	}
 
 	// Check if email already exists
 	existing, err := r.db.GetUserByEmail(c.Request.Context(), req.SiteID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if existing != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
+		respondError(c, http.StatusConflict, ErrUserAlreadyExists, "email already registered")
 		return
 	}
 
 	// Hash password
 	hashedPassword, err := auth.HashPassword(req.Password, r.config.Auth.BCryptCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		respondInternalError(c, ErrPasswordHashFailed, "failed to hash password")
 		return
 	}
 
 	// Generate verification token
 	verifyToken, err := auth.GenerateSessionToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
@@ -381,7 +381,7 @@ func (r *Router) register(c *gin.Context) {
 
 	_, err = r.db.CreateUserWithVerification(c.Request.Context(), userID, req.SiteID, req.Email, hashedPassword, "viewer", name, verifyToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		respondInternalError(c, ErrUserCreationFailed, "failed to create user")
 		return
 	}
 
@@ -420,7 +420,7 @@ func (r *Router) verifyEmail(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "verification token required"})
+		respondBadRequest(c, ErrInvalidVerifyToken, "verification token required")
 		return
 	}
 
@@ -434,7 +434,7 @@ func (r *Router) verifyEmail(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if user == nil {
@@ -445,7 +445,7 @@ func (r *Router) verifyEmail(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired verification token"})
+		respondBadRequest(c, ErrInvalidVerifyToken, "invalid or expired verification token")
 		return
 	}
 
@@ -459,7 +459,7 @@ func (r *Router) verifyEmail(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify email"})
+		respondInternalError(c, ErrEmailVerifyFailed, "failed to verify email")
 		return
 	}
 
@@ -482,14 +482,14 @@ func (r *Router) publicOAuthLogin(c *gin.Context) {
 	siteID := c.Query("site_id")
 
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	// Validate site exists
 	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
 	if err != nil || site == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site"})
+		respondBadRequest(c, ErrSiteInvalid, "invalid site")
 		return
 	}
 
@@ -504,14 +504,14 @@ func (r *Router) publicOAuthLogin(c *gin.Context) {
 	}
 
 	if providerCfg == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		respondBadRequest(c, ErrUnknownProvider, "unknown provider")
 		return
 	}
 
 	// Generate state token with site_id embedded
 	state, err := auth.GenerateSessionToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate state"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate state")
 		return
 	}
 
@@ -540,14 +540,14 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	// Verify state
 	savedState, err := c.Cookie("oauth_state")
 	if err != nil || savedState != state {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid state"})
+		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
 
 	// Get site_id from cookie
 	siteID, err := c.Cookie("oauth_site_id")
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing site context"})
+		respondBadRequest(c, ErrMissingSiteContext, "missing site context")
 		return
 	}
 
@@ -571,14 +571,14 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	}
 
 	if providerCfg == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown provider"})
+		respondBadRequest(c, ErrUnknownProvider, "unknown provider")
 		return
 	}
 
 	// Exchange code for user info
 	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -591,7 +591,7 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	// Default flow: find or create user account
 	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -599,7 +599,7 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 		// Try to find by email
 		user, err = r.db.GetUserByEmail(c.Request.Context(), siteID, userInfo.Email)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+			respondInternalError(c, ErrDatabaseError, "database error")
 			return
 		}
 
@@ -613,14 +613,14 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 
 			user, err = r.db.CreateUserWithOAuth(c.Request.Context(), userID, siteID, userInfo.Email, provider, userInfo.ProviderID, name, userInfo.AvatarURL, "viewer")
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+				respondInternalError(c, ErrUserCreationFailed, "failed to create user")
 				return
 			}
 		} else {
 			// Link OAuth to existing account
 			err = r.db.LinkOAuthToUser(c.Request.Context(), user.ID, provider, userInfo.ProviderID)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to link OAuth"})
+				respondInternalError(c, ErrOAuthLinkFailed, "failed to link OAuth")
 				return
 			}
 		}
@@ -629,7 +629,7 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	// Generate token
 	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
