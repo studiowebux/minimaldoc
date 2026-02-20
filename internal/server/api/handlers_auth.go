@@ -520,6 +520,12 @@ func (r *Router) publicOAuthLogin(c *gin.Context) {
 	c.SetCookie("oauth_state", state, 600, "/", "", r.config.Auth.SecureCookies, true)
 	c.SetCookie("oauth_site_id", siteID, 600, "/", "", r.config.Auth.SecureCookies, true)
 
+	// Store intent cookie for newsletter subscribe flow
+	intent := c.Query("intent")
+	if intent == "subscribe" && r.config.Auth.AllowNewsletterOAuth {
+		c.SetCookie("oauth_intent", "subscribe", 600, "/", "", r.config.Auth.SecureCookies, true)
+	}
+
 	// Redirect to provider
 	authURL := providerCfg.GetAuthURL(state)
 	c.Redirect(http.StatusTemporaryRedirect, authURL)
@@ -545,10 +551,14 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 		return
 	}
 
+	// Read and clear intent cookie
+	intent, _ := c.Cookie("oauth_intent")
+
 	// Clear cookies
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", "", -1, "/", "", r.config.Auth.SecureCookies, true)
 	c.SetCookie("oauth_site_id", "", -1, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_intent", "", -1, "/", "", r.config.Auth.SecureCookies, true)
 
 	// Find provider
 	var providerCfg *auth.OAuthProvider
@@ -572,7 +582,13 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	// Find existing user by OAuth or email
+	// Branch on intent: subscribe creates a verified subscriber, not a user account
+	if intent == "subscribe" && r.config.Auth.AllowNewsletterOAuth {
+		r.handleOAuthNewsletterSubscribe(c, siteID, provider, userInfo)
+		return
+	}
+
+	// Default flow: find or create user account
 	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
@@ -626,6 +642,31 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 
 	// Redirect to forum or home (could use a redirect_uri cookie for flexibility)
 	c.Redirect(http.StatusTemporaryRedirect, "/forum/")
+}
+
+// handleOAuthNewsletterSubscribe creates a verified subscriber via OAuth.
+// No session cookie is set — the user is subscribing, not logging in.
+func (r *Router) handleOAuthNewsletterSubscribe(c *gin.Context, siteID, provider string, userInfo *auth.UserInfo) {
+	displayName := userInfo.Name
+	if displayName == "" {
+		displayName = strings.Split(userInfo.Email, "@")[0]
+	}
+
+	subscriberID := uuid.New().String()
+	err := r.db.CreateVerifiedSubscriber(c.Request.Context(), subscriberID, siteID, userInfo.Email, provider, displayName)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "newsletter-subscribe-result.html", gin.H{
+			"success": false,
+			"error":   "Failed to subscribe. Please try again.",
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "newsletter-subscribe-result.html", gin.H{
+		"success":  true,
+		"provider": provider,
+		"email":    userInfo.Email,
+	})
 }
 
 // Public Auth UI Handlers

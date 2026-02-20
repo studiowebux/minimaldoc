@@ -18,6 +18,7 @@ type Site struct {
 	FaqPage       *FaqPage       // FAQ page data (if enabled)
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
 	KBPage        *KBPage        // Knowledge Base data (if enabled)
+	WaitlistPage  *WaitlistPage  // Waitlist page data (if enabled)
 
 	// Versioning
 	VersionedPages map[string][]*Page // Pages per version (key = version name)
@@ -95,6 +96,9 @@ type SiteConfig struct {
 
 	// Knowledge Base
 	KnowledgeBase KBConfig `yaml:"knowledgebase"` // Knowledge Base configuration
+
+	// Waitlist
+	Waitlist WaitlistConfig `yaml:"waitlist"` // Waitlist landing page configuration
 
 	// Footer (for landing pages)
 	Footer FooterConfig `yaml:"footer"` // Footer configuration
@@ -194,6 +198,7 @@ func DefaultSiteConfig() SiteConfig {
 		Faq:           DefaultFaqConfig(),
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),
+		Waitlist:      DefaultWaitlistConfig(),
 		Footer:        DefaultFooterConfig(),
 		LinkCheck:     DefaultLinkCheckConfig(),
 		Versions:      DefaultVersionConfig(),

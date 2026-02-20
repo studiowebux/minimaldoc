@@ -181,6 +181,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		fmt.Println("Loaded configuration from config.yaml")
 	}
 
+	// Conflict check: waitlist and landing both produce index.html
+	if siteConfig.Waitlist.Enabled && siteConfig.Landing.Enabled {
+		return fmt.Errorf("waitlist and landing page cannot both be enabled: both generate index.html")
+	}
+
 	// In single-file mode, set the entrypoint to the file
 	if singleFile != "" {
 		siteConfig.Entrypoint = singleFile
@@ -189,6 +194,13 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Create site
 	site := core.NewSite(docsDir, outputDir, siteConfig)
+
+	// Set up waitlist page data (pure config, no markdown builder needed)
+	if siteConfig.Waitlist.Enabled {
+		site.WaitlistPage = &core.WaitlistPage{
+			Config: siteConfig.Waitlist,
+		}
+	}
 
 	// Build site (parse and process all markdown)
 	siteBuilder := builder.NewBuilder(site)
@@ -339,6 +351,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 		if err := i18nGen.Generate(); err != nil {
 			return fmt.Errorf("localized documentation generation failed: %w", err)
+		}
+	}
+
+	// Generate waitlist page (if enabled) - writes index.html, mutually exclusive with landing
+	waitlistGen, err := generator.NewWaitlistGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create waitlist generator: %w", err)
+	}
+	if waitlistGen != nil {
+		if err := waitlistGen.Generate(); err != nil {
+			return fmt.Errorf("waitlist page generation failed: %w", err)
 		}
 	}
 

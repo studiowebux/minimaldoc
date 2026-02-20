@@ -96,10 +96,11 @@ type AuthConfig struct {
 	RefreshExpiry    time.Duration
 	BCryptCost       int
 	SessionCookieKey string
-	EnableLocal      bool   // Enable email/password auth
-	EnableOAuth      bool   // Enable OAuth providers
-	BootstrapToken   string // Optional token required to call /api/bootstrap
-	SecureCookies    bool   // Set Secure flag on cookies (requires HTTPS)
+	EnableLocal           bool   // Enable email/password auth
+	EnableOAuth           bool   // Enable OAuth providers
+	AllowNewsletterOAuth  bool   // Allow OAuth subscribe for newsletter
+	BootstrapToken        string // Optional token required to call /api/bootstrap
+	SecureCookies         bool   // Set Secure flag on cookies (requires HTTPS)
 }
 
 // OAuthConfig holds OAuth 2.0 / OIDC provider settings.
@@ -216,9 +217,10 @@ func Load() (*Config, error) {
 			RefreshExpiry:    getEnvDuration("AUTH_REFRESH_EXPIRY", 7*24*time.Hour),
 			BCryptCost:       getEnvInt("AUTH_BCRYPT_COST", 12),
 			SessionCookieKey: getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
-			EnableLocal:      getEnvBool("AUTH_ENABLE_LOCAL", true),
-			EnableOAuth:      getEnvBool("AUTH_ENABLE_OAUTH", false),
-			BootstrapToken:   getEnv("BOOTSTRAP_TOKEN", ""),
+			EnableLocal:          getEnvBool("AUTH_ENABLE_LOCAL", true),
+			EnableOAuth:          getEnvBool("AUTH_ENABLE_OAUTH", false),
+			AllowNewsletterOAuth: getEnvBool("NEWSLETTER_ALLOW_OAUTH_SUBSCRIBE", false),
+			BootstrapToken:       getEnv("BOOTSTRAP_TOKEN", ""),
 			SecureCookies:    getEnvBool("AUTH_SECURE_COOKIES", false),
 		},
 		OAuth: loadOAuthConfig(),

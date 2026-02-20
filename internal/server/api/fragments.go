@@ -435,7 +435,11 @@ func (r *Router) fragmentSubscriberList(c *gin.Context) {
 	for i, s := range subscribers {
 		status := `<span class="status-pending">Pending</span>`
 		if s.Verified {
-			status = `<span class="status-verified">Verified</span>`
+			if s.VerifiedVia != "" {
+				status = `<span class="status-verified">Verified via ` + escapeHTML(s.VerifiedVia) + `</span>`
+			} else {
+				status = `<span class="status-verified">Verified</span>`
+			}
 		}
 		rows[i] = TableRow{Cells: []string{
 			escapeHTML(s.Email),

@@ -82,14 +82,17 @@ type Rating struct {
 
 // Subscriber represents a newsletter subscriber.
 type Subscriber struct {
-	ID             string
-	SiteID         string
-	Email          string
-	Verified       bool
-	VerifyToken    sql.NullString
-	VerifySentAt   sql.NullString
-	SubscribedAt   string
-	UnsubscribedAt sql.NullString
+	ID               string
+	SiteID           string
+	Email            string
+	Verified         bool
+	VerifyToken      sql.NullString
+	VerifySentAt     sql.NullString
+	SubscribedAt     string
+	UnsubscribedAt   sql.NullString
+	OAuthProvider    string
+	OAuthDisplayName string
+	VerifiedVia      string
 }
 
 // BlogPost represents a blog post.
