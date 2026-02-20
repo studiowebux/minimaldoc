@@ -1,16 +1,43 @@
 package api
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 )
+
+// TracingMiddleware creates a span per HTTP request with method, path, and status attributes.
+func TracingMiddleware() gin.HandlerFunc {
+	tracer := otel.Tracer("minimaldoc-server")
+
+	return func(c *gin.Context) {
+		spanName := fmt.Sprintf("%s %s", c.Request.Method, c.FullPath())
+		ctx, span := tracer.Start(c.Request.Context(), spanName,
+			trace.WithSpanKind(trace.SpanKindServer),
+		)
+		defer span.End()
+
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Next()
+
+		span.SetAttributes(
+			attribute.String("http.method", c.Request.Method),
+			attribute.String("http.route", c.FullPath()),
+			attribute.Int("http.status_code", c.Writer.Status()),
+		)
+	}
+}
 
 // SecurityHeadersMiddleware adds common security headers to responses.
 func SecurityHeadersMiddleware() gin.HandlerFunc {
@@ -45,7 +72,7 @@ func LoggerMiddleware() gin.HandlerFunc {
 		status := c.Writer.Status()
 		method := c.Request.Method
 
-		log.Printf("%s %s %d %v", method, path, status, latency)
+		slog.Info("request", "method", method, "path", path, "status", status, "latency", latency)
 	}
 }
 

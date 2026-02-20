@@ -58,6 +58,9 @@ type Config struct {
 	// Rate limiting settings
 	RateLimit RateLimitConfig
 
+	// OpenTelemetry settings
+	Telemetry TelemetryConfig
+
 	// Forum settings
 	Forum ForumConfig
 
@@ -77,6 +80,7 @@ type ServerConfig struct {
 	CORSOrigins    []string
 	DocsDir        string // Directory containing static docs (default: public)
 	DocsConfigPath string // Path to docs config.yaml (default: docs/config.yaml)
+	Environment    string // "production" or "development" (default: development)
 }
 
 // DatabaseConfig holds database connection settings.
@@ -168,6 +172,13 @@ type RateLimitConfig struct {
 	SubmitWindow time.Duration // Submit rate limit window
 }
 
+// TelemetryConfig holds OpenTelemetry settings.
+type TelemetryConfig struct {
+	Enabled     bool   // Enable OpenTelemetry tracing
+	Endpoint    string // OTLP HTTP endpoint (e.g. "localhost:4318")
+	ServiceName string // Service name for traces (default: minimaldoc-server)
+}
+
 // ForumConfig holds forum feature settings.
 type ForumConfig struct {
 	Enabled            bool          // Enable forum feature
@@ -202,6 +213,7 @@ func Load() (*Config, error) {
 			CORSOrigins:  getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
 			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
 			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
+			Environment:    getEnv("SERVER_ENV", "development"),
 		},
 		Database: DatabaseConfig{
 			Driver:          getEnv("DB_DRIVER", "sqlite"),
@@ -260,6 +272,11 @@ func Load() (*Config, error) {
 			APIWindow:    getEnvDuration("RATE_LIMIT_API_WINDOW", time.Minute),
 			SubmitLimit:  getEnvInt("RATE_LIMIT_SUBMIT_LIMIT", 10),
 			SubmitWindow: getEnvDuration("RATE_LIMIT_SUBMIT_WINDOW", time.Minute),
+		},
+		Telemetry: TelemetryConfig{
+			Enabled:     getEnvBool("OTEL_ENABLED", false),
+			Endpoint:    getEnv("OTEL_ENDPOINT", ""),
+			ServiceName: getEnv("OTEL_SERVICE_NAME", "minimaldoc-server"),
 		},
 		Forum: ForumConfig{
 			Enabled:           getEnvBool("FORUM_ENABLED", true),

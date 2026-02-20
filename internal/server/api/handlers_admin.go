@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -101,7 +101,7 @@ func (r *Router) adminLoginPost(c *gin.Context) {
 
 	// Update last login (log error but don't fail login)
 	if err := r.db.UpdateUserLastLogin(c.Request.Context(), user.ID); err != nil {
-		log.Printf("Failed to update last login: %v", err)
+		slog.Error("failed to update last login", "error", err)
 	}
 
 	c.Redirect(http.StatusFound, r.config.Server.AdminPath)
@@ -165,7 +165,7 @@ func (r *Router) adminSettings(c *gin.Context) {
 	}
 	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get site for settings: %v", err)
+		slog.Error("failed to get site for settings", "error", err)
 	}
 
 	serverURL := r.config.Email.BaseURL

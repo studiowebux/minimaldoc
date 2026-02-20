@@ -3,10 +3,11 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"fmt"
-	"log"
+	"log/slog"
 	"sort"
 	"strings"
 
@@ -86,7 +87,7 @@ func (db *DB) Migrate() error {
 
 	for _, m := range migrations {
 		if m.version > currentVersion {
-			log.Printf("Running migration %d: %s", m.version, m.name)
+			slog.Info("running migration", "version", m.version, "name", m.name)
 			if err := db.runMigration(m); err != nil {
 				return fmt.Errorf("migration %d failed: %w", m.version, err)
 			}
@@ -190,6 +191,11 @@ func (db *DB) runMigration(m migration) error {
 	}
 
 	return tx.Commit()
+}
+
+// Ping verifies the database connection is alive.
+func (db *DB) Ping(ctx context.Context) error {
+	return db.PingContext(ctx)
 }
 
 // Driver returns the database driver name.

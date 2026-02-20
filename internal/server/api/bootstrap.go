@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
@@ -22,7 +22,7 @@ type BootstrapResult struct {
 
 // Bootstrap creates the initial site and admin user.
 // Returns the generated API key and credentials.
-func Bootstrap(ctx context.Context, db *store.DB, cfg *config.Config, siteName, domain, adminEmail, adminPassword string) (*BootstrapResult, error) {
+func Bootstrap(ctx context.Context, db store.Store, cfg *config.Config, siteName, domain, adminEmail, adminPassword string) (*BootstrapResult, error) {
 	// Check if any sites exist
 	sites, err := db.ListSites(ctx)
 	if err != nil {
@@ -68,14 +68,14 @@ func Bootstrap(ctx context.Context, db *store.DB, cfg *config.Config, siteName, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create site: %w", err)
 	}
-	log.Printf("Created site: %s (ID: %s)", siteName, siteID)
+	slog.Info("created site", "name", siteName, "id", siteID)
 
 	// Create admin user
 	_, err = db.CreateUser(ctx, userID, siteID, adminEmail, passwordHash, "admin", "Admin")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create admin user: %w", err)
 	}
-	log.Printf("Created admin user: %s", adminEmail)
+	slog.Info("created admin user", "email", adminEmail)
 
 	return &BootstrapResult{
 		SiteID:   siteID,

@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -77,7 +77,7 @@ func (r *Router) sendVerificationEmail(siteName, siteID, emailAddr, token string
 	msg := templates.VerificationEmail(emailAddr, siteID, token)
 
 	if err := r.email.Send(context.Background(), msg); err != nil {
-		log.Printf("Failed to send verification email to %s: %v", emailAddr, err)
+		slog.Error("failed to send verification email", "email", emailAddr, "error", err)
 	}
 }
 
@@ -110,7 +110,7 @@ func (r *Router) verifySubscription(c *gin.Context) {
 	// Send welcome email
 	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get site for welcome email: %v", err)
+		slog.Error("failed to get site for welcome email", "error", err)
 	} else if site != nil {
 		r.sendWelcomeEmail(site.Name, siteID, subscriber.Email)
 	}
@@ -123,7 +123,7 @@ func (r *Router) sendWelcomeEmail(siteName, siteID, emailAddr string) {
 	msg := templates.WelcomeEmail(emailAddr, siteID)
 
 	if err := r.email.Send(context.Background(), msg); err != nil {
-		log.Printf("Failed to send welcome email to %s: %v", emailAddr, err)
+		slog.Error("failed to send welcome email", "email", emailAddr, "error", err)
 	}
 }
 
@@ -158,7 +158,7 @@ func (r *Router) listSubscribers(c *gin.Context) {
 
 	count, err := r.db.CountSubscribers(c.Request.Context(), siteID, true)
 	if err != nil {
-		log.Printf("Failed to count subscribers: %v", err)
+		slog.Error("failed to count subscribers", "error", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

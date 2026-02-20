@@ -18,7 +18,7 @@ import (
 type Router struct {
 	*gin.Engine
 	config  *config.Config
-	db      *store.DB
+	db      store.Store
 	email   email.Sender
 	storage storage.Storage
 
@@ -31,7 +31,7 @@ type Router struct {
 // NewPublicRouter creates the public-facing API router.
 // This handles: tracking, feedback submission, newsletter subscribe.
 // No authentication required, no admin access.
-func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender) *Router {
+func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sender) *Router {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.New()
@@ -53,12 +53,17 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 
 	// Global middleware
 	r.Use(gin.Recovery())
+	if cfg.Telemetry.Enabled {
+		r.Use(TracingMiddleware())
+	}
 	r.Use(LoggerMiddleware())
 	r.Use(SecurityHeadersMiddleware())
 	r.Use(CORSMiddleware(cfg.Server.CORSOrigins))
 
-	// Health check
+	// Health checks
 	r.GET("/health", r.healthCheck)
+	r.GET("/healthz", r.liveness)
+	r.GET("/readyz", r.readiness)
 
 	// Public API routes
 	api := r.Group(cfg.Server.APIPath)
@@ -271,7 +276,7 @@ func NewPublicRouter(cfg *config.Config, db *store.DB, emailSender email.Sender)
 // NewAdminRouter creates the admin API and UI router.
 // This handles: authentication, dashboard, management APIs.
 // Should be on a separate port, not publicly accessible.
-func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, store storage.Storage) *Router {
+func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender, store storage.Storage) *Router {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := &Router{
@@ -293,6 +298,9 @@ func NewAdminRouter(cfg *config.Config, db *store.DB, emailSender email.Sender, 
 
 	// Global middleware
 	r.Use(gin.Recovery())
+	if cfg.Telemetry.Enabled {
+		r.Use(TracingMiddleware())
+	}
 	r.Use(LoggerMiddleware())
 	r.Use(SecurityHeadersMiddleware())
 
@@ -572,4 +580,18 @@ func (r *Router) healthCheck(c *gin.Context) {
 		"status":   "ok",
 		"database": r.db.Driver(),
 	})
+}
+
+// liveness returns 200 if the server process is running.
+func (r *Router) liveness(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "alive"})
+}
+
+// readiness returns 200 if the server can serve requests (DB is reachable).
+func (r *Router) readiness(c *gin.Context) {
+	if err := r.db.Ping(c.Request.Context()); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready", "error": "database unreachable"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "ready"})
 }

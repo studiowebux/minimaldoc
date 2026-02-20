@@ -2,7 +2,7 @@ package email
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 )
 
@@ -24,9 +24,9 @@ func (s *MockSender) Send(ctx context.Context, msg *Message) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	log.Printf("[MockEmail] To: %s, Subject: %s", msg.To, msg.Subject)
+	slog.Debug("mock email sent", "to", msg.To, "subject", msg.Subject)
 	if msg.TextBody != "" {
-		log.Printf("[MockEmail] Body:\n%s", msg.TextBody)
+		slog.Debug("mock email body", "body", msg.TextBody)
 	}
 	s.messages = append(s.messages, msg)
 
