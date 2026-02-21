@@ -55,7 +55,7 @@
 .openapi-body {
   background: var(--openapi-bg);
   color: var(--openapi-fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--openapi-font-base);
   line-height: 1.6;
 }
@@ -86,7 +86,7 @@
   overflow: hidden;
   position: relative;
   min-width: 200px;
-  max-width: 800px;
+  max-width: var(--content-max-width);
 }
 
 /* Resize Handle - Left Sidebar */
@@ -99,7 +99,7 @@
   cursor: col-resize;
   background: transparent;
   z-index: 1000;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base);
 }
 
 .sidebar-resize-handle:hover,
@@ -126,7 +126,7 @@
   cursor: col-resize;
   background: transparent;
   z-index: 1000;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-base);
 }
 
 .sidebar-resize-handle-right:hover,
@@ -173,11 +173,11 @@
   border: none;
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color var(--transition-base), transform var(--transition-base);
   color: var(--openapi-fg);
 }
 
@@ -190,13 +190,13 @@
   height: 16px;
   fill: currentColor;
   stroke: currentColor;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
 }
 
 .collapse-icon {
   width: 12px;
   height: 12px;
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
   fill: var(--openapi-fg-secondary);
   flex-shrink: 0;
 }
@@ -208,11 +208,11 @@
 
 /* Sidebar transition for smooth collapse/expand */
 .openapi-container {
-  transition: grid-template-columns 0.25s ease;
+  transition: grid-template-columns 0.25s ease; /* layout transition — intentional */
 }
 
 .openapi-sidebar-left {
-  transition: min-width 0.25s ease, width 0.25s ease;
+  transition: min-width 0.25s ease, width 0.25s ease; /* layout transition — intentional */
 }
 
 .openapi-sidebar-left .site-title,
@@ -220,7 +220,7 @@
 .openapi-sidebar-left .openapi-nav,
 .openapi-sidebar-left .openapi-sidebar-footer,
 .openapi-sidebar-left .theme-toggle {
-  transition: opacity 0.15s ease, visibility 0.15s ease;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
 }
 
 /* Collapsed Sidebar State */
@@ -284,11 +284,11 @@
 
 .version-label {
   color: var(--openapi-fg-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .version-value {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--method-get);
 }
 
@@ -300,14 +300,14 @@
   display: block;
   margin-bottom: 0.25rem;
   color: var(--openapi-fg-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .server-select {
   width: 100%;
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: var(--openapi-sidebar-bg);
   color: var(--openapi-fg);
   font-size: var(--openapi-font-sm);
@@ -317,7 +317,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a4a4a' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .server-select:hover {
@@ -327,7 +327,7 @@
 .server-select:focus {
   outline: none;
   border-color: var(--openapi-link);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
 }
 
 [data-theme="dark"] .server-select {
@@ -349,7 +349,7 @@
 .openapi-nav-title {
   margin: 0 0 0.75rem 0;
   font-size: var(--openapi-font-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -360,7 +360,7 @@
   gap: 0.25rem;
   background: var(--openapi-bg);
   padding: 0.25rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .view-toggle-btn {
@@ -370,8 +370,8 @@
   background: transparent;
   color: var(--openapi-fg-secondary);
   cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
 }
 
 .view-toggle-btn:hover {
@@ -394,7 +394,7 @@
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--openapi-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--openapi-bg);
   color: var(--openapi-fg);
   font-size: var(--openapi-font-sm);
@@ -430,10 +430,10 @@
   display: flex;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   user-select: none;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
 }
 
 .openapi-path-header:hover,
@@ -448,7 +448,7 @@
   background: transparent;
   color: var(--openapi-fg-secondary);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform var(--transition-base);
 }
 
 /* collapse-icon rotation is handled in base .collapse-icon styles */
@@ -456,7 +456,7 @@
 .openapi-path-name,
 .openapi-tag-name {
   flex: 1;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-sm);
 }
 
@@ -465,7 +465,7 @@
   color: var(--openapi-fg-secondary);
   background: var(--openapi-bg);
   padding: 0.125rem 0.5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
 }
 
 .openapi-tag-desc {
@@ -495,10 +495,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   text-decoration: none;
   color: var(--openapi-fg);
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   font-size: var(--openapi-font-sm);
 }
 
@@ -515,8 +515,8 @@
 .openapi-method {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -537,8 +537,8 @@
 .endpoint-method {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -557,7 +557,7 @@
 
 .openapi-endpoint-path {
   flex: 1;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   white-space: nowrap;
   overflow: hidden;
@@ -576,9 +576,9 @@
 
 .openapi-badge {
   padding: 0.125rem 0.375rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .openapi-badge-deprecated {
@@ -620,7 +620,7 @@
 .openapi-title {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .openapi-description {
@@ -694,9 +694,9 @@
 }
 
 .endpoint-detail .endpoint-path {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   word-break: break-all;
   overflow-wrap: break-word;
 }
@@ -713,8 +713,8 @@
   background: transparent;
   color: var(--openapi-fg);
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
   font-size: 1rem;
 }
 
@@ -727,7 +727,7 @@
 .endpoint-summary {
   margin: 0 0 0.75rem 0;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .endpoint-description {
@@ -738,17 +738,17 @@
 
 .endpoint-deprecated-notice {
   padding: 0.75rem 1rem;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 4px;
-  color: #856404;
+  background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  color: var(--color-warning);
   margin-bottom: 1.5rem;
 }
 
 [data-theme="dark"] .endpoint-deprecated-notice {
-  background: #332701;
-  border-color: #664d03;
-  color: #ffecb5;
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-warning) 50%, transparent);
+  color: var(--color-warning);
 }
 
 .endpoint-section {
@@ -758,7 +758,7 @@
 .endpoint-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* Parameters Table */
@@ -774,7 +774,7 @@
   padding: 0.75rem;
   background: var(--openapi-hover);
   border: 1px solid var(--openapi-border);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .parameters-table td {
@@ -785,8 +785,8 @@
 .parameters-table code {
   background: var(--openapi-hover);
   padding: 0.125rem 0.375rem;
-  border-radius: 3px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
 }
 
@@ -802,9 +802,9 @@
   display: inline-block;
   padding: 0.125rem 0.5rem;
   background: var(--openapi-hover);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg-secondary);
 }
 
@@ -817,7 +817,7 @@
 
 .response-item {
   border: 1px solid var(--openapi-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -830,10 +830,10 @@
 }
 
 .response-code {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-bold);
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: white;
   font-size: var(--openapi-font-sm);
 }
@@ -862,7 +862,7 @@
 
 /* Default for unspecified codes */
 .response-code-default {
-  background: #999;
+  background: var(--text-muted);
   color: #fff;
 }
 
@@ -887,13 +887,13 @@
   right: 0.5rem;
   padding: 0.375rem 0.75rem;
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg-muted);
   background: var(--openapi-hover);
   border: 1px solid var(--openapi-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   z-index: 1;
 }
 
@@ -908,8 +908,8 @@
 }
 
 .code-copy-btn.copied {
-  color: #49cc90;
-  border-color: #49cc90;
+  color: var(--color-success);
+  border-color: var(--color-success);
 }
 
 .code-block-wrapper pre {
@@ -942,13 +942,13 @@
 .schema-copy-btn {
   padding: 0.375rem 0.75rem;
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg);
   background: var(--openapi-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   white-space: nowrap;
 }
 
@@ -963,8 +963,8 @@
 }
 
 .schema-copy-btn.copied {
-  color: #49cc90;
-  border-color: #49cc90;
+  color: var(--color-success);
+  border-color: var(--color-success);
 }
 
 .schema-properties {
@@ -984,13 +984,13 @@
   cursor: pointer;
   padding: 0.5rem;
   background: var(--openapi-hover);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-size: var(--openapi-font-sm);
   user-select: none;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--transition-fast);
 }
 
 .schema-summary:hover {
@@ -1007,7 +1007,7 @@
   content: '▶';
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
-  transition: transform 0.2s ease;
+  transition: transform var(--transition-base);
 }
 
 .schema-details[open] > .schema-summary::before {
@@ -1024,24 +1024,24 @@
 }
 
 .property-name {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg);
 }
 
 .property-type {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
   background: var(--openapi-hover);
   padding: 0.125rem 0.5rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 .property-required {
   font-size: var(--openapi-font-xs);
-  color: #e74c3c;
-  font-weight: 600;
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
 }
 
@@ -1088,7 +1088,7 @@
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .schema-primitive {
@@ -1110,9 +1110,9 @@
 .security-requirement {
   padding: 0.75rem;
   background: var(--openapi-hover);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-sm);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Right Sidebar - API Tester */
@@ -1127,10 +1127,10 @@
   top: 0;
   width: var(--openapi-tester-width);
   min-width: 300px;
-  max-width: 800px;
+  max-width: var(--content-max-width);
   height: 100vh;
   z-index: 1000;
-  transition: right 0.3s ease;
+  transition: right var(--transition-slow);
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -1169,8 +1169,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
 }
 
 .api-tester-close:hover {
@@ -1191,7 +1191,7 @@
 .api-tester-label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-sm);
 }
 
@@ -1199,7 +1199,7 @@
   width: 100%;
   padding: 0.5rem 2rem 0.5rem 0.75rem;
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: var(--openapi-card-bg);
   color: var(--openapi-fg);
   font-size: var(--openapi-font-sm);
@@ -1209,7 +1209,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234a4a4a' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .api-tester-select:hover {
@@ -1219,7 +1219,7 @@
 .api-tester-select:focus {
   outline: none;
   border-color: var(--openapi-link);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
 }
 
 [data-theme="dark"] .api-tester-select {
@@ -1243,9 +1243,9 @@
   background: transparent;
   color: var(--method-get);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .add-header-btn:hover {
@@ -1257,10 +1257,10 @@
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--openapi-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--openapi-bg);
   color: var(--openapi-fg);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   resize: vertical;
 }
@@ -1277,11 +1277,11 @@
 .btn {
   padding: 0.75rem 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .btn-primary {
@@ -1307,8 +1307,8 @@
 .response-status {
   padding: 0.75rem;
   background: var(--openapi-hover);
-  border-radius: 4px 4px 0 0;
-  font-weight: 600;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 0;
 }
 
@@ -1318,7 +1318,7 @@
   border-top: 1px solid var(--openapi-border);
   border-bottom: 1px solid var(--openapi-border);
   font-size: var(--openapi-font-xs);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 .response-body {
@@ -1326,9 +1326,9 @@
   padding: 1rem;
   background: var(--openapi-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 0 0 4px 4px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   overflow-x: auto;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   max-height: 400px;
   overflow-y: auto;
@@ -1352,7 +1352,7 @@
     max-width: var(--openapi-sidebar-width);
     height: 100vh;
     z-index: 999;
-    transition: left 0.3s;
+    transition: left var(--transition-slow);
   }
 
   .openapi-sidebar-left.open {
@@ -1428,9 +1428,9 @@
 }
 
 .endpoint-path {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .endpoint-auth-badge {
@@ -1438,8 +1438,8 @@
   color: white;
   font-size: var(--openapi-font-xs);
   padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .endpoint-deprecated-badge {
@@ -1447,8 +1447,8 @@
   color: white;
   font-size: var(--openapi-font-xs);
   padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .endpoint-url-row {
@@ -1459,12 +1459,12 @@
 }
 
 .endpoint-url {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
   background: var(--openapi-hover);
   padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 .btn-copy-small {
@@ -1473,7 +1473,7 @@
   color: var(--openapi-fg-secondary);
   font-size: var(--openapi-font-xs);
   padding: 0.2rem 0.5rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
@@ -1487,9 +1487,9 @@
   border: none;
   color: white;
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   padding: 0.25rem 0.75rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
@@ -1518,7 +1518,7 @@
 
 .endpoint-section h4 {
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--openapi-fg-secondary);
@@ -1539,7 +1539,7 @@
   padding: 0.75rem;
   background: var(--openapi-hover);
   border-bottom: 1px solid var(--openapi-border);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-secondary);
   text-transform: uppercase;
@@ -1553,14 +1553,14 @@
 }
 
 .params-table tr.required td:first-child code {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .params-table code {
   font-size: var(--openapi-font-code);
   background: var(--openapi-hover);
   padding: 0.2rem 0.4rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 /* Code Block */
@@ -1569,14 +1569,14 @@
   padding: 1rem;
   background: var(--openapi-card-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   font-size: var(--openapi-font-code);
   line-height: 1.6;
 }
 
 .code-block code {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   color: var(--openapi-fg);
 }
 
@@ -1593,16 +1593,16 @@
   background: var(--openapi-hover);
   color: var(--openapi-fg-secondary);
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 
 .response-tab:first-child {
-  border-radius: 4px 0 0 4px;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
 .response-tab:last-child {
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .response-tab.active {
@@ -1644,13 +1644,13 @@
 .code-samples-section {
   background: var(--openapi-card-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
 }
 
 .code-samples-title {
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--openapi-fg-secondary);
@@ -1674,10 +1674,10 @@
   background: var(--openapi-bg);
   color: var(--openapi-fg-secondary);
   font-size: var(--openapi-font-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .code-sample-tab:hover {
@@ -1714,7 +1714,7 @@
   padding: 1rem;
   background: var(--openapi-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   font-size: var(--openapi-font-code);
   line-height: 1.6;
@@ -1723,7 +1723,7 @@
 }
 
 .code-sample-code code {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   color: var(--openapi-fg);
 }
 
@@ -1733,11 +1733,11 @@
   color: var(--openapi-fg-secondary);
   border: 1px solid var(--openapi-border);
   padding: 0.375rem 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all var(--transition-fast);
 }
 
 .btn-copy:hover {
@@ -1766,7 +1766,7 @@
 .auth-scheme {
   background: var(--openapi-card-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 1rem;
 }
 
@@ -1785,13 +1785,13 @@
   background: var(--method-put);
   color: white;
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
-  border-radius: 4px;
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-sm);
   text-transform: uppercase;
 }
 
 .auth-scheme-name {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--openapi-font-base);
   color: var(--openapi-fg);
 }
@@ -1824,7 +1824,7 @@
 .auth-details-table .auth-detail-label {
   color: var(--openapi-fg-muted);
   width: 120px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .auth-details-table .auth-detail-value {
@@ -1832,11 +1832,11 @@
 }
 
 .auth-details-table .auth-detail-value code {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-code);
   background: var(--openapi-hover);
   padding: 0.2rem 0.4rem;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   word-break: break-all;
 }
 
@@ -1856,7 +1856,7 @@
 
 .auth-scopes-label {
   font-size: var(--openapi-font-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--openapi-fg-secondary);
   text-transform: uppercase;
   margin-bottom: 0.5rem;
@@ -1873,15 +1873,15 @@
   padding: 0.25rem 0.5rem;
   background: var(--openapi-hover);
   border: 1px solid var(--openapi-border);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--openapi-font-xs);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 /* ===== SCHEMA PROPERTY DISPLAY ===== */
 .schema-viewer {
   border: 1px solid var(--openapi-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: 1rem;
 }
@@ -1896,10 +1896,10 @@
 }
 
 .schema-viewer-title {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 .schema-viewer-tabs {
@@ -1913,10 +1913,10 @@
   background: transparent;
   color: var(--openapi-fg-secondary);
   font-size: var(--openapi-font-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.15s;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .schema-viewer-tab:hover {
@@ -1962,9 +1962,9 @@
 }
 
 .schema-prop-name {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-code);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--openapi-fg);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1978,7 +1978,7 @@
 }
 
 .schema-prop-type {
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-code);
   color: var(--openapi-fg-muted);
 }
@@ -2000,9 +2000,9 @@
   font-size: var(--openapi-font-xs);
   padding: 0.125rem 0.375rem;
   background: var(--openapi-hover);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: var(--openapi-fg-muted);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Nested schema properties */
@@ -2020,7 +2020,7 @@
   margin: 0;
   padding: 0.75rem;
   background: var(--openapi-bg);
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-code);
   line-height: 1.5;
   overflow-x: auto;
@@ -2044,7 +2044,7 @@
 .schema-card {
   background: var(--openapi-card-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -2059,7 +2059,7 @@
 
 .schema-card-title {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 0;
   color: var(--openapi-fg);
 }
@@ -2084,7 +2084,7 @@
   padding: 0.625rem 1rem;
   text-decoration: none;
   color: var(--openapi-fg);
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
   font-size: var(--openapi-font-sm);
 }
 
@@ -2102,8 +2102,8 @@
   display: inline-block;
   padding: 0.25rem 0.5rem;
   background: var(--openapi-hover);
-  border-radius: 3px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
   font-size: var(--openapi-font-xs);
   color: var(--openapi-fg-muted);
   min-width: 52px;
@@ -2112,7 +2112,7 @@
 
 .openapi-schema-name {
   flex: 1;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .openapi-nav-empty {
@@ -2152,7 +2152,7 @@
   text-align: center;
   background: var(--openapi-card-bg);
   border: 1px solid var(--openapi-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   margin: 2rem;
 }
 

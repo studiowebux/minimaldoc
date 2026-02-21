@@ -16,13 +16,13 @@
 }
 
 .changelog-header-content {
-    max-width: 900px;
+    max-width: var(--max-w-md);
     margin: 0 auto;
 }
 
 .changelog-header h1 {
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
     color: var(--text-primary);
 }
@@ -45,7 +45,7 @@
 /* Main Content */
 .changelog-main {
     flex: 1;
-    max-width: 900px;
+    max-width: var(--max-w-md);
     margin: 0 auto;
     padding: 2rem;
     width: 100%;
@@ -61,12 +61,12 @@
 .release-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
 }
 
 .release-card.prerelease {
-    border-left: 4px solid #eab308;
+    border-left: 4px solid var(--color-warning);
 }
 
 .release-header {
@@ -84,7 +84,7 @@
 
 .release-version {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     margin: 0;
     color: var(--text-primary);
 }
@@ -120,11 +120,11 @@
 .prerelease-badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
-    background: #fef9c3;
+    background: var(--color-warning-bg);
     color: #854d0e;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
@@ -164,46 +164,46 @@
 .category-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
 /* Category Colors - Light Mode */
 .category-green {
-    background: #dcfce7;
+    background: var(--color-success-bg);
     color: #166534;
 }
 
 .category-blue {
-    background: #dbeafe;
+    background: var(--color-info-bg);
     color: #1e40af;
 }
 
 .category-yellow {
-    background: #fef9c3;
+    background: var(--color-warning-bg);
     color: #854d0e;
 }
 
 .category-red {
-    background: #fee2e2;
+    background: var(--color-danger-bg);
     color: #991b1b;
 }
 
 .category-purple {
-    background: #f3e8ff;
+    background: var(--color-accent-bg);
     color: #6b21a8;
 }
 
 .category-orange {
-    background: #ffedd5;
+    background: var(--color-note-bg);
     color: #9a3412;
 }
 
 .category-gray {
-    background: #f3f4f6;
-    color: #4b5563;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 /* Change List */
@@ -248,7 +248,7 @@
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 .change-entry:first-child h3:first-child {
@@ -258,7 +258,7 @@
 .change-entry code {
     background: var(--bg-tertiary);
     padding: 0.125rem 0.375rem;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     font-size: 0.875em;
 }
 
@@ -287,6 +287,7 @@
 
 .meta-item strong {
     color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
 }
 
 .release-full-content {
@@ -317,7 +318,7 @@
     color: var(--text-secondary);
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
 }
 
 /* Footer */
@@ -341,43 +342,43 @@
 
 /* Dark Mode Adjustments */
 [data-theme="dark"] .prerelease-badge {
-    background: rgba(234, 179, 8, 0.2);
+    background: color-mix(in srgb, var(--color-warning) 20%, transparent);
     color: #facc15;
 }
 
 [data-theme="dark"] .category-green {
-    background: rgba(34, 197, 94, 0.2);
+    background: color-mix(in srgb, var(--color-success) 20%, transparent);
     color: #4ade80;
 }
 
 [data-theme="dark"] .category-blue {
-    background: rgba(59, 130, 246, 0.2);
+    background: color-mix(in srgb, var(--color-info) 20%, transparent);
     color: #60a5fa;
 }
 
 [data-theme="dark"] .category-yellow {
-    background: rgba(234, 179, 8, 0.2);
+    background: color-mix(in srgb, var(--color-warning) 20%, transparent);
     color: #facc15;
 }
 
 [data-theme="dark"] .category-red {
-    background: rgba(239, 68, 68, 0.2);
+    background: color-mix(in srgb, var(--color-danger) 20%, transparent);
     color: #f87171;
 }
 
 [data-theme="dark"] .category-purple {
-    background: rgba(168, 85, 247, 0.2);
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
     color: #c084fc;
 }
 
 [data-theme="dark"] .category-orange {
-    background: rgba(249, 115, 22, 0.2);
+    background: color-mix(in srgb, var(--color-note, #f97316) 20%, transparent);
     color: #fb923c;
 }
 
 [data-theme="dark"] .category-gray {
-    background: rgba(107, 114, 128, 0.2);
-    color: #9ca3af;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 /* Responsive */

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{.Config.Title}}</title>
 <meta name="description" content="{{.Config.Tagline}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/waitlist.css?v={{.Version}}">
 {{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}

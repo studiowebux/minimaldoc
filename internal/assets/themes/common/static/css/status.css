@@ -22,7 +22,7 @@
 
 .status-header h1 {
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
     color: var(--text-primary);
 }
@@ -57,7 +57,7 @@
 
 .status-main h2 {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 1rem;
     color: var(--text-primary);
 }
@@ -68,7 +68,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     margin-bottom: 2rem;
 }
 
@@ -81,7 +81,7 @@
 
 .overall-status-text {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
 }
 
 /* Status Colors */
@@ -128,7 +128,7 @@
 
 .component-group-title {
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -138,7 +138,7 @@
 .component-list {
     list-style: none;
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
 }
 
@@ -155,7 +155,7 @@
 }
 
 .component-name {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
 }
 
@@ -173,7 +173,7 @@
     height: 8px;
     border-radius: 50%;
     background: var(--text-tertiary);
-    transition: background 0.2s ease;
+    transition: background var(--transition-base);
 }
 
 .health-pulse.checking {
@@ -206,7 +206,7 @@
     gap: 0.5rem;
     font-size: 0.6875rem;
     color: var(--text-tertiary);
-    font-family: monospace;
+    font-family: var(--font-mono);
 }
 
 .health-latency,
@@ -217,9 +217,9 @@
 
 .status-badge {
     padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    border-radius: var(--radius-full);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
@@ -252,7 +252,7 @@
 .incident-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1.25rem;
     margin-bottom: 1rem;
 }
@@ -278,9 +278,9 @@
 .incident-severity,
 .incident-status {
     padding: 0.125rem 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
@@ -296,7 +296,7 @@
 
 .incident-card h3 {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
 }
 
@@ -330,14 +330,14 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
     border-left: 4px solid #3b82f6;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1.25rem;
     margin-bottom: 1rem;
 }
 
 .maintenance-card h3 {
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
 }
 
@@ -382,13 +382,13 @@
     color: var(--text-primary);
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
-    transition: all 0.2s ease;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
 }
 
 .incident-link:hover {
     border-color: var(--accent-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .incident-link:hover .incident-view-link {
@@ -405,9 +405,9 @@
 .incident-severity-badge,
 .incident-status-badge {
     padding: 0.125rem 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.6875rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
@@ -423,7 +423,7 @@
 
 .incident-link .incident-title {
     display: block;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     font-size: 1rem;
     margin-bottom: 0.5rem;
 }
@@ -438,8 +438,8 @@
 
 .incident-view-link {
     color: var(--text-tertiary);
-    font-weight: 500;
-    transition: color 0.2s ease;
+    font-weight: var(--font-weight-medium);
+    transition: color var(--transition-base);
 }
 
 /* History page incident list (simpler style) */
@@ -532,7 +532,7 @@
 
 .incident-detail-header h1 {
     font-size: 1.75rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 1rem;
     color: var(--text-primary);
 }
@@ -593,7 +593,7 @@
 .timeline-content {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1rem;
 }
 
@@ -613,10 +613,10 @@
 
 .timeline-status {
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     padding: 0.125rem 0.5rem;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     color: var(--text-secondary);
 }
 
@@ -632,7 +632,7 @@
 
 .history-month h2 {
     font-size: 1.125rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--border-primary);
     margin-bottom: 0.5rem;
@@ -645,7 +645,7 @@
     color: var(--text-secondary);
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
 }
 
 /* Footer */
@@ -733,7 +733,7 @@
 .uptime-component {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1.25rem;
 }
 
@@ -745,14 +745,14 @@
 }
 
 .uptime-component-name {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     font-size: 1rem;
     color: var(--text-primary);
 }
 
 .uptime-percent {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
 }
 
 .uptime-percent.sla-met {
@@ -773,7 +773,7 @@
 .sla-period {
     padding: 0.25rem 0.5rem;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
     color: var(--text-secondary);
 }
@@ -781,7 +781,7 @@
 .sla-target {
     padding: 0.25rem 0.5rem;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     font-size: 0.75rem;
     color: var(--text-tertiary);
     font-style: italic;
@@ -851,11 +851,11 @@
     z-index: 1000;
     background: var(--bg-primary);
     border: 1px solid var(--border-primary);
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
     color: var(--text-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-md);
     pointer-events: none;
     white-space: nowrap;
 }
@@ -880,7 +880,7 @@
 }
 
 [data-theme="dark"] .uptime-tooltip {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
 /* Responsive */

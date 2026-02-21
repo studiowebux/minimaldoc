@@ -4,6 +4,7 @@
 {{template "landing-head" .}}
 <title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
 <meta name="description" content="{{.Config.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
@@ -42,7 +43,7 @@
 <div class="roadmap-item-row">
 <div class="roadmap-item-text">
 <span class="roadmap-item-title">{{.Title}}</span>
-{{if .Description}}<span class="roadmap-item-desc"> — {{.Description}}</span>{{end}}
+{{if .Description}}<span class="roadmap-item-desc">{{.Description}}</span>{{end}}
 </div>
 {{if .ShippedDate}}<span class="roadmap-date">Shipped {{.ShippedDate}}</span>{{end}}
 </div>
