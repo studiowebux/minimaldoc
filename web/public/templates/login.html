@@ -1,0 +1,56 @@
+{{define "login.html"}}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/theme/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>{{.site_name}}</h1>
+            <p>Sign in to continue</p>
+        </div>
+        <form class="login-form" method="POST" action="/login">
+            <input type="hidden" name="site_id" value="{{.site_id}}">
+            <input type="hidden" name="redirect" value="{{.redirect}}">
+            {{if .error}}
+            <div class="alert alert-error">{{.error}}</div>
+            {{end}}
+            {{if .message}}
+            <div class="alert alert-success">{{.message}}</div>
+            {{end}}
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+        </form>
+        {{if .oauth_providers}}
+        <div class="oauth-divider">
+            <span>or continue with</span>
+        </div>
+        <div class="oauth-buttons">
+            {{range .oauth_providers}}
+            <a href="/api/auth/oauth/{{.}}/login?site_id={{$.site_id}}" class="btn btn-oauth">
+                {{.}}
+            </a>
+            {{end}}
+        </div>
+        {{end}}
+        {{if .enable_registration}}
+        <div class="register-link">
+            Don't have an account? <a href="/register?site_id={{.site_id}}">Sign up</a>
+        </div>
+        {{end}}
+    </div>
+</body>
+</html>
+{{end}}

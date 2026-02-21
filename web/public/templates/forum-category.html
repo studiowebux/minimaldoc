@@ -1,0 +1,52 @@
+{{define "forum-category.html"}}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category | Forum | {{.site_name}}</title>
+    <link rel="stylesheet" href="/theme/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/public.css">
+    <script src="/static/js/htmx.min.js"></script>
+</head>
+<body>
+    {{template "header" .}}
+
+    <section class="forum-content">
+        <div class="forum-category-container">
+            <div class="forum-breadcrumb">
+                <a href="/forum/">Forum</a> &raquo; <span id="category-name">Loading...</span>
+            </div>
+
+            <div id="forum-category-header"
+                 hx-get="/api/forum/fragments/category/{{.slug}}/header"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+                <div class="forum-loading">Loading category...</div>
+            </div>
+
+            <div id="forum-category-topics"
+                 hx-get="/api/forum/fragments/topics?category={{.slug}}"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+                <div class="forum-loading">Loading topics...</div>
+            </div>
+        </div>
+    </section>
+
+    {{template "footer"}}
+
+    <script>
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'forum-category-header') {
+            var nameEl = event.detail.target.querySelector('.forum-category-title, h1');
+            if (nameEl) {
+                document.getElementById('category-name').textContent = nameEl.textContent;
+                document.title = nameEl.textContent + ' | Forum';
+            }
+        }
+    });
+    </script>
+</body>
+</html>
+{{end}}
