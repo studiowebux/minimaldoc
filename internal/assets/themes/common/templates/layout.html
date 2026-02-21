@@ -152,6 +152,13 @@ a{color:var(--link-color)}
 <span class="changelog-text">Changelog</span>
 </a>
 {{end}}
+{{if .Site.Config.Roadmap.Enabled}}
+<div class="changelog-link-separator"></div>
+<a href="{{.BasePath}}/{{.Site.Config.Roadmap.Path}}/" class="changelog-page-link">
+<span class="changelog-icon">&#9656;</span>
+<span class="changelog-text">Roadmap</span>
+</a>
+{{end}}
 {{if .Site.Config.SocialLinks}}
 <div class="social-links" role="list" aria-label="Social links">
 {{range .Site.Config.SocialLinks}}

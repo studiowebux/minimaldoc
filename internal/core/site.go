@@ -19,6 +19,7 @@ type Site struct {
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
 	KBPage        *KBPage        // Knowledge Base data (if enabled)
 	WaitlistPage  *WaitlistPage  // Waitlist page data (if enabled)
+	RoadmapPage   *RoadmapPage   // Roadmap page data (if enabled)
 
 	// Versioning
 	VersionedPages map[string][]*Page // Pages per version (key = version name)
@@ -99,6 +100,9 @@ type SiteConfig struct {
 
 	// Waitlist
 	Waitlist WaitlistConfig `yaml:"waitlist"` // Waitlist landing page configuration
+
+	// Roadmap
+	Roadmap RoadmapConfig `yaml:"roadmap"` // Roadmap page configuration
 
 	// Footer (for landing pages)
 	Footer FooterConfig `yaml:"footer"` // Footer configuration
@@ -199,6 +203,7 @@ func DefaultSiteConfig() SiteConfig {
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),
 		Waitlist:      DefaultWaitlistConfig(),
+		Roadmap:       DefaultRoadmapConfig(),
 		Footer:        DefaultFooterConfig(),
 		LinkCheck:     DefaultLinkCheckConfig(),
 		Versions:      DefaultVersionConfig(),

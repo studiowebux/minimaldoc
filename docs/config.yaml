@@ -207,6 +207,82 @@ knowledgebase:
       icon: "wrench"
       order: 3
 
+roadmap:
+  enabled: true
+  title: "Roadmap"
+  description: "What we're building and where we're headed."
+  layout: "board"
+  show_versions: true
+  path: "roadmap"
+  columns:
+    - id: planned
+      label: "Planned"
+    - id: in_progress
+      label: "In Progress"
+    - id: shipped
+      label: "Shipped"
+  items:
+    - title: "Dark mode"
+      description: "System-aware theme switching with manual override and localStorage persistence."
+      status: shipped
+      version: "v1.0"
+      tags: ["ui", "theme"]
+      shipped_date: "2025-01-15"
+      changelog_url: "/changelog/#v1.0"
+    - title: "OpenAPI documentation"
+      description: "Interactive API docs with endpoint testing, code samples, and schema visualization."
+      status: shipped
+      version: "v1.0"
+      tags: ["api", "docs"]
+      shipped_date: "2025-01-15"
+      changelog_url: "/changelog/#v1.0"
+    - title: "Status pages"
+      description: "Track service health with incidents, maintenance windows, uptime metrics, and RSS feeds."
+      status: shipped
+      version: "v1.1"
+      tags: ["monitoring"]
+      shipped_date: "2025-02-01"
+      changelog_url: "/changelog/#v1.1"
+    - title: "Versioned documentation"
+      description: "Multi-version docs with version selector and EOL warnings."
+      status: shipped
+      version: "v1.2"
+      tags: ["docs"]
+      shipped_date: "2025-03-01"
+      changelog_url: "/changelog/#v1.2"
+    - title: "Blog and forum"
+      description: "Community blog CMS and discussion forum with categories, reputation, and moderation."
+      status: shipped
+      version: "v1.3"
+      tags: ["community", "cms"]
+      shipped_date: "2025-06-01"
+    - title: "Knowledge base"
+      description: "Categorized articles with search, icons, and structured navigation."
+      status: shipped
+      version: "v1.4"
+      tags: ["docs", "search"]
+      shipped_date: "2025-09-01"
+    - title: "Roadmap page"
+      description: "Visual roadmap with board and timeline layouts, tag filtering."
+      status: in_progress
+      version: "v1.4"
+      tags: ["ui", "docs"]
+    - title: "SaaS platform"
+      description: "Hosted documentation service at minimaldoc.dev with multi-tenant architecture."
+      status: planned
+      version: "v2.0"
+      tags: ["saas", "platform"]
+    - title: "Plugin architecture"
+      description: "Extensible plugin system for custom page types and widgets."
+      status: planned
+      version: "v2.0"
+      tags: ["architecture"]
+    - title: "Full-text search"
+      description: "Server-side PostgreSQL FTS with instant results and faceted filtering."
+      status: planned
+      version: "v2.0"
+      tags: ["search", "backend"]
+
 footer:
   copyright: "2026 Studio Webux. GPL-3.0 License."
   links:

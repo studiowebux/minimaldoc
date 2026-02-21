@@ -76,6 +76,7 @@ type FileConfig struct {
 	Legal         core.LegalConfig     `yaml:"legal"`
 	KnowledgeBase core.KBConfig        `yaml:"knowledgebase"`
 	Waitlist      core.WaitlistConfig  `yaml:"waitlist"`
+	Roadmap       core.RoadmapConfig   `yaml:"roadmap"`
 	Footer        core.FooterConfig    `yaml:"footer"`
 	LinkCheck     core.LinkCheckConfig   `yaml:"link_check"`
 	Versions      core.VersionConfig     `yaml:"versions"`
@@ -194,6 +195,9 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	}
 	if cfg.Waitlist.Enabled {
 		result.Waitlist = cfg.Waitlist
+	}
+	if cfg.Roadmap.Enabled {
+		result.Roadmap = cfg.Roadmap
 	}
 	if cfg.Footer.Copyright != "" || len(cfg.Footer.Links) > 0 || len(cfg.Footer.Social) > 0 {
 		result.Footer = cfg.Footer

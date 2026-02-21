@@ -12,7 +12,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 | **Design** | Dark/Light mode, Responsive, Custom themes via YAML |
 | **Versioning** | Multi-version docs, Version selector, EOL warnings |
 | **i18n** | Multi-locale, Translation files, RTL support |
-| **Pages** | Landing, Knowledge Base, Portfolio, FAQ, Legal, Status, Changelog |
+| **Pages** | Landing, Knowledge Base, Portfolio, FAQ, Legal, Status, Changelog, Roadmap |
 | **API Docs** | OpenAPI/Swagger, Live testing, Code samples, Schema viewer |
 | **SEO** | Sitemap, Open Graph, Twitter Cards, llms.txt |
 | **Analytics** | GA4, Plausible, Umami, Matomo, MinimalDoc Backend |

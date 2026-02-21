@@ -1,0 +1,96 @@
+{{define "roadmap.html"}}<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>{{.PageTitle}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.Config.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/roadmap.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+</head>
+<body>
+<a href="#roadmap-main" class="skip-link">Skip to roadmap</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+<div class="roadmap-page">
+<main class="roadmap-main" id="roadmap-main">
+<header class="roadmap-header">
+<h1>{{.Config.Title}}</h1>
+{{if .Config.Description}}<p class="roadmap-description">{{.Config.Description}}</p>{{end}}
+</header>
+
+{{if .Tags}}
+<nav class="roadmap-filters" aria-label="Filter by tag">
+<button class="roadmap-filter-btn active" data-tag="all">All</button>
+{{range .Tags}}<button class="roadmap-filter-btn" data-tag="{{.}}">{{.}}</button>
+{{end}}
+</nav>
+{{end}}
+
+<div class="roadmap-timeline">
+{{range .Groups}}
+<section class="roadmap-milestone" data-status="{{.Status}}">
+<div class="milestone-left">
+<span class="milestone-version">{{.Version}}</span>
+<span class="milestone-status status-{{.Status}}">{{.Label}}</span>
+</div>
+<div class="milestone-right">
+{{range .Items}}
+<div class="roadmap-item" data-status="{{.Status}}"{{if .Tags}} data-tags="{{range $i, $t := .Tags}}{{if $i}} {{end}}{{$t}}{{end}}"{{end}}>
+<div class="roadmap-item-row">
+<div class="roadmap-item-text">
+<span class="roadmap-item-title">{{.Title}}</span>
+{{if .Description}}<span class="roadmap-item-desc"> — {{.Description}}</span>{{end}}
+</div>
+{{if .ShippedDate}}<span class="roadmap-date">Shipped {{.ShippedDate}}</span>{{end}}
+</div>
+<div class="roadmap-item-row">
+{{if .Tags}}<div class="roadmap-item-tags">{{range .Tags}}<span class="roadmap-tag">{{.}}</span>{{end}}</div>{{else}}<div></div>{{end}}
+{{if .ChangelogURL}}<a href="{{.ChangelogURL}}" class="roadmap-changelog-link">Changelog<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></a>{{end}}
+</div>
+</div>
+{{end}}
+</div>
+</section>
+{{end}}
+</div>
+
+</main>
+</div>
+{{template "landing-scripts" .}}
+</div>
+
+<script>
+(function() {
+    var filters = document.querySelectorAll('.roadmap-filter-btn');
+    if (!filters.length) return;
+
+    filters.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tag = btn.getAttribute('data-tag');
+
+            filters.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+
+            document.querySelectorAll('.roadmap-item').forEach(function(item) {
+                if (tag === 'all') {
+                    item.style.display = '';
+                    return;
+                }
+                var itemTags = (item.getAttribute('data-tags') || '').split(' ');
+                item.style.display = itemTags.indexOf(tag) !== -1 ? '' : 'none';
+            });
+
+            document.querySelectorAll('.roadmap-milestone').forEach(function(ms) {
+                var visible = ms.querySelectorAll('.roadmap-item:not([style*="display: none"])').length;
+                ms.style.display = visible > 0 ? '' : 'none';
+            });
+        });
+    });
+})();
+</script>
+</body>
+</html>
+{{end}}

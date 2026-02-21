@@ -202,6 +202,13 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Set up roadmap page data (pure config, no markdown builder needed)
+	if siteConfig.Roadmap.Enabled {
+		site.RoadmapPage = &core.RoadmapPage{
+			Config: siteConfig.Roadmap,
+		}
+	}
+
 	// Build site (parse and process all markdown)
 	siteBuilder := builder.NewBuilder(site)
 	if err := siteBuilder.Build(); err != nil {
@@ -351,6 +358,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 		if err := i18nGen.Generate(); err != nil {
 			return fmt.Errorf("localized documentation generation failed: %w", err)
+		}
+	}
+
+	// Generate roadmap page (if enabled)
+	roadmapGen, err := generator.NewRoadmapGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create roadmap generator: %w", err)
+	}
+	if roadmapGen != nil {
+		if err := roadmapGen.Generate(); err != nil {
+			return fmt.Errorf("roadmap page generation failed: %w", err)
 		}
 	}
 
