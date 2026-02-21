@@ -18,7 +18,7 @@
 }
 
 .portfolio-description {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     color: var(--text-secondary);
     max-width: var(--modal-max-width);
     margin: 0 auto;
@@ -44,7 +44,7 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-full);
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-base);
@@ -112,7 +112,7 @@
 }
 
 .project-title {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
 }
@@ -127,7 +127,7 @@
 }
 
 .project-description {
-    font-size: 0.95rem;
+    font-size: var(--font-size-md-lg);
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 1rem;
@@ -144,7 +144,7 @@
     padding: 0.25rem 0.625rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-tertiary);
 }
 
@@ -159,7 +159,7 @@
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-sm);
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-primary);
     text-decoration: none;
     transition: all var(--transition-base);
@@ -176,7 +176,7 @@
 
 .breadcrumb {
     padding: 2rem 0 1rem;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -209,7 +209,7 @@
 }
 
 .project-detail-description {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 1rem;
@@ -235,7 +235,7 @@
     background: var(--text-primary);
     color: var(--bg-primary);
     border-radius: var(--radius-md);
-    font-size: 0.95rem;
+    font-size: var(--font-size-md-lg);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
     transition: opacity var(--transition-base);
@@ -271,7 +271,7 @@
     align-items: center;
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: var(--font-size-md-lg);
 }
 
 .back-to-portfolio:hover {

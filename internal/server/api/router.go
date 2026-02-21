@@ -3,10 +3,12 @@ package api
 
 import (
 	"html/template"
+	"io/fs"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/studiowebux/minimaldoc/internal/assets"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 	"github.com/studiowebux/minimaldoc/internal/server/email"
 	"github.com/studiowebux/minimaldoc/internal/server/ratelimit"
@@ -26,6 +28,16 @@ type Router struct {
 	loginLimiter  *ratelimit.Limiter
 	apiLimiter    *ratelimit.Limiter
 	submitLimiter *ratelimit.Limiter
+}
+
+// themeStaticCSS returns the embedded common theme CSS as an http.FileSystem.
+// This eliminates duplication -- tokens.css lives only in internal/assets/themes/.
+func themeStaticCSS() http.FileSystem {
+	sub, err := fs.Sub(assets.ThemeFS, "themes/common/static/css")
+	if err != nil {
+		panic("embedded theme CSS not found: " + err.Error())
+	}
+	return http.FS(sub)
 }
 
 // NewPublicRouter creates the public-facing API router.
@@ -227,7 +239,10 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 	r.StaticFile("/minimaldoc.js", "web/client/minimaldoc-client.js")
 	r.StaticFile("/minimaldoc.css", "web/client/minimaldoc-client.css")
 
-	// Static files for public pages
+	// Shared theme CSS from embedded FS (single source of truth)
+	r.StaticFS("/theme/css", themeStaticCSS())
+
+	// Static files for public pages (admin.css, auth.css, public.css)
 	r.Static("/static", "web/admin/static")
 
 	// Load public templates
@@ -550,7 +565,10 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 		}
 	}
 
-	// Static files for admin UI
+	// Shared theme CSS from embedded FS (single source of truth)
+	r.StaticFS("/theme/css", themeStaticCSS())
+
+	// Static files for admin UI (admin.css, auth.css, public.css)
 	r.Static("/static", "web/admin/static")
 
 	// Serve uploaded files (local storage)

@@ -27,7 +27,7 @@ vendor/
 go.work
 
 # Build output
-public/
+/public/
 dist/
 
 # IDE

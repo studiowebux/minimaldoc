@@ -203,7 +203,7 @@ main {
 }
 .blog-card-meta { display: flex; gap: 1rem; font-size: var(--font-size-md); color: var(--text-muted); }
 .blog-empty, .blog-loading { text-align: center; padding: 4rem 2rem; color: var(--text-muted); grid-column: 1 / -1; }
-.blog-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+.blog-empty-icon { font-size: var(--font-size-5xl); margin-bottom: 1rem; opacity: 0.5; }
 
 /* Blog Article */
 .blog-article-container {

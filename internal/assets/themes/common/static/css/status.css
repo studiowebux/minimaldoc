@@ -2,6 +2,37 @@
    Status Page Styles
    ======================================== */
 
+/* Status color tokens (scoped to page) */
+.status-page {
+    --st-green: #16a34a;
+    --st-green-light: #4ade80;
+    --st-green-indicator: #22c55e;
+    --st-green-bg: #dcfce7;
+    --st-green-text: #166534;
+    --st-yellow: #ca8a04;
+    --st-yellow-light: #facc15;
+    --st-yellow-indicator: #eab308;
+    --st-yellow-bg: #fef9c3;
+    --st-yellow-text: #854d0e;
+    --st-orange: #ea580c;
+    --st-orange-light: #fb923c;
+    --st-orange-indicator: #f97316;
+    --st-orange-bg: #ffedd5;
+    --st-orange-text: #9a3412;
+    --st-red: #dc2626;
+    --st-red-light: #f87171;
+    --st-red-indicator: #ef4444;
+    --st-red-bg: #fee2e2;
+    --st-red-bg-light: #fecaca;
+    --st-red-text: #991b1b;
+    --st-blue: #2563eb;
+    --st-blue-light: #60a5fa;
+    --st-blue-indicator: #3b82f6;
+    --st-blue-bg: #dbeafe;
+    --st-blue-text: #1e40af;
+    --st-gray: #6b7280;
+}
+
 .status-page {
     min-height: 100vh;
     display: flex;
@@ -21,7 +52,7 @@
 }
 
 .status-header h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
     color: var(--text-primary);
@@ -35,7 +66,7 @@
 .back-link {
     color: var(--accent-primary);
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
 }
 
 .back-link:hover {
@@ -56,7 +87,7 @@
 }
 
 .status-main h2 {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 1rem;
     color: var(--text-primary);
@@ -80,46 +111,46 @@
 }
 
 .overall-status-text {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     font-weight: var(--font-weight-semibold);
 }
 
 /* Status Colors */
 .status-green {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
+    background: color-mix(in srgb, var(--st-green) 10%, transparent);
+    color: var(--st-green);
 }
-.status-green .overall-status-indicator { background: #22c55e; }
+.status-green .overall-status-indicator { background: var(--st-green-indicator); }
 
 .status-yellow {
-    background: rgba(234, 179, 8, 0.1);
-    color: #ca8a04;
+    background: color-mix(in srgb, var(--st-yellow) 10%, transparent);
+    color: var(--st-yellow);
 }
-.status-yellow .overall-status-indicator { background: #eab308; }
+.status-yellow .overall-status-indicator { background: var(--st-yellow-indicator); }
 
 .status-orange {
-    background: rgba(249, 115, 22, 0.1);
-    color: #ea580c;
+    background: color-mix(in srgb, var(--st-orange) 10%, transparent);
+    color: var(--st-orange);
 }
-.status-orange .overall-status-indicator { background: #f97316; }
+.status-orange .overall-status-indicator { background: var(--st-orange-indicator); }
 
 .status-red {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
+    background: color-mix(in srgb, var(--st-red) 10%, transparent);
+    color: var(--st-red);
 }
-.status-red .overall-status-indicator { background: #ef4444; }
+.status-red .overall-status-indicator { background: var(--st-red-indicator); }
 
 .status-blue {
-    background: rgba(59, 130, 246, 0.1);
-    color: #2563eb;
+    background: color-mix(in srgb, var(--st-blue) 10%, transparent);
+    color: var(--st-blue);
 }
-.status-blue .overall-status-indicator { background: #3b82f6; }
+.status-blue .overall-status-indicator { background: var(--st-blue-indicator); }
 
 .status-gray {
-    background: rgba(107, 114, 128, 0.1);
-    color: #6b7280;
+    background: color-mix(in srgb, var(--st-gray) 10%, transparent);
+    color: var(--st-gray);
 }
-.status-gray .overall-status-indicator { background: #6b7280; }
+.status-gray .overall-status-indicator { background: var(--st-gray); }
 
 /* Component List */
 .component-group {
@@ -127,7 +158,7 @@
 }
 
 .component-group-title {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -186,25 +217,25 @@
 }
 
 [data-live-status="operational"] .health-pulse {
-    background: #22c55e;
+    background: var(--st-green-indicator);
 }
 
 [data-live-status="degraded"] .health-pulse {
-    background: #eab308;
+    background: var(--st-yellow-indicator);
 }
 
 [data-live-status="partial_outage"] .health-pulse {
-    background: #f97316;
+    background: var(--st-orange-indicator);
 }
 
 [data-live-status="major_outage"] .health-pulse {
-    background: #ef4444;
+    background: var(--st-red-indicator);
 }
 
 .health-info {
     display: flex;
     gap: 0.5rem;
-    font-size: 0.6875rem;
+    font-size: var(--font-size-xs);
     color: var(--text-tertiary);
     font-family: var(--font-mono);
 }
@@ -218,34 +249,34 @@
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
 
 .status-badge.status-green {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
 }
 
 .status-badge.status-yellow {
-    background: #fef9c3;
-    color: #854d0e;
+    background: var(--st-yellow-bg);
+    color: var(--st-yellow-text);
 }
 
 .status-badge.status-orange {
-    background: #ffedd5;
-    color: #9a3412;
+    background: var(--st-orange-bg);
+    color: var(--st-orange-text);
 }
 
 .status-badge.status-red {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--st-red-bg);
+    color: var(--st-red-text);
 }
 
 .status-badge.status-blue {
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--st-blue-bg);
+    color: var(--st-blue-text);
 }
 
 /* Incident Cards */
@@ -258,15 +289,15 @@
 }
 
 .incident-card.severity-yellow {
-    border-left: 4px solid #eab308;
+    border-left: 4px solid var(--st-yellow-indicator);
 }
 
 .incident-card.severity-orange {
-    border-left: 4px solid #f97316;
+    border-left: 4px solid var(--st-orange-indicator);
 }
 
 .incident-card.severity-red {
-    border-left: 4px solid #ef4444;
+    border-left: 4px solid var(--st-red-indicator);
 }
 
 .incident-header {
@@ -279,7 +310,7 @@
 .incident-status {
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-sm);
-    font-size: 0.6875rem;
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
@@ -291,11 +322,11 @@
 
 .incident-status {
     background: var(--accent-primary);
-    color: white;
+    color: var(--text-white);
 }
 
 .incident-card h3 {
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
 }
@@ -310,7 +341,7 @@
 }
 
 .incident-meta {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     display: flex;
     flex-wrap: wrap;
@@ -321,7 +352,7 @@
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border-primary);
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -329,14 +360,14 @@
 .maintenance-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-left: 4px solid #3b82f6;
+    border-left: 4px solid var(--st-blue-indicator);
     border-radius: var(--radius-lg);
     padding: 1.25rem;
     margin-bottom: 1rem;
 }
 
 .maintenance-card h3 {
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 0.5rem;
 }
@@ -351,13 +382,13 @@
 }
 
 .maintenance-time {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     margin-bottom: 0.5rem;
 }
 
 .maintenance-affected {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-tertiary);
     margin-top: 0.5rem;
 }
@@ -406,7 +437,7 @@
 .incident-status-badge {
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-sm);
-    font-size: 0.6875rem;
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
 }
@@ -417,14 +448,14 @@
 }
 
 .incident-status-badge {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
 }
 
 .incident-link .incident-title {
     display: block;
     font-weight: var(--font-weight-semibold);
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     margin-bottom: 0.5rem;
 }
 
@@ -432,7 +463,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -469,7 +500,7 @@
 .history-month .incident-list-meta {
     display: flex;
     gap: 1rem;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -502,36 +533,36 @@
 .incident-badges .incident-severity,
 .incident-badges .incident-status {
     padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
 }
 
 .incident-badges .status-active {
-    background: #fecaca;
-    color: #991b1b;
+    background: var(--st-red-bg-light);
+    color: var(--st-red-text);
 }
 
 .incident-badges .status-resolved {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--st-green-bg);
+    color: var(--st-green-text);
 }
 
 .severity-yellow {
-    background: #fef9c3 !important;
-    color: #854d0e !important;
+    background: var(--st-yellow-bg) !important;
+    color: var(--st-yellow-text) !important;
 }
 
 .severity-orange {
-    background: #ffedd5 !important;
-    color: #9a3412 !important;
+    background: var(--st-orange-bg) !important;
+    color: var(--st-orange-text) !important;
 }
 
 .severity-red {
-    background: #fee2e2 !important;
-    color: #991b1b !important;
+    background: var(--st-red-bg) !important;
+    color: var(--st-red-text) !important;
 }
 
 .incident-detail-header h1 {
-    font-size: 1.75rem;
+    font-size: var(--font-size-2xl-3xl);
     font-weight: var(--font-weight-semibold);
     margin-bottom: 1rem;
     color: var(--text-primary);
@@ -541,7 +572,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -607,12 +638,12 @@
 }
 
 .timeline-time {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
 .timeline-status {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     padding: 0.125rem 0.5rem;
     background: var(--bg-tertiary);
@@ -621,7 +652,7 @@
 }
 
 .timeline-body {
-    font-size: 0.9375rem;
+    font-size: var(--font-size-md-lg);
     color: var(--text-primary);
 }
 
@@ -631,7 +662,7 @@
 }
 
 .history-month h2 {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
     padding-bottom: 0.5rem;
     border-bottom: 2px solid var(--border-primary);
@@ -654,7 +685,7 @@
     border-top: 1px solid var(--border-primary);
     padding: 1.5rem 2rem;
     text-align: center;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
 }
 
@@ -669,54 +700,54 @@
 
 /* Dark Mode Adjustments */
 [data-theme="dark"] .status-badge.status-green {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
+    background: color-mix(in srgb, var(--st-green-indicator) 20%, transparent);
+    color: var(--st-green-light);
 }
 
 [data-theme="dark"] .status-badge.status-yellow {
-    background: rgba(234, 179, 8, 0.2);
-    color: #facc15;
+    background: color-mix(in srgb, var(--st-yellow-indicator) 20%, transparent);
+    color: var(--st-yellow-light);
 }
 
 [data-theme="dark"] .status-badge.status-orange {
-    background: rgba(249, 115, 22, 0.2);
-    color: #fb923c;
+    background: color-mix(in srgb, var(--st-orange-indicator) 20%, transparent);
+    color: var(--st-orange-light);
 }
 
 [data-theme="dark"] .status-badge.status-red {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    background: color-mix(in srgb, var(--st-red-indicator) 20%, transparent);
+    color: var(--st-red-light);
 }
 
 [data-theme="dark"] .status-badge.status-blue {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    background: color-mix(in srgb, var(--st-blue-indicator) 20%, transparent);
+    color: var(--st-blue-light);
 }
 
 [data-theme="dark"] .severity-yellow {
-    background: rgba(234, 179, 8, 0.2) !important;
-    color: #facc15 !important;
+    background: color-mix(in srgb, var(--st-yellow-indicator) 20%, transparent) !important;
+    color: var(--st-yellow-light) !important;
 }
 
 [data-theme="dark"] .severity-orange {
-    background: rgba(249, 115, 22, 0.2) !important;
-    color: #fb923c !important;
+    background: color-mix(in srgb, var(--st-orange-indicator) 20%, transparent) !important;
+    color: var(--st-orange-light) !important;
 }
 
 [data-theme="dark"] .severity-red {
-    background: rgba(239, 68, 68, 0.2) !important;
-    color: #f87171 !important;
+    background: color-mix(in srgb, var(--st-red-indicator) 20%, transparent) !important;
+    color: var(--st-red-light) !important;
 }
 
 [data-theme="dark"] .incident-badges .status-active {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    background: color-mix(in srgb, var(--st-red-indicator) 20%, transparent);
+    color: var(--st-red-light);
 }
 
 [data-theme="dark"] .incident-badges .status-resolved,
 [data-theme="dark"] .incident-status-badge {
-    background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
+    background: color-mix(in srgb, var(--st-green-indicator) 20%, transparent);
+    color: var(--st-green-light);
 }
 
 /* Uptime Section */
@@ -746,21 +777,21 @@
 
 .uptime-component-name {
     font-weight: var(--font-weight-semibold);
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     color: var(--text-primary);
 }
 
 .uptime-percent {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-bold);
 }
 
 .uptime-percent.sla-met {
-    color: #16a34a;
+    color: var(--st-green);
 }
 
 .uptime-percent.sla-missed {
-    color: #dc2626;
+    color: var(--st-red);
 }
 
 .uptime-sla-stats {
@@ -774,7 +805,7 @@
     padding: 0.25rem 0.5rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
 }
 
@@ -782,7 +813,7 @@
     padding: 0.25rem 0.5rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-sm);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-tertiary);
     font-style: italic;
 }
@@ -798,9 +829,9 @@
 .uptime-day {
     width: 10px;
     height: 10px;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: transform 0.1s ease;
+    transition: transform var(--transition-fast);
 }
 
 .uptime-day:hover {
@@ -810,27 +841,27 @@
 
 /* Uptime Status Colors */
 .uptime-operational {
-    background: #22c55e;
+    background: var(--st-green-indicator);
 }
 
 .uptime-degraded {
-    background: #eab308;
+    background: var(--st-yellow-indicator);
 }
 
 .uptime-partial_outage {
-    background: #f97316;
+    background: var(--st-orange-indicator);
 }
 
 .uptime-major_outage {
-    background: #ef4444;
+    background: var(--st-red-indicator);
 }
 
 .uptime-maintenance {
-    background: #3b82f6;
+    background: var(--st-blue-indicator);
 }
 
 .uptime-unknown {
-    background: #6b7280;
+    background: var(--st-gray);
 }
 
 /* Uptime Grid Placeholder */
@@ -841,19 +872,19 @@
 }
 
 .loading-uptime {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-tertiary);
 }
 
 /* Uptime Tooltip */
 .uptime-tooltip {
     position: absolute;
-    z-index: 1000;
+    z-index: var(--z-overlay);
     background: var(--bg-primary);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-md);
     padding: 0.5rem 0.75rem;
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-primary);
     box-shadow: var(--shadow-md);
     pointer-events: none;
@@ -872,11 +903,11 @@
 
 /* Dark Mode Uptime */
 [data-theme="dark"] .uptime-percent.sla-met {
-    color: #4ade80;
+    color: var(--st-green-light);
 }
 
 [data-theme="dark"] .uptime-percent.sla-missed {
-    color: #f87171;
+    color: var(--st-red-light);
 }
 
 [data-theme="dark"] .uptime-tooltip {

@@ -14,20 +14,20 @@
 }
 
 .kb-hero h1 {
-    font-size: 2.5rem;
+    font-size: var(--font-size-4xl);
     font-weight: var(--font-weight-bold);
     margin: 0 0 1rem;
     color: var(--text-primary);
 }
 
 .kb-hero-description {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     color: var(--text-secondary);
     margin: 0 0 0.5rem;
 }
 
 .kb-hero-stats {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-muted);
     margin: 0 0 2rem;
 }
@@ -42,7 +42,7 @@
 .kb-search-input {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     border: 2px solid var(--border-color);
     border-radius: var(--radius-lg);
     background: var(--bg-primary);
@@ -115,13 +115,13 @@
 }
 
 .kb-search-result-category {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--accent-color);
     margin: 0 0 0.25rem;
 }
 
 .kb-search-result-description {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     margin: 0;
 }
@@ -187,14 +187,14 @@
 }
 
 .kb-category-name {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
     margin: 0 0 0.25rem;
     color: var(--text-primary);
 }
 
 .kb-category-description {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     margin: 0 0 0.5rem;
     display: -webkit-box;
@@ -204,7 +204,7 @@
 }
 
 .kb-category-count {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
 }
 
@@ -243,7 +243,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
 }
 
 .kb-breadcrumb li {
@@ -272,20 +272,20 @@
 }
 
 .kb-category-header h1 {
-    font-size: 2rem;
+    font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-bold);
     margin: 0 0 0.5rem;
     color: var(--text-primary);
 }
 
 .kb-category-desc {
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     color: var(--text-secondary);
     margin: 0 0 0.5rem;
 }
 
 .kb-article-count {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-muted);
 }
 
@@ -337,14 +337,14 @@
 }
 
 .kb-article-title {
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     margin: 0 0 0.25rem;
     color: var(--text-primary);
 }
 
 .kb-article-desc {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     margin: 0 0 0.5rem;
     display: -webkit-box;
@@ -360,7 +360,7 @@
 }
 
 .kb-tag {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     padding: 0.125rem 0.5rem;
     background: var(--bg-secondary);
     border-radius: var(--radius-sm);
@@ -388,7 +388,7 @@
 }
 
 .kb-sidebar h3 {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -425,11 +425,11 @@
 }
 
 .kb-sidebar-name {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
 }
 
 .kb-sidebar-count {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     padding: 0.125rem 0.5rem;
     background: var(--bg-tertiary, var(--bg-secondary));
     border-radius: var(--radius-full);
@@ -453,7 +453,7 @@
 }
 
 .kb-article-header h1 {
-    font-size: 2.25rem;
+    font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-bold);
     margin: 0 0 0.75rem;
     color: var(--text-primary);
@@ -461,7 +461,7 @@
 }
 
 .kb-article-summary {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     color: var(--text-secondary);
     margin: 0 0 1rem;
 }
@@ -472,14 +472,14 @@
 }
 
 .kb-article-body h2 {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-semibold);
     margin: 2rem 0 1rem;
     color: var(--text-primary);
 }
 
 .kb-article-body h3 {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     font-weight: var(--font-weight-semibold);
     margin: 1.5rem 0 0.75rem;
     color: var(--text-primary);
@@ -591,7 +591,7 @@
 }
 
 .kb-nav-label {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
@@ -599,7 +599,7 @@
 }
 
 .kb-nav-title {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     color: var(--accent-color);
 }
@@ -616,7 +616,7 @@
 }
 
 .kb-related h2 {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
     margin: 0 0 1rem;
     color: var(--text-primary);
@@ -645,13 +645,13 @@
 }
 
 .kb-related-category {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-muted);
     margin-bottom: 0.125rem;
 }
 
 .kb-related-title {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-medium);
     color: var(--accent-color);
 }
@@ -663,11 +663,11 @@
     }
 
     .kb-hero h1 {
-        font-size: 1.75rem;
+        font-size: var(--font-size-2xl-3xl);
     }
 
     .kb-hero-description {
-        font-size: 1rem;
+        font-size: var(--font-size-lg);
     }
 
     .kb-categories {
@@ -684,7 +684,7 @@
     }
 
     .kb-article-header h1 {
-        font-size: 1.75rem;
+        font-size: var(--font-size-2xl-3xl);
     }
 
     .kb-article-nav {

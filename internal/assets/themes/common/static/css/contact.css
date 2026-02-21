@@ -22,7 +22,7 @@
 }
 
 .contact-description {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 2.5rem;
@@ -44,7 +44,7 @@
     background: var(--text-primary);
     color: var(--bg-primary);
     border-radius: var(--radius-lg);
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
     text-decoration: none;
     transition: all var(--transition-base);
@@ -91,7 +91,7 @@
 
 .contact-info-item span {
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: var(--font-size-md-lg);
 }
 
 /* ========================================
@@ -110,7 +110,7 @@
 
     .contact-email-btn {
         padding: 0.875rem 1.5rem;
-        font-size: 1rem;
+        font-size: var(--font-size-lg);
     }
 
     .contact-info-item {

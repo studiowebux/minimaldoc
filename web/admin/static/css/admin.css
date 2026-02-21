@@ -821,7 +821,7 @@ a.btn-danger {
 
 /* Large Input */
 .input-lg {
-    font-size: 1.25rem !important;
+    font-size: var(--font-size-xl-2xl) !important;
     padding: 1rem !important;
 }
 
@@ -1371,7 +1371,7 @@ a.btn-success {
 }
 
 .error-code {
-    font-size: 6rem;
+    font-size: var(--font-size-display);
     font-weight: var(--font-weight-bold);
     color: var(--danger);
     line-height: 1;

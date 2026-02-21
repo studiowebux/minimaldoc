@@ -3,7 +3,7 @@
    --roadmap-radius controls border-radius globally for this page. */
 
 .roadmap-page {
-    --roadmap-radius: 0;
+    --roadmap-radius: var(--radius-sm);
 
     max-width: 56rem;
     margin: 0 auto;
@@ -17,7 +17,7 @@
 }
 
 .roadmap-header h1 {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-semibold);
     margin: 0 0 0.375rem;
     color: var(--text-primary);
@@ -25,7 +25,7 @@
 
 .roadmap-description {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     margin: 0;
 }
 
@@ -42,7 +42,7 @@
     background: transparent;
     border: 1px solid var(--text-tertiary);
     color: var(--text-secondary);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     padding: 0.1875rem 0.5rem;
     border-radius: var(--roadmap-radius);
     cursor: pointer;
@@ -96,7 +96,7 @@
 }
 
 .milestone-version {
-    font-size: 0.9375rem;
+    font-size: var(--font-size-md-lg);
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
     font-family: var(--font-mono);
@@ -104,7 +104,7 @@
 }
 
 .milestone-status {
-    font-size: 0.625rem;
+    font-size: var(--font-size-2xs);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: var(--font-weight-medium);
@@ -167,20 +167,20 @@
 }
 
 .roadmap-item-title {
-    font-size: 0.8125rem;
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     color: var(--text-primary);
 }
 
 .roadmap-item-desc {
-    font-size: 0.8125rem;
+    font-size: var(--font-size-base);
     color: var(--text-secondary);
 }
 
 /* Top row right: shipped date */
 
 .roadmap-date {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
     white-space: nowrap;
     flex-shrink: 0;
@@ -195,7 +195,7 @@
 }
 
 .roadmap-tag {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
     background: var(--bg-primary);
@@ -210,7 +210,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
     background: var(--bg-primary);
     border: 1px solid var(--text-tertiary);
