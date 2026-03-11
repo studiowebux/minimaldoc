@@ -567,48 +567,6 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 	return s
 }
 
-// resolveSchemaRef resolves a schema reference like "#/components/schemas/Error"
-func (p *OpenAPIParser) resolveSchemaRef(ref string) *openapi3.SchemaRef {
-	if p.doc == nil || p.doc.Components == nil {
-		return nil
-	}
-
-	// Handle #/components/schemas/SchemaName format
-	if strings.HasPrefix(ref, "#/components/schemas/") {
-		schemaName := strings.TrimPrefix(ref, "#/components/schemas/")
-		if schemaRef, ok := p.doc.Components.Schemas[schemaName]; ok {
-			return schemaRef
-		}
-	}
-
-	// Handle #/components/responses/ResponseName format
-	if strings.HasPrefix(ref, "#/components/responses/") {
-		responseName := strings.TrimPrefix(ref, "#/components/responses/")
-		if responseRef, ok := p.doc.Components.Responses[responseName]; ok {
-			if responseRef.Value != nil && responseRef.Value.Content != nil {
-				// Return the first content schema
-				for _, mediaType := range responseRef.Value.Content {
-					if mediaType.Schema != nil {
-						return mediaType.Schema
-					}
-				}
-			}
-		}
-	}
-
-	// Handle #/components/parameters/ParameterName format
-	if strings.HasPrefix(ref, "#/components/parameters/") {
-		paramName := strings.TrimPrefix(ref, "#/components/parameters/")
-		if paramRef, ok := p.doc.Components.Parameters[paramName]; ok {
-			if paramRef.Value != nil && paramRef.Value.Schema != nil {
-				return paramRef.Value.Schema
-			}
-		}
-	}
-
-	return nil
-}
-
 // renderMarkdown converts markdown description to HTML
 func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 	if markdown == "" {
@@ -728,21 +686,6 @@ func (p *OpenAPIParser) pathNodesToGroups(node *pathNode, pathPrefix string) []*
 	}
 
 	return groups
-}
-
-// flattenPathTree converts a path tree map to a sorted slice
-func (p *OpenAPIParser) flattenPathTree(tree map[string]*core.APIPathGroup) []*core.APIPathGroup {
-	result := make([]*core.APIPathGroup, 0, len(tree))
-	for _, group := range tree {
-		result = append(result, group)
-	}
-
-	// Sort by path
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Path < result[j].Path
-	})
-
-	return result
 }
 
 // organizeByTag organizes endpoints by tags

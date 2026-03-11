@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -234,25 +233,4 @@ func buildAuditPagination(action, entityType string, limit, offset, total int) s
 	html.WriteString(`</div>`)
 
 	return html.String()
-}
-
-// fragmentAuditFilters returns the filter dropdown options HTML.
-func (r *Router) fragmentAuditFilters(c *gin.Context) {
-	siteID, err := getSiteID(c)
-	if err != nil {
-		c.String(http.StatusOK, "")
-		return
-	}
-
-	entityTypes, _ := r.db.GetAuditLogEntityTypes(c.Request.Context(), siteID)
-
-	var html strings.Builder
-
-	// Entity type options
-	html.WriteString(`<option value="">All Entity Types</option>`)
-	for _, et := range entityTypes {
-		html.WriteString(fmt.Sprintf(`<option value="%s">%s</option>`, escapeHTML(et), escapeHTML(et)))
-	}
-
-	respondHTML(c, html.String())
 }

@@ -84,25 +84,3 @@ func (r *Router) logAuditAction(c *gin.Context, action, entityType, entityID, en
 		_ = r.db.CreateAuditLog(c.Request.Context(), id, siteID, userID, userEmail, action, entityType, entityID, entityName, details, ipAddress, userAgent)
 	}()
 }
-
-// logAuditActionSync creates an audit log entry synchronously.
-// Use this when you need to ensure the log is written before responding.
-func (r *Router) logAuditActionSync(c *gin.Context, action, entityType, entityID, entityName, details string) error {
-	siteID, err := getSiteID(c)
-	if err != nil {
-		return err
-	}
-
-	userID, _ := getUserID(c)
-	userEmail := ""
-	if claims, err := getUserClaims(c); err == nil && claims != nil {
-		userEmail = claims.Email
-	}
-
-	ipAddress := c.ClientIP()
-	userAgent := c.Request.UserAgent()
-
-	id := uuid.New().String()
-
-	return r.db.CreateAuditLog(c.Request.Context(), id, siteID, userID, userEmail, action, entityType, entityID, entityName, details, ipAddress, userAgent)
-}

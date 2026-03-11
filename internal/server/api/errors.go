@@ -132,14 +132,6 @@ func respondError(c *gin.Context, status int, code string, message string) {
 	})
 }
 
-// respondErrorAbort sends a JSON error response and aborts the request chain.
-func respondErrorAbort(c *gin.Context, status int, code string, message string) {
-	c.AbortWithStatusJSON(status, gin.H{
-		"error": message,
-		"code":  code,
-	})
-}
-
 // respondBadRequest is a shorthand for 400 errors.
 func respondBadRequest(c *gin.Context, code string, message string) {
 	respondError(c, http.StatusBadRequest, code, message)

@@ -129,10 +129,7 @@ func (pb *PortfolioBuilder) parseProject(filePath string, basePath string) (*cor
 func convertLinksToSimpleLinks(links []core.MetadataLink) []core.SimpleLink {
 	result := make([]core.SimpleLink, len(links))
 	for i, l := range links {
-		result[i] = core.SimpleLink{
-			Text: l.Text,
-			URL:  l.URL,
-		}
+		result[i] = core.SimpleLink(l)
 	}
 	return result
 }

@@ -339,9 +339,7 @@ func (b *Builder) getOutputPath(page *core.Page) string {
 		}
 
 		// For other pages, trim trailing /index and create directory structure
-		if strings.HasSuffix(slug, "/index") {
-			slug = strings.TrimSuffix(slug, "/index")
-		}
+		slug = strings.TrimSuffix(slug, "/index")
 		return filepath.Join(b.site.OutputRoot, slug, "index.html")
 	}
 
