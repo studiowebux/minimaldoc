@@ -55,8 +55,8 @@ a{color:var(--link-color)}
 <div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
 </div>
 </div>
-<div class="container">
-<aside class="sidebar sidebar-left" id="sidebar-left" aria-label="Site navigation">
+<div class="container{{if .Page.Metadata.FullWidth}} full-width-layout{{end}}">
+{{if not .Page.Metadata.FullWidth}}<aside class="sidebar sidebar-left" id="sidebar-left" aria-label="Site navigation">
 <div class="sidebar-header">
 <p class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></p>
 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
@@ -184,9 +184,10 @@ if(v)s.scrollTop=parseInt(v,10);
 document.addEventListener('click',function(e){if(e.target.closest('a'))sessionStorage.setItem('sidebarScroll',s.scrollTop)},true);
 })();
 </script>
+{{end}}
 <main class="main-content" id="main-content">
 <article class="page-content">
-{{if .Page.Metadata.Title}}<header class="page-header">
+{{if and .Page.Metadata.Title (not .Page.Metadata.NoHeader)}}<header class="page-header">
 <div class="page-title-row">
 <h1>{{.Page.Metadata.Title}}</h1>
 <div class="page-title-actions">
@@ -212,6 +213,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 </div>
 </div>
 {{end}}
+{{if not .Page.Metadata.NoWidgets}}{{template "widgets-docs" .}}{{end}}
 {{if or .Page.Prev .Page.Next}}<nav class="page-nav">
 {{if .Page.Prev}}<a href="{{$.BasePath}}/{{.Page.Prev.Slug}}.html" class="page-nav-link page-nav-prev">
 <span class="page-nav-label">Previous</span>
@@ -224,7 +226,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 </nav>{{end}}
 </article>
 </main>
-{{if .Page.TOC.Items}}<aside class="sidebar sidebar-right" aria-label="Page table of contents">
+{{if and .Page.TOC.Items (not .Page.Metadata.FullWidth)}}<aside class="sidebar sidebar-right" aria-label="Page table of contents">
 <div class="toc-header" id="toc-heading">On this page</div>
 {{template "toc" .Page.TOC}}
 </aside>{{end}}

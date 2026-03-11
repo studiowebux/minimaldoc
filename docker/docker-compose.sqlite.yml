@@ -1,0 +1,36 @@
+# MinimalDoc Server - SQLite (Simple Deployment)
+# Usage: docker-compose -f docker/docker-compose.sqlite.yml up
+
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    ports:
+      - "8080:8080"
+    environment:
+      # Server
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8080"
+      SERVER_CORS_ORIGINS: "*"
+
+      # Database (SQLite)
+      DB_DRIVER: "sqlite"
+      DATABASE_URL: "/data/minimaldoc.db"
+
+      # Auth
+      AUTH_JWT_SECRET: "change-this-to-a-secure-secret-key-at-least-32-chars"
+      AUTH_ENABLE_LOCAL: "true"
+      AUTH_ENABLE_OAUTH: "false"
+
+      # Email (mock for development)
+      EMAIL_PROVIDER: "mock"
+
+      # AI (disabled by default)
+      AI_ENABLED: "false"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+
+volumes:
+  data:

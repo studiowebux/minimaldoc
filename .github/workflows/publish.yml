@@ -29,9 +29,13 @@ jobs:
         with:
           go-version: "^1.24.0"
 
-      - name: Compile minimaldoc
+      - name: Compile minimaldoc CLI
         run: |
           go build -o ./bin/minimaldoc-${{ matrix.platform }}${{ matrix.extension }} ./cmd/minimaldoc
+
+      - name: Compile minimaldoc-server
+        run: |
+          go build -o ./bin/minimaldoc-server-${{ matrix.platform }}${{ matrix.extension }} ./cmd/minimaldoc-server
 
       - name: Release
         uses: softprops/action-gh-release@v2
@@ -39,3 +43,4 @@ jobs:
         with:
           files: |
             ./bin/minimaldoc-${{ matrix.platform }}${{ matrix.extension }}
+            ./bin/minimaldoc-server-${{ matrix.platform }}${{ matrix.extension }}

@@ -52,6 +52,7 @@
 </div>
 </div>
 {{end}}
+{{template "widgets-faq" .}}
 </div>
 </section>
 </main>
@@ -77,5 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {{template "landing-scripts" .}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

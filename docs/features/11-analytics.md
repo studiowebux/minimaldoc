@@ -26,6 +26,7 @@ analytics:
 
 | Provider | Type Key | Required Config | Script Location |
 |----------|----------|-----------------|-----------------|
+| MinimalDoc Backend | `minimaldoc` | `endpoint`, `site_id` | body |
 | Google Analytics 4 | `ga4` | `measurement_id` | head |
 | Plausible | `plausible` | `domain` | head |
 | Umami | `umami` | `website_id`, `src` | head |
@@ -35,6 +36,28 @@ analytics:
 | Custom | `custom` | `src` | configurable |
 
 ## Provider Examples
+
+### MinimalDoc Backend
+
+Self-hosted, cookie-free analytics with the optional MinimalDoc backend server. See [Backend](/features/backend.html) for full documentation.
+
+```yaml
+analytics:
+  enabled: true
+  providers:
+    - type: minimaldoc
+      enabled: true
+      config:
+        endpoint: "https://your-minimaldoc-server.com"
+        site_id: "your-site-id-from-bootstrap"
+        features: "analytics,feedback,newsletter"  # optional, default: analytics
+        debug: "false"  # optional, enables console logging
+```
+
+Features available:
+- `analytics` - Cookie-free page view tracking
+- `feedback` - Page rating widget (requires `data-minimaldoc-feedback` element)
+- `newsletter` - Newsletter signup forms (requires `data-minimaldoc-newsletter` form)
 
 ### Google Analytics 4
 

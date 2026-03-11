@@ -1,0 +1,58 @@
+{{define "subscribers.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="subscribers-page">
+                    <div class="page-actions">
+                        <a href="/admin/subscribers/export" class="btn btn-primary">Export CSV</a>
+                    </div>
+
+                    <div class="stats-grid" id="subscriber-stats" hx-get="/admin/fragments/subscriber-stats" hx-trigger="load">
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Total Subscribers</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Verified</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3>Subscriber List</h3>
+                            <div class="card-actions">
+                                <select id="status-filter" hx-get="/admin/fragments/subscriber-list" hx-trigger="change" hx-target="#subscriber-list" hx-include="this">
+                                    <option value="">All</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="subscriber-list" hx-get="/admin/fragments/subscriber-list" hx-trigger="load">
+                                <p class="loading">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}

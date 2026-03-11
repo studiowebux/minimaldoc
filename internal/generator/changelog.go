@@ -37,6 +37,8 @@ func NewChangelogGenerator(site *core.Site, themeFS embed.FS, version string) (*
 	tmpl, err = tmpl.ParseFS(
 		themeFS,
 		"themes/common/templates/partials/landing-*.html",
+		"themes/common/templates/partials/analytics.html",
+		"themes/common/templates/partials/minimaldoc-widgets.html",
 		"themes/common/templates/changelog/*.html",
 	)
 	if err != nil {

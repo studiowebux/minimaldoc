@@ -1,0 +1,85 @@
+{{define "settings.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="settings-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Site Information</h3>
+                        </div>
+                        <div class="card-body" id="site-info" hx-get="/admin/fragments/site-info" hx-trigger="load">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>API Configuration</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Site ID</label>
+                                <div class="input-group">
+                                    <input type="text" id="site-id" readonly value="{{.SiteID}}">
+                                    <button type="button" class="btn btn-secondary" onclick="copyToClipboard('site-id')">Copy</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <div class="input-group">
+                                    <input type="password" id="api-key" readonly value="{{.APIKey}}">
+                                    <button type="button" class="btn btn-secondary" onclick="toggleApiKey()">Show</button>
+                                    <button type="button" class="btn btn-secondary" onclick="copyToClipboard('api-key')">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Integration Code</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="help-text">Add this script to your documentation site:</p>
+                            <pre class="code-block"><code>&lt;script src="{{.ServerURL}}/minimaldoc.js"
+        data-site-id="{{.SiteID}}"
+        data-features="analytics,feedback,newsletter"&gt;&lt;/script&gt;</code></pre>
+                            <button type="button" class="btn btn-secondary" onclick="copyCode()">Copy Code</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+    function copyToClipboard(elementId) {
+        var el = document.getElementById(elementId);
+        var originalType = el.type;
+        el.type = 'text';
+        el.select();
+        document.execCommand('copy');
+        el.type = originalType;
+        alert('Copied!');
+    }
+
+    function toggleApiKey() {
+        var el = document.getElementById('api-key');
+        el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function copyCode() {
+        var code = document.querySelector('.code-block code').textContent;
+        navigator.clipboard.writeText(code).then(function() {
+            alert('Code copied!');
+        });
+    }
+    </script>
+</body>
+</html>
+{{end}}

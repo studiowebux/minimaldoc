@@ -14,6 +14,11 @@ type Metadata struct {
 	MenuOrder int    `yaml:"menu_order"` // Override order (takes precedence over file numbering)
 	Hidden    bool   `yaml:"hidden"`     // Hide from navigation
 
+	// Layout overrides
+	FullWidth bool `yaml:"full_width"` // Hide sidebar, use full-width layout
+	NoHeader  bool `yaml:"no_header"`  // Hide page header (title, buttons, description)
+	NoWidgets bool `yaml:"no_widgets"` // Hide feedback and newsletter widgets
+
 	// SEO metadata
 	SEO SEO `yaml:"seo"`
 

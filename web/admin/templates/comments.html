@@ -1,0 +1,44 @@
+{{define "comments.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="comments-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Moderation Queue</h3>
+                        </div>
+                        <div class="card-body" hx-get="/admin/fragments/comment-moderation" hx-trigger="load">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>All Comments</h3>
+                            <div class="card-actions">
+                                <select id="status-filter" hx-get="/admin/fragments/comment-list" hx-trigger="change" hx-target="#comment-list" hx-include="this">
+                                    <option value="">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="spam">Spam</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body" id="comment-list" hx-get="/admin/fragments/comment-list" hx-trigger="load">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}

@@ -1,0 +1,304 @@
+package api
+
+import (
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/studiowebux/minimaldoc/internal/server/auth"
+	"github.com/studiowebux/minimaldoc/internal/server/config"
+)
+
+// SecurityHeadersMiddleware adds common security headers to responses.
+func SecurityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Prevent MIME type sniffing
+		c.Header("X-Content-Type-Options", "nosniff")
+		// Prevent clickjacking
+		c.Header("X-Frame-Options", "DENY")
+		// Enable XSS filter in browsers
+		c.Header("X-XSS-Protection", "1; mode=block")
+		// Referrer policy - don't leak full URL
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		// Permissions policy - disable unnecessary features
+		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		// Content Security Policy - restrict resource loading
+		// Allow self, inline styles (for admin UI), and data: URIs for images
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+
+		c.Next()
+	}
+}
+
+// LoggerMiddleware logs HTTP requests.
+func LoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+
+		c.Next()
+
+		latency := time.Since(start)
+		status := c.Writer.Status()
+		method := c.Request.Method
+
+		log.Printf("%s %s %d %v", method, path, status, latency)
+	}
+}
+
+// CORSMiddleware handles Cross-Origin Resource Sharing.
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
+	// Check if wildcard is configured
+	hasWildcard := false
+	for _, o := range allowedOrigins {
+		if o == "*" {
+			hasWildcard = true
+			break
+		}
+	}
+
+	return func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		if origin == "" {
+			c.Next()
+			return
+		}
+
+		// Check if origin is allowed
+		allowed := false
+		for _, o := range allowedOrigins {
+			if o == "*" || o == origin {
+				allowed = true
+				break
+			}
+		}
+
+		if allowed {
+			if hasWildcard {
+				// With wildcard, use "*" and don't allow credentials
+				// This is the safe configuration for public APIs
+				c.Header("Access-Control-Allow-Origin", "*")
+				// Don't set Allow-Credentials with wildcard
+			} else {
+				// With explicit origins, echo back the origin and allow credentials
+				c.Header("Access-Control-Allow-Origin", origin)
+				c.Header("Access-Control-Allow-Credentials", "true")
+			}
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, X-API-Key")
+			c.Header("Access-Control-Max-Age", "86400")
+		}
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// AuthMiddleware validates JWT tokens or session cookies.
+func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var token string
+
+		// Check Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+
+		// Check session cookie
+		if token == "" {
+			cookie, err := c.Cookie(cfg.Auth.SessionCookieKey)
+			if err == nil {
+				token = cookie
+			}
+		}
+
+		// API key header is handled by individual handlers for public routes
+		// This middleware is primarily for JWT-based admin auth
+		apiKey := c.GetHeader("X-API-Key")
+		if apiKey != "" {
+			// API key routes don't need JWT - handlers validate the key themselves
+			c.Next()
+			return
+		}
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+			c.Abort()
+			return
+		}
+
+		// Validate JWT
+		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
+			return
+		}
+
+		// Set user info in context
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Set("site_id", claims.SiteID)
+
+		c.Next()
+	}
+}
+
+// wantsHTML checks if the request prefers HTML response.
+func wantsHTML(c *gin.Context) bool {
+	accept := c.GetHeader("Accept")
+	// Check if Accept header prefers HTML or if it's a browser navigation
+	return strings.Contains(accept, "text/html") ||
+		(!strings.Contains(accept, "application/json") && c.Request.Method == "GET")
+}
+
+// renderForbidden renders an appropriate forbidden response based on Accept header.
+func renderForbidden(c *gin.Context, message string) {
+	if wantsHTML(c) {
+		c.HTML(http.StatusForbidden, "error.html", gin.H{
+			"Title":   "Access Denied",
+			"Code":    403,
+			"Message": message,
+		})
+	} else {
+		c.JSON(http.StatusForbidden, gin.H{"error": message})
+	}
+	c.Abort()
+}
+
+// AdminMiddleware ensures the user has admin role.
+func AdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("user_role")
+		if !exists || role != "admin" {
+			renderForbidden(c, "Admin access required. Your current role does not have permission to view this page.")
+			return
+		}
+		c.Next()
+	}
+}
+
+// AdminUIAuthMiddleware validates JWT for admin UI routes.
+// Redirects to login page instead of returning JSON error.
+func AdminUIAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var token string
+
+		// Check session cookie
+		cookie, err := c.Cookie(cfg.Auth.SessionCookieKey)
+		if err == nil {
+			token = cookie
+		}
+
+		if token == "" {
+			c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
+			c.Abort()
+			return
+		}
+
+		// Validate JWT
+		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
+		if err != nil {
+			c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
+			c.Abort()
+			return
+		}
+
+		// Set user info in context
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Set("site_id", claims.SiteID)
+		c.Set("user", claims)
+
+		c.Next()
+	}
+}
+
+// SiteMiddleware validates and sets site context from user's JWT.
+// For API key-based requests, handlers validate the key directly.
+func SiteMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		siteID, exists := c.Get("site_id")
+		if !exists {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "site context required"})
+			c.Abort()
+			return
+		}
+
+		c.Set("site_id", siteID)
+		c.Next()
+	}
+}
+
+// EditorOrAboveMiddleware requires admin or editor role.
+func EditorOrAboveMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("user_role")
+		if !exists {
+			renderForbidden(c, "Access denied. Authentication required.")
+			return
+		}
+		r := role.(string)
+		if r != "admin" && r != "editor" {
+			renderForbidden(c, "Editor or admin access required. Your current role does not have permission to view this page.")
+			return
+		}
+		c.Next()
+	}
+}
+
+// AuthorOrAboveMiddleware requires admin, editor, or author role.
+func AuthorOrAboveMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("user_role")
+		if !exists {
+			renderForbidden(c, "Access denied. Authentication required.")
+			return
+		}
+		r := role.(string)
+		if r != "admin" && r != "editor" && r != "author" {
+			renderForbidden(c, "Author or above access required. Your current role does not have permission to view this page.")
+			return
+		}
+		c.Next()
+	}
+}
+
+// CanEditPostMiddleware checks if user can edit a specific post.
+// Admin/editor can edit any post, author can only edit own posts.
+// Requires post_id param and author_id to be fetched before this middleware.
+func CanEditPostMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, _ := getUserRole(c)
+
+		// Admin and editor can edit any post
+		if role == "admin" || role == "editor" {
+			c.Next()
+			return
+		}
+
+		// Author can only edit own posts
+		if role == "author" {
+			userID, _ := getUserID(c)
+			postAuthorID, exists := c.Get("post_author_id")
+			if !exists || postAuthorID != userID {
+				renderForbidden(c, "You can only edit your own posts.")
+				return
+			}
+			c.Next()
+			return
+		}
+
+		renderForbidden(c, "Access denied.")
+	}
+}

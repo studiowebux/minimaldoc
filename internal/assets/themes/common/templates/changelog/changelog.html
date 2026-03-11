@@ -58,9 +58,11 @@
 <footer class="changelog-footer">
 <p>Last updated: {{.ChangelogPage.LastUpdated | formatDate}}</p>
 {{if .ChangelogPage.Config.RSSEnabled}}<p><a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/feed.xml">RSS Feed</a> | <a href="{{.BasePath}}/{{.ChangelogPage.Config.Path}}/changelog.json">API</a></p>{{end}}
+{{template "widgets-changelog" .}}
 </footer>
 </div>
 </div>
 {{template "landing-scripts" .}}
+{{if .Site.Config.Analytics.Enabled}}{{template "analytics-body" .}}{{end}}
 </body>
 </html>

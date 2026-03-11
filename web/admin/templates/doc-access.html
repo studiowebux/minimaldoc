@@ -1,0 +1,71 @@
+{{define "doc-access.html"}}
+<!DOCTYPE html>
+<html lang="en">
+{{template "head" .}}
+<body>
+    <div class="admin-layout">
+        {{template "sidebar" .}}
+        <main class="main-content">
+            {{template "content-header" .}}
+            <div class="content-body">
+                <div class="doc-access-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Access Rules</h3>
+                            <p class="card-description">Define which documentation paths require authentication and what role level is needed.</p>
+                            <div class="card-actions">
+                                <button class="btn btn-primary" hx-get="/admin/fragments/doc-access-form" hx-target="#rule-form-container" hx-swap="innerHTML">
+                                    New Rule
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="rule-form-container"></div>
+                            <div id="rule-list" hx-get="/admin/fragments/doc-access-list" hx-trigger="load">
+                                <p class="loading">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>How It Works</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="help-content">
+                                <h4>Path Patterns</h4>
+                                <p>Use glob patterns to match documentation paths:</p>
+                                <ul>
+                                    <li><code>/docs/internal/*</code> - Matches any file directly in /docs/internal/</li>
+                                    <li><code>/docs/internal/**</code> - Matches all files recursively under /docs/internal/</li>
+                                    <li><code>/docs/api/v2/*</code> - Matches files in /docs/api/v2/</li>
+                                </ul>
+
+                                <h4>Role Hierarchy</h4>
+                                <p>Users with higher roles automatically have access to lower-role content:</p>
+                                <ul>
+                                    <li><strong>admin</strong> - Full access to everything</li>
+                                    <li><strong>editor</strong> - Can access editor, author, and viewer content</li>
+                                    <li><strong>author</strong> - Can access author and viewer content</li>
+                                    <li><strong>viewer</strong> - Basic authenticated access</li>
+                                </ul>
+
+                                <h4>Client Integration</h4>
+                                <p>Add this to your static site to enable private docs checking:</p>
+                                <pre><code>&lt;script&gt;
+MinimalDoc.init({
+  endpoint: 'https://api.example.com',
+  siteId: 'your-site-id',
+  features: ['analytics', 'private-docs']
+});
+&lt;/script&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+{{end}}
