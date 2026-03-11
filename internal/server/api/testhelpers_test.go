@@ -37,8 +37,8 @@ func testConfig() *config.Config {
 		},
 		Auth: config.AuthConfig{
 			JWTSecret:        "test-secret-key-min-32-characters-long",
-			JWTExpiry:         15 * time.Minute,
-			RefreshExpiry:     7 * 24 * time.Hour,
+			JWTExpiry:        15 * time.Minute,
+			RefreshExpiry:    7 * 24 * time.Hour,
 			BCryptCost:       4, // Low cost for fast tests
 			SessionCookieKey: "test_session",
 			EnableLocal:      true,
@@ -124,10 +124,10 @@ func setupTestRouter(t *testing.T) (*Router, *store.DB, *email.MockSender) {
 	// Build a minimal public router without template loading
 	engine := gin.New()
 	r := &Router{
-		Engine:  engine,
-		config:  cfg,
-		db:      db,
-		email:   mockEmail,
+		Engine: engine,
+		config: cfg,
+		db:     db,
+		email:  mockEmail,
 	}
 
 	// Register health endpoints for testing

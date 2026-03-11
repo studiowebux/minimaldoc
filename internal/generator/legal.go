@@ -135,4 +135,3 @@ func (g *LegalGenerator) getBasePath() string {
 
 	return path
 }
-

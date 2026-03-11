@@ -119,19 +119,19 @@ type BlogPost struct {
 
 // BlogComment represents a blog comment.
 type BlogComment struct {
-	ID           string
-	SiteID       string
-	PostID       string
-	ParentID     sql.NullString
-	AuthorName   string
-	AuthorEmail  string
-	Content      string
-	Status       string
-	IPAddress    sql.NullString
-	UserAgent    sql.NullString
-	CreatedAt    string
-	ModeratedAt  sql.NullString
-	ModeratedBy  sql.NullString
+	ID          string
+	SiteID      string
+	PostID      string
+	ParentID    sql.NullString
+	AuthorName  string
+	AuthorEmail string
+	Content     string
+	Status      string
+	IPAddress   sql.NullString
+	UserAgent   sql.NullString
+	CreatedAt   string
+	ModeratedAt sql.NullString
+	ModeratedBy sql.NullString
 	// Joined fields
 	ModeratorName sql.NullString
 	Replies       []BlogComment
@@ -359,9 +359,9 @@ type ForumBan struct {
 	IsPermanent bool
 	CreatedAt   string
 	// Joined fields
-	UserName    sql.NullString
-	UserEmail   sql.NullString
-	BannerName  sql.NullString
+	UserName   sql.NullString
+	UserEmail  sql.NullString
+	BannerName sql.NullString
 }
 
 // ForumUserStats represents user reputation and stats.

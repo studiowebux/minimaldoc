@@ -106,9 +106,9 @@ type UptimeData struct {
 // Incident represents a service incident or outage
 type Incident struct {
 	// Identity
-	ID       string `yaml:"id"`        // derived from filename if not set
-	Slug     string `yaml:"-"`         // URL-friendly identifier
-	FilePath string `yaml:"-"`         // source file path
+	ID       string `yaml:"id"` // derived from filename if not set
+	Slug     string `yaml:"-"`  // URL-friendly identifier
+	FilePath string `yaml:"-"`  // source file path
 
 	// Metadata from frontmatter
 	Title              string           `yaml:"title"`

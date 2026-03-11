@@ -22,17 +22,17 @@ type Builder struct {
 	openapiParser     *parser.OpenAPIParser
 
 	// Builders
-	navBuilder        *NavigationBuilder
-	statusBuilder     *StatusBuilder
-	changelogBuilder  *ChangelogBuilder
-	landingBuilder    *LandingBuilder
-	portfolioBuilder  *PortfolioBuilder
-	contactBuilder    *ContactBuilder
-	faqBuilder        *FaqBuilder
-	legalBuilder      *LegalBuilder
-	kbBuilder         *KBBuilder
-	versionBuilder    *VersionBuilder
-	i18nBuilder       *I18nBuilder
+	navBuilder       *NavigationBuilder
+	statusBuilder    *StatusBuilder
+	changelogBuilder *ChangelogBuilder
+	landingBuilder   *LandingBuilder
+	portfolioBuilder *PortfolioBuilder
+	contactBuilder   *ContactBuilder
+	faqBuilder       *FaqBuilder
+	legalBuilder     *LegalBuilder
+	kbBuilder        *KBBuilder
+	versionBuilder   *VersionBuilder
+	i18nBuilder      *I18nBuilder
 }
 
 // NewBuilder creates a new site builder

@@ -23,8 +23,8 @@ import (
 // OpenAPIParser handles parsing of OpenAPI specifications
 type OpenAPIParser struct {
 	cacheDir string
-	doc      *openapi3.T        // Current document being parsed (for resolving $refs)
-	md       goldmark.Markdown  // Markdown renderer for descriptions
+	doc      *openapi3.T       // Current document being parsed (for resolving $refs)
+	md       goldmark.Markdown // Markdown renderer for descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser
@@ -32,8 +32,8 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 	// Create a simple markdown renderer for descriptions
 	md := goldmark.New(
 		goldmark.WithExtensions(
-			extension.GFM,          // GitHub Flavored Markdown
-			extension.Typographer,  // Smart quotes, dashes
+			extension.GFM,         // GitHub Flavored Markdown
+			extension.Typographer, // Smart quotes, dashes
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
@@ -140,15 +140,15 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 // convertSpec converts an openapi3.T to our internal APISpec
 func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
 	spec := &core.APISpec{
-		Title:          doc.Info.Title,
-		Description:    p.renderMarkdown(doc.Info.Description),
-		Version:        doc.Info.Version,
-		OpenAPIVersion: doc.OpenAPI,
-		Servers:        p.convertServers(doc.Servers),
-		Tags:           p.convertTags(doc.Tags),
+		Title:           doc.Info.Title,
+		Description:     p.renderMarkdown(doc.Info.Description),
+		Version:         doc.Info.Version,
+		OpenAPIVersion:  doc.OpenAPI,
+		Servers:         p.convertServers(doc.Servers),
+		Tags:            p.convertTags(doc.Tags),
 		SecuritySchemes: p.convertSecuritySchemes(doc.Components.SecuritySchemes),
-		Schemas:        p.convertSchemas(doc.Components.Schemas),
-		Endpoints:      []*core.APIEndpoint{},
+		Schemas:         p.convertSchemas(doc.Components.Schemas),
+		Endpoints:       []*core.APIEndpoint{},
 	}
 
 	// Parse all paths

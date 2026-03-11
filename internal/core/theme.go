@@ -2,10 +2,10 @@ package core
 
 // ThemeConfig holds theme customization settings
 type ThemeConfig struct {
-	Name   string       `yaml:"name"`   // Theme name: "default", "dark", or custom
-	Colors ThemeColors  `yaml:"colors"` // Custom color overrides
-	Fonts  ThemeFonts   `yaml:"fonts"`  // Custom font settings
-	Hero   ThemeHero    `yaml:"hero"`   // Hero section styling
+	Name   string      `yaml:"name"`   // Theme name: "default", "dark", or custom
+	Colors ThemeColors `yaml:"colors"` // Custom color overrides
+	Fonts  ThemeFonts  `yaml:"fonts"`  // Custom font settings
+	Hero   ThemeHero   `yaml:"hero"`   // Hero section styling
 }
 
 // ThemeColors defines customizable color variables
@@ -52,10 +52,10 @@ type ThemeColorSet struct {
 
 // ThemeFonts defines custom font settings
 type ThemeFonts struct {
-	Heading    string `yaml:"heading"`     // Font family for headings
-	Body       string `yaml:"body"`        // Font family for body text
-	Code       string `yaml:"code"`        // Font family for code
-	GoogleURL  string `yaml:"google_url"`  // Google Fonts import URL
+	Heading   string `yaml:"heading"`    // Font family for headings
+	Body      string `yaml:"body"`       // Font family for body text
+	Code      string `yaml:"code"`       // Font family for code
+	GoogleURL string `yaml:"google_url"` // Google Fonts import URL
 }
 
 // ThemeHero defines hero section styling

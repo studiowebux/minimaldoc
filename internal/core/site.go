@@ -55,12 +55,12 @@ type SiteConfig struct {
 	ThemeConfig ThemeConfig `yaml:"theme_config"` // Custom theme configuration
 
 	// Features
-	EnableLLMS  bool `yaml:"enable_llms"`  // Generate llms.txt
+	EnableLLMS   bool `yaml:"enable_llms"`   // Generate llms.txt
 	EnableSearch bool `yaml:"enable_search"` // Enable search (future)
 
 	// Entrypoint
-	Entrypoint     string `yaml:"entrypoint"`      // Custom homepage file (default: index.md)
-	SingleFileMode bool   `yaml:"-"`               // Only process the entrypoint file
+	Entrypoint     string `yaml:"entrypoint"` // Custom homepage file (default: index.md)
+	SingleFileMode bool   `yaml:"-"`          // Only process the entrypoint file
 
 	// Navigation
 	NavDepth int `yaml:"nav_depth"` // Max depth for navigation tree (0 = unlimited)
@@ -148,9 +148,9 @@ type PDFExportConfig struct {
 
 // ClaudeAssistConfig holds configuration for Claude AI assist feature
 type ClaudeAssistConfig struct {
-	Enabled bool   `yaml:"enabled"`       // Enable "Ask Claude" button
-	Prompt  string `yaml:"prompt"`        // Custom prompt prefix (optional)
-	Label   string `yaml:"label"`         // Button label (default: "Ask Claude")
+	Enabled bool   `yaml:"enabled"` // Enable "Ask Claude" button
+	Prompt  string `yaml:"prompt"`  // Custom prompt prefix (optional)
+	Label   string `yaml:"label"`   // Button label (default: "Ask Claude")
 }
 
 // DefaultStaleWarningConfig returns a StaleWarningConfig with sensible defaults
@@ -183,22 +183,22 @@ func DefaultClaudeAssistConfig() ClaudeAssistConfig {
 // DefaultSiteConfig returns a SiteConfig with sensible defaults
 func DefaultSiteConfig() SiteConfig {
 	return SiteConfig{
-		Title:        "Documentation",
-		Description:  "Documentation site powered by Minimal Doc",
-		Theme:        "default",
-		DarkMode:     false,
-		ThemeConfig:  DefaultThemeConfig(),
-		EnableLLMS:   true,
-		EnableSearch: false,
-		NavDepth:     0,
-		CleanURLs:    false,
-		OpenAPI:      DefaultOpenAPIConfig(),
-		Status:       DefaultStatusConfig(),
-		Changelog:    DefaultChangelogConfig(),
-		StaleWarning: DefaultStaleWarningConfig(),
-		Landing:      DefaultLandingConfig(),
-		Portfolio:    DefaultPortfolioConfig(),
-		Contact:      DefaultContactConfig(),
+		Title:         "Documentation",
+		Description:   "Documentation site powered by Minimal Doc",
+		Theme:         "default",
+		DarkMode:      false,
+		ThemeConfig:   DefaultThemeConfig(),
+		EnableLLMS:    true,
+		EnableSearch:  false,
+		NavDepth:      0,
+		CleanURLs:     false,
+		OpenAPI:       DefaultOpenAPIConfig(),
+		Status:        DefaultStatusConfig(),
+		Changelog:     DefaultChangelogConfig(),
+		StaleWarning:  DefaultStaleWarningConfig(),
+		Landing:       DefaultLandingConfig(),
+		Portfolio:     DefaultPortfolioConfig(),
+		Contact:       DefaultContactConfig(),
 		Faq:           DefaultFaqConfig(),
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),

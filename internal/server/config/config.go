@@ -96,16 +96,16 @@ type DatabaseConfig struct {
 
 // AuthConfig holds authentication settings.
 type AuthConfig struct {
-	JWTSecret        string
-	JWTExpiry        time.Duration
-	RefreshExpiry    time.Duration
-	BCryptCost       int
-	SessionCookieKey string
-	EnableLocal           bool   // Enable email/password auth
-	EnableOAuth           bool   // Enable OAuth providers
-	AllowNewsletterOAuth  bool   // Allow OAuth subscribe for newsletter
-	BootstrapToken        string // Optional token required to call /api/bootstrap
-	SecureCookies         bool   // Set Secure flag on cookies (requires HTTPS)
+	JWTSecret            string
+	JWTExpiry            time.Duration
+	RefreshExpiry        time.Duration
+	BCryptCost           int
+	SessionCookieKey     string
+	EnableLocal          bool   // Enable email/password auth
+	EnableOAuth          bool   // Enable OAuth providers
+	AllowNewsletterOAuth bool   // Allow OAuth subscribe for newsletter
+	BootstrapToken       string // Optional token required to call /api/bootstrap
+	SecureCookies        bool   // Set Secure flag on cookies (requires HTTPS)
 }
 
 // OAuthConfig holds OAuth 2.0 / OIDC provider settings.
@@ -122,10 +122,10 @@ type OAuthProvider struct {
 	Scopes       []string
 
 	// OIDC-specific (for generic OIDC or Cognito)
-	Issuer       string // OIDC issuer URL
-	AuthURL      string // Authorization endpoint (if not using discovery)
-	TokenURL     string // Token endpoint (if not using discovery)
-	UserInfoURL  string // UserInfo endpoint (if not using discovery)
+	Issuer      string // OIDC issuer URL
+	AuthURL     string // Authorization endpoint (if not using discovery)
+	TokenURL    string // Token endpoint (if not using discovery)
+	UserInfoURL string // UserInfo endpoint (if not using discovery)
 }
 
 // EmailConfig holds email sending settings.
@@ -182,36 +182,36 @@ type TelemetryConfig struct {
 
 // ForumConfig holds forum feature settings.
 type ForumConfig struct {
-	Enabled            bool          // Enable forum feature
-	AllowAnonymous     bool          // Allow viewing without auth
-	RequireAuth        bool          // Require auth to post
-	MaxTopicsPerDay    int           // Rate limit for topic creation
-	MaxPostsPerDay     int           // Rate limit for post creation
-	EditWindow         time.Duration // Time window for editing posts
-	ModerationMode     string        // none, first_post, all
-	EmailEnabled       bool          // Enable email notifications
-	EmailDigest        string        // daily, weekly, none
-	EmailOnReply       bool          // Send email on reply
-	EmailOnMention     bool          // Send email on @mention
-	ReputationEnabled  bool          // Enable reputation system
-	RepTopicCreate     int           // Points for creating topic
-	RepPostCreate      int           // Points for posting reply
-	RepLikeReceived    int           // Points when liked
-	RepSolutionMarked  int           // Points for accepted solution
+	Enabled           bool          // Enable forum feature
+	AllowAnonymous    bool          // Allow viewing without auth
+	RequireAuth       bool          // Require auth to post
+	MaxTopicsPerDay   int           // Rate limit for topic creation
+	MaxPostsPerDay    int           // Rate limit for post creation
+	EditWindow        time.Duration // Time window for editing posts
+	ModerationMode    string        // none, first_post, all
+	EmailEnabled      bool          // Enable email notifications
+	EmailDigest       string        // daily, weekly, none
+	EmailOnReply      bool          // Send email on reply
+	EmailOnMention    bool          // Send email on @mention
+	ReputationEnabled bool          // Enable reputation system
+	RepTopicCreate    int           // Points for creating topic
+	RepPostCreate     int           // Points for posting reply
+	RepLikeReceived   int           // Points when liked
+	RepSolutionMarked int           // Points for accepted solution
 }
 
 // Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
-			Host:         getEnv("SERVER_HOST", "0.0.0.0"),
-			Port:         getEnvInt("SERVER_PORT", 8080),
-			AdminPort:    getEnvInt("SERVER_ADMIN_PORT", 8090),
-			ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
-			WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
-			AdminPath:    getEnv("SERVER_ADMIN_PATH", "/admin"),
-			APIPath:      getEnv("SERVER_API_PATH", "/api"),
-			CORSOrigins:  getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
+			Host:           getEnv("SERVER_HOST", "0.0.0.0"),
+			Port:           getEnvInt("SERVER_PORT", 8080),
+			AdminPort:      getEnvInt("SERVER_ADMIN_PORT", 8090),
+			ReadTimeout:    getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
+			WriteTimeout:   getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
+			AdminPath:      getEnv("SERVER_ADMIN_PATH", "/admin"),
+			APIPath:        getEnv("SERVER_API_PATH", "/api"),
+			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
 			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
 			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
 			Environment:    getEnv("SERVER_ENV", "development"),
@@ -225,16 +225,16 @@ func Load() (*Config, error) {
 			MigrationsPath:  getEnv("DB_MIGRATIONS_PATH", "migrations"),
 		},
 		Auth: AuthConfig{
-			JWTSecret:        getEnv("AUTH_JWT_SECRET", ""),
-			JWTExpiry:        getEnvDuration("AUTH_JWT_EXPIRY", 15*time.Minute),
-			RefreshExpiry:    getEnvDuration("AUTH_REFRESH_EXPIRY", 7*24*time.Hour),
-			BCryptCost:       getEnvInt("AUTH_BCRYPT_COST", 12),
-			SessionCookieKey: getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
+			JWTSecret:            getEnv("AUTH_JWT_SECRET", ""),
+			JWTExpiry:            getEnvDuration("AUTH_JWT_EXPIRY", 15*time.Minute),
+			RefreshExpiry:        getEnvDuration("AUTH_REFRESH_EXPIRY", 7*24*time.Hour),
+			BCryptCost:           getEnvInt("AUTH_BCRYPT_COST", 12),
+			SessionCookieKey:     getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
 			EnableLocal:          getEnvBool("AUTH_ENABLE_LOCAL", true),
 			EnableOAuth:          getEnvBool("AUTH_ENABLE_OAUTH", false),
 			AllowNewsletterOAuth: getEnvBool("NEWSLETTER_ALLOW_OAUTH_SUBSCRIBE", false),
 			BootstrapToken:       getEnv("BOOTSTRAP_TOKEN", ""),
-			SecureCookies:    getEnvBool("AUTH_SECURE_COOKIES", false),
+			SecureCookies:        getEnvBool("AUTH_SECURE_COOKIES", false),
 		},
 		OAuth: loadOAuthConfig(),
 		Email: EmailConfig{

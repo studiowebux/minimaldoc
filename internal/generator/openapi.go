@@ -393,4 +393,3 @@ func (g *OpenAPIGenerator) getBasePath() string {
 
 	return path
 }
-

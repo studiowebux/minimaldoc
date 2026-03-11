@@ -145,13 +145,13 @@ func TestGetSiteByID(t *testing.T) {
 
 func TestGetSiteByAPIKey(t *testing.T) {
 	tests := []struct {
-		name          string
-		id            string
-		siteName      string
-		domain        string
-		apiKeyHash    string
-		lookupHash    string
-		wantNil       bool
+		name       string
+		id         string
+		siteName   string
+		domain     string
+		apiKeyHash string
+		lookupHash string
+		wantNil    bool
 	}{
 		{
 			name:       "returns site by matching API key hash",

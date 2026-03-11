@@ -38,9 +38,9 @@ type BlogPostRequest struct {
 	Description   string `json:"description"`
 	Content       string `json:"content" binding:"required"`
 	FeaturedImage string `json:"featured_image"`
-	Tags          string `json:"tags"`       // JSON array string
+	Tags          string `json:"tags"` // JSON array string
 	Category      string `json:"category"`
-	Visibility    string `json:"visibility"` // public, authenticated, role_viewer, role_author, role_editor, role_admin
+	Visibility    string `json:"visibility"`   // public, authenticated, role_viewer, role_author, role_editor, role_admin
 	ScheduledAt   string `json:"scheduled_at"` // ISO 8601 datetime for scheduled publishing
 }
 

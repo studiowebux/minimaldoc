@@ -62,29 +62,29 @@ type ForumTagRequest struct {
 // Response types
 
 type ForumTopicResponse struct {
-	ID             string   `json:"id"`
-	Slug           string   `json:"slug"`
-	Title          string   `json:"title"`
-	Content        string   `json:"content,omitempty"`
-	ContentHTML    string   `json:"content_html,omitempty"`
-	Status         string   `json:"status"`
-	IsPinned       bool     `json:"is_pinned"`
-	IsSolved       bool     `json:"is_solved"`
-	ViewCount      int64    `json:"view_count"`
-	LikeCount      int64    `json:"like_count"`
-	PostCount      int64    `json:"post_count"`
-	CategoryID     string   `json:"category_id,omitempty"`
-	CategoryName   string   `json:"category_name,omitempty"`
-	CategorySlug   string   `json:"category_slug,omitempty"`
-	AuthorID       string   `json:"author_id,omitempty"`
-	AuthorName     string   `json:"author_name,omitempty"`
-	AuthorAvatar   string   `json:"author_avatar,omitempty"`
-	Tags           []string `json:"tags,omitempty"`
-	LastPostAt     string   `json:"last_post_at,omitempty"`
-	CreatedAt      string   `json:"created_at"`
-	UpdatedAt      string   `json:"updated_at"`
-	IsLiked        bool     `json:"is_liked,omitempty"`
-	IsBookmarked   bool     `json:"is_bookmarked,omitempty"`
+	ID           string   `json:"id"`
+	Slug         string   `json:"slug"`
+	Title        string   `json:"title"`
+	Content      string   `json:"content,omitempty"`
+	ContentHTML  string   `json:"content_html,omitempty"`
+	Status       string   `json:"status"`
+	IsPinned     bool     `json:"is_pinned"`
+	IsSolved     bool     `json:"is_solved"`
+	ViewCount    int64    `json:"view_count"`
+	LikeCount    int64    `json:"like_count"`
+	PostCount    int64    `json:"post_count"`
+	CategoryID   string   `json:"category_id,omitempty"`
+	CategoryName string   `json:"category_name,omitempty"`
+	CategorySlug string   `json:"category_slug,omitempty"`
+	AuthorID     string   `json:"author_id,omitempty"`
+	AuthorName   string   `json:"author_name,omitempty"`
+	AuthorAvatar string   `json:"author_avatar,omitempty"`
+	Tags         []string `json:"tags,omitempty"`
+	LastPostAt   string   `json:"last_post_at,omitempty"`
+	CreatedAt    string   `json:"created_at"`
+	UpdatedAt    string   `json:"updated_at"`
+	IsLiked      bool     `json:"is_liked,omitempty"`
+	IsBookmarked bool     `json:"is_bookmarked,omitempty"`
 }
 
 type ForumPostResponse struct {
@@ -144,18 +144,18 @@ type ForumUserStatsResponse struct {
 
 func forumTopicToResponse(t *store.ForumTopic, includeContent bool) ForumTopicResponse {
 	r := ForumTopicResponse{
-		ID:        t.ID,
-		Slug:      t.Slug,
-		Title:     t.Title,
-		Status:    t.Status,
-		IsPinned:  t.IsPinned,
-		IsSolved:  t.IsSolved,
-		ViewCount: t.ViewCount,
-		LikeCount: t.LikeCount,
-		PostCount: t.PostCount,
-		CreatedAt: t.CreatedAt,
-		UpdatedAt: t.UpdatedAt,
-		IsLiked:   t.IsLiked,
+		ID:           t.ID,
+		Slug:         t.Slug,
+		Title:        t.Title,
+		Status:       t.Status,
+		IsPinned:     t.IsPinned,
+		IsSolved:     t.IsSolved,
+		ViewCount:    t.ViewCount,
+		LikeCount:    t.LikeCount,
+		PostCount:    t.PostCount,
+		CreatedAt:    t.CreatedAt,
+		UpdatedAt:    t.UpdatedAt,
+		IsLiked:      t.IsLiked,
 		IsBookmarked: t.IsBookmarked,
 	}
 

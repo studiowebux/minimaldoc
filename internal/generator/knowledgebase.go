@@ -98,13 +98,13 @@ func (g *KBGenerator) generateLanding(outputDir string) error {
 	}
 
 	data := map[string]any{
-		"Site":      g.site,
-		"KBPage":    g.site.KBPage,
-		"Footer":    BuildFooter(g.site, g.version),
-		"BasePath":  g.getBasePath(),
-		"KBPath":    kbPath,
-		"Version":   g.version,
-		"PageTitle": g.site.KBPage.Config.Title + " | " + g.site.Config.Title,
+		"Site":       g.site,
+		"KBPage":     g.site.KBPage,
+		"Footer":     BuildFooter(g.site, g.version),
+		"BasePath":   g.getBasePath(),
+		"KBPath":     kbPath,
+		"Version":    g.version,
+		"PageTitle":  g.site.KBPage.Config.Title + " | " + g.site.Config.Title,
 		"ActivePath": "/" + kbPath + "/",
 	}
 
@@ -135,14 +135,14 @@ func (g *KBGenerator) generateCategory(outputDir string, cat core.KBCategory) er
 
 	// Generate category index page
 	data := map[string]any{
-		"Site":      g.site,
-		"KBPage":    g.site.KBPage,
-		"Category":  cat,
-		"Footer":    BuildFooter(g.site, g.version),
-		"BasePath":  g.getBasePath(),
-		"KBPath":    kbPath,
-		"Version":   g.version,
-		"PageTitle": cat.Name + " | " + g.site.KBPage.Config.Title + " | " + g.site.Config.Title,
+		"Site":       g.site,
+		"KBPage":     g.site.KBPage,
+		"Category":   cat,
+		"Footer":     BuildFooter(g.site, g.version),
+		"BasePath":   g.getBasePath(),
+		"KBPath":     kbPath,
+		"Version":    g.version,
+		"PageTitle":  cat.Name + " | " + g.site.KBPage.Config.Title + " | " + g.site.Config.Title,
 		"ActivePath": "/" + kbPath + "/",
 	}
 
@@ -174,15 +174,15 @@ func (g *KBGenerator) generateArticle(catDir string, cat core.KBCategory, articl
 	}
 
 	data := map[string]any{
-		"Site":      g.site,
-		"KBPage":    g.site.KBPage,
-		"Category":  cat,
-		"Article":   article,
-		"Footer":    BuildFooter(g.site, g.version),
-		"BasePath":  g.getBasePath(),
-		"KBPath":    kbPath,
-		"Version":   g.version,
-		"PageTitle": article.Title + " | " + cat.Name + " | " + g.site.Config.Title,
+		"Site":       g.site,
+		"KBPage":     g.site.KBPage,
+		"Category":   cat,
+		"Article":    article,
+		"Footer":     BuildFooter(g.site, g.version),
+		"BasePath":   g.getBasePath(),
+		"KBPath":     kbPath,
+		"Version":    g.version,
+		"PageTitle":  article.Title + " | " + cat.Name + " | " + g.site.Config.Title,
 		"ActivePath": "/" + kbPath + "/",
 	}
 

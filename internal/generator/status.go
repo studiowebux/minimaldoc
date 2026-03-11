@@ -264,25 +264,25 @@ func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
 
 // StatusJSON represents the JSON API response for status
 type StatusJSON struct {
-	OverallStatus        string                `json:"overall_status"`
-	Components           []ComponentJSON       `json:"components"`
-	ActiveIncidents      []IncidentJSON        `json:"active_incidents"`
-	ScheduledMaintenance []MaintenanceJSON     `json:"scheduled_maintenance"`
-	LastUpdated          time.Time             `json:"last_updated"`
+	OverallStatus        string            `json:"overall_status"`
+	Components           []ComponentJSON   `json:"components"`
+	ActiveIncidents      []IncidentJSON    `json:"active_incidents"`
+	ScheduledMaintenance []MaintenanceJSON `json:"scheduled_maintenance"`
+	LastUpdated          time.Time         `json:"last_updated"`
 }
 
 // ComponentJSON represents a component in the JSON API
 type ComponentJSON struct {
-	ID             string           `json:"id"`
-	Name           string           `json:"name"`
-	Description    string           `json:"description,omitempty"`
-	Status         string           `json:"status"`
-	Group          string           `json:"group,omitempty"`
-	URL            string           `json:"url,omitempty"`
-	HealthEndpoint string           `json:"health_endpoint,omitempty"`
-	HealthInterval int              `json:"health_interval,omitempty"`
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	Description    string            `json:"description,omitempty"`
+	Status         string            `json:"status"`
+	Group          string            `json:"group,omitempty"`
+	URL            string            `json:"url,omitempty"`
+	HealthEndpoint string            `json:"health_endpoint,omitempty"`
+	HealthInterval int               `json:"health_interval,omitempty"`
 	Uptime         *UptimeConfigJSON `json:"uptime,omitempty"`
-	UptimeData     *core.UptimeData `json:"uptime_data,omitempty"`
+	UptimeData     *core.UptimeData  `json:"uptime_data,omitempty"`
 }
 
 // UptimeConfigJSON represents uptime configuration in the JSON API

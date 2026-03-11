@@ -18,28 +18,28 @@ type SocialLinkConfig struct {
 
 // FileConfig represents the structure of config.yaml
 type FileConfig struct {
-	Title       string `yaml:"title"`
-	Description string `yaml:"description"`
-	BaseURL     string `yaml:"base_url"`
-	Author      string `yaml:"author"`
-	Theme       string `yaml:"theme"`
-	DarkMode    bool   `yaml:"dark_mode"`
-	EnableLLMS  bool   `yaml:"enable_llms"`
-	EnableSearch bool  `yaml:"enable_search"`
-	CleanURLs   bool   `yaml:"clean_urls"`
-	Entrypoint  string `yaml:"entrypoint"`
+	Title        string `yaml:"title"`
+	Description  string `yaml:"description"`
+	BaseURL      string `yaml:"base_url"`
+	Author       string `yaml:"author"`
+	Theme        string `yaml:"theme"`
+	DarkMode     bool   `yaml:"dark_mode"`
+	EnableLLMS   bool   `yaml:"enable_llms"`
+	EnableSearch bool   `yaml:"enable_search"`
+	CleanURLs    bool   `yaml:"clean_urls"`
+	Entrypoint   string `yaml:"entrypoint"`
 
 	OpenAPI struct {
-		Enabled            bool     `yaml:"enabled"`
-		SpecFiles          []string `yaml:"spec_files"`
-		SpecURLs           []string `yaml:"spec_urls"`
-		DefaultView        string   `yaml:"default_view"`
-		SyncOnBuild        bool     `yaml:"sync_on_build"`
-		CacheDir           string   `yaml:"cache_dir"`
-		EnableTesting      bool     `yaml:"enable_testing"`
-		EnableExport       bool     `yaml:"enable_export"`
-		EnableCodeSamples  bool     `yaml:"enable_code_samples"`
-		LazyLoadChunkSize  int      `yaml:"lazy_load_chunk_size"`
+		Enabled           bool     `yaml:"enabled"`
+		SpecFiles         []string `yaml:"spec_files"`
+		SpecURLs          []string `yaml:"spec_urls"`
+		DefaultView       string   `yaml:"default_view"`
+		SyncOnBuild       bool     `yaml:"sync_on_build"`
+		CacheDir          string   `yaml:"cache_dir"`
+		EnableTesting     bool     `yaml:"enable_testing"`
+		EnableExport      bool     `yaml:"enable_export"`
+		EnableCodeSamples bool     `yaml:"enable_code_samples"`
+		LazyLoadChunkSize int      `yaml:"lazy_load_chunk_size"`
 	} `yaml:"openapi"`
 
 	Status struct {
@@ -68,19 +68,19 @@ type FileConfig struct {
 		ShowUpdateDate bool   `yaml:"show_update_date"`
 	} `yaml:"stale_warning"`
 
-	Landing       core.LandingConfig   `yaml:"landing"`
-	ThemeConfig   core.ThemeConfig     `yaml:"theme_config"`
-	Portfolio     core.PortfolioConfig `yaml:"portfolio"`
-	Contact       core.ContactConfig   `yaml:"contact"`
-	Faq           core.FaqConfig       `yaml:"faq"`
-	Legal         core.LegalConfig     `yaml:"legal"`
-	KnowledgeBase core.KBConfig        `yaml:"knowledgebase"`
-	Waitlist      core.WaitlistConfig  `yaml:"waitlist"`
-	Roadmap       core.RoadmapConfig   `yaml:"roadmap"`
-	Footer        core.FooterConfig    `yaml:"footer"`
-	LinkCheck     core.LinkCheckConfig   `yaml:"link_check"`
-	Versions      core.VersionConfig     `yaml:"versions"`
-	I18n          core.I18nConfig        `yaml:"i18n"`
+	Landing       core.LandingConfig      `yaml:"landing"`
+	ThemeConfig   core.ThemeConfig        `yaml:"theme_config"`
+	Portfolio     core.PortfolioConfig    `yaml:"portfolio"`
+	Contact       core.ContactConfig      `yaml:"contact"`
+	Faq           core.FaqConfig          `yaml:"faq"`
+	Legal         core.LegalConfig        `yaml:"legal"`
+	KnowledgeBase core.KBConfig           `yaml:"knowledgebase"`
+	Waitlist      core.WaitlistConfig     `yaml:"waitlist"`
+	Roadmap       core.RoadmapConfig      `yaml:"roadmap"`
+	Footer        core.FooterConfig       `yaml:"footer"`
+	LinkCheck     core.LinkCheckConfig    `yaml:"link_check"`
+	Versions      core.VersionConfig      `yaml:"versions"`
+	I18n          core.I18nConfig         `yaml:"i18n"`
 	PDFExport     core.PDFExportConfig    `yaml:"pdf_export"`
 	ClaudeAssist  core.ClaudeAssistConfig `yaml:"claude_assist"`
 	Analytics     core.AnalyticsConfig    `yaml:"analytics"`

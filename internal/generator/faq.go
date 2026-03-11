@@ -138,4 +138,3 @@ func (g *FaqGenerator) getBasePath() string {
 
 	return path
 }
-

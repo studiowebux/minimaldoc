@@ -17,10 +17,10 @@ func setupTestDB(t *testing.T) *DB {
 	t.Helper()
 
 	cfg := config.DatabaseConfig{
-		Driver:          "sqlite",
-		URL:             ":memory:",
-		MaxOpenConns:    1,
-		MaxIdleConns:    1,
+		Driver:       "sqlite",
+		URL:          ":memory:",
+		MaxOpenConns: 1,
+		MaxIdleConns: 1,
 	}
 
 	db, err := New(cfg)

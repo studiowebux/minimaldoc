@@ -48,7 +48,7 @@ const (
 	ErrMissingSiteContext     = "MISSING_SITE_CONTEXT"
 	ErrCannotModifySelf       = "CANNOT_MODIFY_SELF"
 	ErrInsufficientPermission = "INSUFFICIENT_PERMISSION"
-	ErrOwnPostsOnly          = "OWN_POSTS_ONLY"
+	ErrOwnPostsOnly           = "OWN_POSTS_ONLY"
 	ErrBanned                 = "BANNED"
 )
 
@@ -111,11 +111,11 @@ const (
 
 // Upload
 const (
-	ErrUploadFailed      = "UPLOAD_FAILED"
-	ErrUploadNotFound    = "UPLOAD_NOT_FOUND"
-	ErrNoFileProvided    = "NO_FILE_PROVIDED"
-	ErrStorageNotConfig  = "STORAGE_NOT_CONFIGURED"
-	ErrNotUploadOwner    = "NOT_UPLOAD_OWNER"
+	ErrUploadFailed     = "UPLOAD_FAILED"
+	ErrUploadNotFound   = "UPLOAD_NOT_FOUND"
+	ErrNoFileProvided   = "NO_FILE_PROVIDED"
+	ErrStorageNotConfig = "STORAGE_NOT_CONFIGURED"
+	ErrNotUploadOwner   = "NOT_UPLOAD_OWNER"
 )
 
 // Health

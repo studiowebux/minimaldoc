@@ -11,23 +11,23 @@ const (
 
 // LinkCheckConfig holds configuration for the link checker
 type LinkCheckConfig struct {
-	Enabled       bool          `yaml:"enabled"`
-	Mode          LinkCheckMode `yaml:"mode"`
-	CheckExternal bool          `yaml:"check_external"`
-	ExternalTimeout int         `yaml:"external_timeout"` // Seconds
-	IgnorePatterns []string     `yaml:"ignore_patterns"`  // Glob patterns to skip
-	AllowedBroken  []string     `yaml:"allowed_broken"`   // Known broken links to ignore
+	Enabled         bool          `yaml:"enabled"`
+	Mode            LinkCheckMode `yaml:"mode"`
+	CheckExternal   bool          `yaml:"check_external"`
+	ExternalTimeout int           `yaml:"external_timeout"` // Seconds
+	IgnorePatterns  []string      `yaml:"ignore_patterns"`  // Glob patterns to skip
+	AllowedBroken   []string      `yaml:"allowed_broken"`   // Known broken links to ignore
 }
 
 // DefaultLinkCheckConfig returns a LinkCheckConfig with sensible defaults
 func DefaultLinkCheckConfig() LinkCheckConfig {
 	return LinkCheckConfig{
-		Enabled:        true,
-		Mode:           LinkCheckWarn,
-		CheckExternal:  false,
+		Enabled:         true,
+		Mode:            LinkCheckWarn,
+		CheckExternal:   false,
 		ExternalTimeout: 5,
-		IgnorePatterns: []string{},
-		AllowedBroken:  []string{},
+		IgnorePatterns:  []string{},
+		AllowedBroken:   []string{},
 	}
 }
 
@@ -46,11 +46,11 @@ type LinkType int
 
 const (
 	LinkTypeInternalPage   LinkType = iota // /page.html, ./page.md
-	LinkTypeInternalAnchor                  // #section
-	LinkTypeInternalAsset                   // /images/logo.png
-	LinkTypeExternal                        // https://example.com
-	LinkTypeEmail                           // mailto:user@example.com
-	LinkTypeOther                           // tel:, javascript:, etc.
+	LinkTypeInternalAnchor                 // #section
+	LinkTypeInternalAsset                  // /images/logo.png
+	LinkTypeExternal                       // https://example.com
+	LinkTypeEmail                          // mailto:user@example.com
+	LinkTypeOther                          // tel:, javascript:, etc.
 )
 
 // String returns a human-readable link type
@@ -73,16 +73,16 @@ func (lt LinkType) String() string {
 
 // BrokenLink represents a link that failed validation
 type BrokenLink struct {
-	Link   CollectedLink
-	Reason string
+	Link       CollectedLink
+	Reason     string
 	Suggestion string // Optional: "did you mean X?"
 }
 
 // LinkCheckResult holds the results of link checking
 type LinkCheckResult struct {
-	TotalLinks   int
-	BrokenLinks  []BrokenLink
-	SkippedLinks int // Links that matched ignore patterns
+	TotalLinks    int
+	BrokenLinks   []BrokenLink
+	SkippedLinks  int // Links that matched ignore patterns
 	ExternalLinks int // External links (checked or not)
 }
 

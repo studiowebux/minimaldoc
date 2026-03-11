@@ -30,25 +30,25 @@ to the 'public' directory.`,
 }
 
 var (
-	outputDir        string
-	themeName        string
-	enableLLMS       bool
-	cleanURLs        bool
-	siteTitle        string
-	siteDesc         string
-	baseURL          string
-	enableOpenAPI    bool
-	openapiSpecDir   string
-	enableStatus     bool
-	statusTitle      string
-	statusPath       string
-	enableChangelog  bool
-	changelogTitle   string
-	changelogPath    string
-	enableStaleWarn  bool
-	staleThreshold   int
-	linkCheckMode    string
-	checkExternal    bool
+	outputDir       string
+	themeName       string
+	enableLLMS      bool
+	cleanURLs       bool
+	siteTitle       string
+	siteDesc        string
+	baseURL         string
+	enableOpenAPI   bool
+	openapiSpecDir  string
+	enableStatus    bool
+	statusTitle     string
+	statusPath      string
+	enableChangelog bool
+	changelogTitle  string
+	changelogPath   string
+	enableStaleWarn bool
+	staleThreshold  int
+	linkCheckMode   string
+	checkExternal   bool
 )
 
 func init() {

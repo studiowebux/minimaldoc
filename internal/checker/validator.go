@@ -51,9 +51,9 @@ func NewLinkValidator(config core.LinkCheckConfig, outputRoot, docsRoot, basePat
 // Validate checks all collected links and returns results
 func (v *LinkValidator) Validate(links []core.CollectedLink) *core.LinkCheckResult {
 	result := &core.LinkCheckResult{
-		TotalLinks:   len(links),
-		BrokenLinks:  []core.BrokenLink{},
-		SkippedLinks: 0,
+		TotalLinks:    len(links),
+		BrokenLinks:   []core.BrokenLink{},
+		SkippedLinks:  0,
 		ExternalLinks: 0,
 	}
 

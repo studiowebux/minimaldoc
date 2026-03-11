@@ -10,11 +10,11 @@ import (
 
 // LinkChecker orchestrates link collection and validation
 type LinkChecker struct {
-	config     core.LinkCheckConfig
-	site       *core.Site
-	collector  *LinkCollector
-	validator  *LinkValidator
-	reporter   *Reporter
+	config    core.LinkCheckConfig
+	site      *core.Site
+	collector *LinkCollector
+	validator *LinkValidator
+	reporter  *Reporter
 }
 
 // NewLinkChecker creates a new link checker
