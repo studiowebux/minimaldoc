@@ -4,129 +4,12 @@
 {{template "landing-head" .}}
 <title>Blog | {{.Site.Config.Title}}</title>
 <meta name="description" content="Blog article">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
 {{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
-<style>
-.blog-article {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
-}
-.blog-article-header {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--border-primary);
-}
-.blog-article-back {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.9375rem;
-    border: none;
-}
-.blog-article-back:hover {
-    color: var(--link-color);
-}
-.blog-article-category {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--link-color);
-    background: rgba(37, 99, 235, 0.1);
-    padding: 0.375rem 0.75rem;
-    border-radius: 4px;
-}
-.blog-article-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1.2;
-    margin: 0;
-    color: var(--text-primary);
-}
-.blog-article-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    font-size: 0.9375rem;
-    color: var(--text-secondary);
-}
-.blog-article-featured {
-    width: 100%;
-    max-height: 400px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-}
-.blog-article-content {
-    font-size: 1.125rem;
-    line-height: 1.8;
-    color: var(--text-primary);
-}
-.blog-article-content h2 {
-    font-size: 1.75rem;
-    margin: 2rem 0 1rem;
-}
-.blog-article-content h3 {
-    font-size: 1.5rem;
-    margin: 1.75rem 0 0.75rem;
-}
-.blog-article-content p {
-    margin: 0 0 1.25rem;
-}
-.blog-article-content pre {
-    background: var(--bg-code);
-    color: #e9ecef;
-    padding: 1rem;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 1.5rem 0;
-}
-.blog-article-content code {
-    font-family: 'Monaco', 'Consolas', monospace;
-    font-size: 0.9em;
-}
-.blog-article-content img {
-    max-width: 100%;
-    border-radius: 8px;
-    margin: 1.5rem 0;
-}
-.blog-article-content a {
-    color: var(--link-color);
-}
-.blog-article-content blockquote {
-    border-left: 4px solid var(--link-color);
-    margin: 1.5rem 0;
-    padding: 0.5rem 0 0.5rem 1.5rem;
-    color: var(--text-secondary);
-    font-style: italic;
-}
-.blog-article-loading,
-.blog-article-error {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: var(--text-muted);
-}
-.blog-article-error {
-    color: var(--text-secondary);
-}
-@media (max-width: 768px) {
-    .blog-article {
-        padding: 2rem 1rem;
-    }
-    .blog-article-title {
-        font-size: 1.75rem;
-    }
-    .blog-article-content {
-        font-size: 1rem;
-    }
-}
-</style>
+<link rel="stylesheet" href="{{.BasePath}}/css/blog.css?v={{.Version}}">
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to main content</a>
@@ -134,7 +17,7 @@
 {{template "landing-header" .}}
 
 <main id="main" class="landing-main" style="max-width: none; padding: 0;">
-<article class="blog-article" id="blog-article" data-minimaldoc-blog="single">
+<article class="blog-article" id="blog-article">
     <div class="blog-article-loading">Loading article...</div>
 </article>
 </main>
@@ -144,6 +27,7 @@
 {{template "landing-scripts" .}}
 <script>
 (function() {
+    var apiEndpoint = '{{.APIEndpoint}}';
     var slug = window.location.pathname.replace(/^\/blog\//, '').replace(/\/$/, '');
     var container = document.getElementById('blog-article');
 
@@ -152,66 +36,29 @@
         return;
     }
 
-    function renderArticle(post) {
-        var html = '<header class="blog-article-header">';
-        html += '<a href="/blog/" class="blog-article-back">&larr; Back to Blog</a>';
-        if (post.category) {
-            html += '<span class="blog-article-category">' + escapeHtml(post.category) + '</span>';
-        }
-        html += '<h1 class="blog-article-title">' + escapeHtml(post.title) + '</h1>';
-        html += '<div class="blog-article-meta">';
-        if (post.published_at) {
-            html += '<time datetime="' + post.published_at + '">' + formatDate(post.published_at) + '</time>';
-        }
-        if (post.reading_time) {
-            html += '<span>' + post.reading_time + ' min read</span>';
-        }
-        html += '</div></header>';
+    // Load article content via HTMX
+    htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug), {
+        target: container,
+        swap: 'innerHTML'
+    }).then(function() {
+        // After article loads, load related posts
+        var relatedContainer = document.createElement('div');
+        relatedContainer.id = 'blog-related';
+        container.appendChild(relatedContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug) + '/related', {
+            target: relatedContainer,
+            swap: 'innerHTML'
+        });
 
-        if (post.featured_image) {
-            html += '<img src="' + escapeHtml(post.featured_image) + '" alt="" class="blog-article-featured">';
-        }
-
-        html += '<div class="blog-article-content">';
-        html += post.content_html || '<p>' + escapeHtml(post.description || '') + '</p>';
-        html += '</div>';
-
-        container.innerHTML = html;
-
-        // Update page title
-        document.title = post.title + ' | Blog';
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function formatDate(dateStr) {
-        var date = new Date(dateStr);
-        return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    // Wait for MinimalDoc to be ready
-    function loadArticle() {
-        if (window.MinimalDoc && window.MinimalDoc.blog) {
-            window.MinimalDoc.blog.get(slug).then(function(response) {
-                if (response.post) {
-                    renderArticle(response.post);
-                } else {
-                    container.innerHTML = '<div class="blog-article-error">Article not found</div>';
-                }
-            }).catch(function(err) {
-                container.innerHTML = '<div class="blog-article-error">Failed to load article</div>';
-            });
-        } else {
-            setTimeout(loadArticle, 100);
-        }
-    }
-
-    loadArticle();
+        // Load comments section
+        var commentsContainer = document.createElement('div');
+        commentsContainer.id = 'blog-comments-section';
+        container.appendChild(commentsContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/blog/fragments/posts/' + encodeURIComponent(slug) + '/comments', {
+            target: commentsContainer,
+            swap: 'innerHTML'
+        });
+    });
 })();
 </script>
 </body>

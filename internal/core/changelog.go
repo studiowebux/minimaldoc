@@ -17,7 +17,7 @@ type ChangelogConfig struct {
 	Enabled     bool   `yaml:"enabled"`
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
-	Path        string `yaml:"path"`       // output path (default: "changelog")
+	Path        string `yaml:"path"`        // output path (default: "changelog")
 	RSSEnabled  bool   `yaml:"rss_enabled"` // generate RSS feed
 	Repository  string `yaml:"repository"`  // GitHub repository URL for compare links
 }

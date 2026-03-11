@@ -19,12 +19,12 @@ type GitHubRelease struct {
 
 // CheckResult contains the result of a version check
 type CheckResult struct {
-	CurrentVersion string
-	LatestVersion  string
+	CurrentVersion  string
+	LatestVersion   string
 	UpdateAvailable bool
-	ReleaseURL     string
-	PublishedAt    string
-	ReleaseNotes   string
+	ReleaseURL      string
+	PublishedAt     string
+	ReleaseNotes    string
 }
 
 // CheckForUpdate checks if a newer version is available on GitHub

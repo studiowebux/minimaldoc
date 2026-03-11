@@ -5,6 +5,20 @@ import (
 	"database/sql"
 )
 
+// subscriberColumns is the canonical column list for subscriber SELECT queries.
+const subscriberColumns = `id, site_id, email, verified, verify_token, verify_sent_at, subscribed_at, unsubscribed_at, oauth_provider, oauth_display_name, verified_via`
+
+// scanSubscriber scans a row into a Subscriber struct using the canonical column order.
+func scanSubscriber(scanner interface{ Scan(...any) error }) (Subscriber, error) {
+	var s Subscriber
+	err := scanner.Scan(
+		&s.ID, &s.SiteID, &s.Email, &s.Verified, &s.VerifyToken, &s.VerifySentAt,
+		&s.SubscribedAt, &s.UnsubscribedAt,
+		&s.OAuthProvider, &s.OAuthDisplayName, &s.VerifiedVia,
+	)
+	return s, err
+}
+
 // Newsletter queries
 
 func (db *DB) CreateSubscriber(ctx context.Context, id, siteID, email, verifyToken string) error {
@@ -13,15 +27,26 @@ func (db *DB) CreateSubscriber(ctx context.Context, id, siteID, email, verifyTok
 	return err
 }
 
-func (db *DB) GetSubscriberByEmail(ctx context.Context, siteID, email string) (*Subscriber, error) {
+// CreateVerifiedSubscriber inserts or upgrades a subscriber as OAuth-verified.
+// ON CONFLICT upgrades an existing email-only subscriber to OAuth-verified.
+func (db *DB) CreateVerifiedSubscriber(ctx context.Context, id, siteID, email, provider, displayName string) error {
 	query := `
-		SELECT id, site_id, email, verified, verify_token, verify_sent_at, subscribed_at, unsubscribed_at
-		FROM subscribers WHERE site_id = $1 AND email = $2
+		INSERT INTO subscribers (id, site_id, email, verified, verify_token, oauth_provider, oauth_display_name, verified_via)
+		VALUES ($1, $2, $3, true, NULL, $4, $5, $4)
+		ON CONFLICT (site_id, email) DO UPDATE SET
+			verified = true,
+			verify_token = NULL,
+			oauth_provider = EXCLUDED.oauth_provider,
+			oauth_display_name = EXCLUDED.oauth_display_name,
+			verified_via = EXCLUDED.verified_via
 	`
-	var s Subscriber
-	err := db.QueryRowContext(ctx, query, siteID, email).Scan(
-		&s.ID, &s.SiteID, &s.Email, &s.Verified, &s.VerifyToken, &s.VerifySentAt, &s.SubscribedAt, &s.UnsubscribedAt,
-	)
+	_, err := db.ExecContext(ctx, query, id, siteID, email, provider, displayName)
+	return err
+}
+
+func (db *DB) GetSubscriberByEmail(ctx context.Context, siteID, email string) (*Subscriber, error) {
+	query := `SELECT ` + subscriberColumns + ` FROM subscribers WHERE site_id = $1 AND email = $2`
+	s, err := scanSubscriber(db.QueryRowContext(ctx, query, siteID, email))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -29,14 +54,8 @@ func (db *DB) GetSubscriberByEmail(ctx context.Context, siteID, email string) (*
 }
 
 func (db *DB) GetSubscriberByToken(ctx context.Context, siteID, token string) (*Subscriber, error) {
-	query := `
-		SELECT id, site_id, email, verified, verify_token, verify_sent_at, subscribed_at, unsubscribed_at
-		FROM subscribers WHERE site_id = $1 AND verify_token = $2
-	`
-	var s Subscriber
-	err := db.QueryRowContext(ctx, query, siteID, token).Scan(
-		&s.ID, &s.SiteID, &s.Email, &s.Verified, &s.VerifyToken, &s.VerifySentAt, &s.SubscribedAt, &s.UnsubscribedAt,
-	)
+	query := `SELECT ` + subscriberColumns + ` FROM subscribers WHERE site_id = $1 AND verify_token = $2`
+	s, err := scanSubscriber(db.QueryRowContext(ctx, query, siteID, token))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -63,10 +82,7 @@ func (db *DB) UnsubscribeByEmail(ctx context.Context, siteID, email string) erro
 }
 
 func (db *DB) ListSubscribers(ctx context.Context, siteID string, verifiedOnly bool) ([]Subscriber, error) {
-	query := `
-		SELECT id, site_id, email, verified, verify_token, verify_sent_at, subscribed_at, unsubscribed_at
-		FROM subscribers WHERE site_id = $1 AND unsubscribed_at IS NULL
-	`
+	query := `SELECT ` + subscriberColumns + ` FROM subscribers WHERE site_id = $1 AND unsubscribed_at IS NULL`
 	if verifiedOnly {
 		query += ` AND verified = true`
 	}
@@ -80,8 +96,8 @@ func (db *DB) ListSubscribers(ctx context.Context, siteID string, verifiedOnly b
 
 	var subs []Subscriber
 	for rows.Next() {
-		var s Subscriber
-		if err := rows.Scan(&s.ID, &s.SiteID, &s.Email, &s.Verified, &s.VerifyToken, &s.VerifySentAt, &s.SubscribedAt, &s.UnsubscribedAt); err != nil {
+		s, err := scanSubscriber(rows)
+		if err != nil {
 			return nil, err
 		}
 		subs = append(subs, s)

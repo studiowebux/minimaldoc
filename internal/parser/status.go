@@ -181,14 +181,14 @@ func (p *StatusParser) ParseIncidents(dir string) ([]core.Incident, error) {
 
 // IncidentFrontmatter represents the YAML frontmatter for incidents
 type IncidentFrontmatter struct {
-	ID                 string               `yaml:"id"`
-	Title              string               `yaml:"title"`
-	Status             core.IncidentStatus  `yaml:"status"`
+	ID                 string                `yaml:"id"`
+	Title              string                `yaml:"title"`
+	Status             core.IncidentStatus   `yaml:"status"`
 	Severity           core.IncidentSeverity `yaml:"severity"`
-	AffectedComponents []string             `yaml:"affected_components"`
-	CreatedAt          time.Time            `yaml:"created_at"`
-	UpdatedAt          time.Time            `yaml:"updated_at"`
-	ResolvedAt         *time.Time           `yaml:"resolved_at"`
+	AffectedComponents []string              `yaml:"affected_components"`
+	CreatedAt          time.Time             `yaml:"created_at"`
+	UpdatedAt          time.Time             `yaml:"updated_at"`
+	ResolvedAt         *time.Time            `yaml:"resolved_at"`
 }
 
 // ParseIncident parses a single incident markdown file
@@ -384,12 +384,12 @@ func (p *StatusParser) ParseMaintenance(dir string) ([]core.Maintenance, error) 
 
 // MaintenanceFrontmatter represents the YAML frontmatter for maintenance
 type MaintenanceFrontmatter struct {
-	ID                 string                `yaml:"id"`
-	Title              string                `yaml:"title"`
-	Description        string                `yaml:"description"`
-	AffectedComponents []string              `yaml:"affected_components"`
-	ScheduledStart     time.Time             `yaml:"scheduled_start"`
-	ScheduledEnd       time.Time             `yaml:"scheduled_end"`
+	ID                 string                 `yaml:"id"`
+	Title              string                 `yaml:"title"`
+	Description        string                 `yaml:"description"`
+	AffectedComponents []string               `yaml:"affected_components"`
+	ScheduledStart     time.Time              `yaml:"scheduled_start"`
+	ScheduledEnd       time.Time              `yaml:"scheduled_end"`
 	Status             core.MaintenanceStatus `yaml:"status"`
 }
 

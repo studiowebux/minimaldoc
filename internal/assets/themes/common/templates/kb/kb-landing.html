@@ -4,6 +4,7 @@
 {{template "landing-head" .}}
 <title>{{.PageTitle}}</title>
 <meta name="description" content="{{.KBPage.Config.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
 <link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
@@ -29,8 +30,8 @@
 <circle cx="11" cy="11" r="8"/>
 <path d="m21 21-4.35-4.35"/>
 </svg>
-</div>
 <div id="kb-search-results" class="kb-search-results"></div>
+</div>
 {{end}}
 </div>
 </section>

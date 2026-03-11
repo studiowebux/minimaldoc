@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>New Topic | Forum | {{.Site.Config.Title}}</title>
+<meta name="description" content="Start a new forum discussion">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+<link rel="stylesheet" href="{{.BasePath}}/css/forum.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main" style="max-width: none; padding: 0;">
+<div class="forum-create-topic">
+<a href="{{.BasePath}}/forum/" class="forum-back-link">&larr; Back to Forum</a>
+<h1>Start a New Discussion</h1>
+
+<div id="error-container"></div>
+
+<form id="new-topic-form">
+<div class="forum-form-group">
+<label class="forum-form-label" for="topic-title">Title</label>
+<input type="text" id="topic-title" name="title" class="forum-form-input" placeholder="What's your question or topic?" required>
+<p class="forum-form-hint">Be specific and descriptive to help others understand your topic</p>
+</div>
+
+<div class="forum-form-group">
+<label class="forum-form-label" for="topic-category">Category</label>
+<select id="topic-category" name="category_id" class="forum-form-select"
+        hx-get="{{.APIEndpoint}}/api/forum/fragments/category-options"
+        hx-trigger="load"
+        hx-swap="innerHTML">
+<option value="">Loading categories...</option>
+</select>
+</div>
+
+<div class="forum-form-group">
+<label class="forum-form-label" for="topic-content">Content</label>
+<textarea id="topic-content" name="content" class="forum-form-textarea" placeholder="Describe your topic in detail. Markdown is supported..." required></textarea>
+<p class="forum-form-hint">You can use Markdown for formatting: **bold**, *italic*, `code`, [links](url)</p>
+</div>
+
+<div class="forum-form-group">
+<label class="forum-form-label">Tags</label>
+<div id="tags-container" class="forum-tags-list"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/tag-buttons"
+     hx-trigger="load"
+     hx-swap="innerHTML">
+<div class="forum-loading">Loading tags...</div>
+</div>
+<input type="hidden" id="selected-tags" name="tags" value="">
+<p class="forum-form-hint">Select up to 5 relevant tags to help others find your topic</p>
+</div>
+
+<div class="forum-form-actions">
+<button type="submit" class="forum-btn forum-btn--primary" id="submit-btn">Post Topic</button>
+<button type="button" class="forum-btn forum-btn--secondary" onclick="window.history.back()">Cancel</button>
+</div>
+</form>
+</div>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-scripts" .}}
+<script>
+var selectedTags = [];
+
+function toggleTag(btn) {
+    var tag = btn.getAttribute('data-tag');
+    var index = selectedTags.indexOf(tag);
+    if (index >= 0) {
+        selectedTags.splice(index, 1);
+        btn.classList.remove('forum-tag-btn--selected');
+    } else {
+        if (selectedTags.length < 5) {
+            selectedTags.push(tag);
+            btn.classList.add('forum-tag-btn--selected');
+        } else {
+            alert('You can select up to 5 tags.');
+        }
+    }
+    document.getElementById('selected-tags').value = selectedTags.join(',');
+}
+
+document.getElementById('new-topic-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var title = document.getElementById('topic-title').value.trim();
+    var content = document.getElementById('topic-content').value.trim();
+    var categoryId = document.getElementById('topic-category').value;
+    var errorContainer = document.getElementById('error-container');
+    var submitBtn = document.getElementById('submit-btn');
+
+    if (!title) {
+        errorContainer.innerHTML = '<div class="forum-error-message">Please enter a title.</div>';
+        return;
+    }
+    if (!content) {
+        errorContainer.innerHTML = '<div class="forum-error-message">Please enter the topic content.</div>';
+        return;
+    }
+
+    errorContainer.innerHTML = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Posting...';
+
+    var data = { title: title, content: content };
+    if (categoryId) data.category_id = categoryId;
+    if (selectedTags.length) data.tags = selectedTags;
+
+    fetch('{{.APIEndpoint}}/api/forum/topics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        return response.json().then(function(json) {
+            return { ok: response.ok, data: json };
+        });
+    })
+    .then(function(result) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Topic';
+
+        if (!result.ok) {
+            var msg = result.data.error || 'Failed to create topic';
+            if (msg.indexOf('authentication') >= 0 || msg.indexOf('unauthorized') >= 0) {
+                msg = 'Please log in to create a topic.';
+            }
+            errorContainer.innerHTML = '<div class="forum-error-message">' + msg + '</div>';
+            return;
+        }
+
+        if (result.data.topic && result.data.topic.slug) {
+            window.location.href = '{{.BasePath}}/forum/topic/' + result.data.topic.slug + '/';
+        } else {
+            window.location.href = '{{.BasePath}}/forum/';
+        }
+    })
+    .catch(function() {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Topic';
+        errorContainer.innerHTML = '<div class="forum-error-message">Network error. Please try again.</div>';
+    });
+});
+</script>
+</body>
+</html>

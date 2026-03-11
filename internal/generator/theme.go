@@ -195,6 +195,18 @@ func (g *ThemeGenerator) writeColorVariables(css *strings.Builder, colors core.T
 	if colors.LinkHover != "" {
 		css.WriteString(fmt.Sprintf("    --link-hover: %s;\n", colors.LinkHover))
 	}
+	if colors.ColorSuccess != "" {
+		css.WriteString(fmt.Sprintf("    --color-success: %s;\n", colors.ColorSuccess))
+	}
+	if colors.ColorWarning != "" {
+		css.WriteString(fmt.Sprintf("    --color-warning: %s;\n", colors.ColorWarning))
+	}
+	if colors.ColorDanger != "" {
+		css.WriteString(fmt.Sprintf("    --color-danger: %s;\n", colors.ColorDanger))
+	}
+	if colors.ColorInfo != "" {
+		css.WriteString(fmt.Sprintf("    --color-info: %s;\n", colors.ColorInfo))
+	}
 }
 
 // HasCustomTheme returns true if custom theme is configured

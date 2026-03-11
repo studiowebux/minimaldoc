@@ -1,7 +1,7 @@
 package api
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -119,7 +119,7 @@ func (r *Router) analyticsSummary(c *gin.Context) {
 
 	topPages, err := r.db.GetTopPages(c.Request.Context(), siteID, since, 10)
 	if err != nil {
-		log.Printf("Failed to get top pages: %v", err)
+		slog.Error("failed to get top pages", "error", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

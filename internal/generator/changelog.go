@@ -174,13 +174,13 @@ type ChangelogJSON struct {
 
 // ReleaseJSON represents a release in the JSON API
 type ReleaseJSON struct {
-	Version    string            `json:"version"`
-	Date       string            `json:"date"`
-	Title      string            `json:"title,omitempty"`
-	Prerelease bool              `json:"prerelease,omitempty"`
-	URL        string            `json:"url"`
-	CompareURL string            `json:"compare_url,omitempty"`
-	Categories []CategoryJSON    `json:"categories,omitempty"`
+	Version    string         `json:"version"`
+	Date       string         `json:"date"`
+	Title      string         `json:"title,omitempty"`
+	Prerelease bool           `json:"prerelease,omitempty"`
+	URL        string         `json:"url"`
+	CompareURL string         `json:"compare_url,omitempty"`
+	Categories []CategoryJSON `json:"categories,omitempty"`
 }
 
 // CategoryJSON represents a change category in the JSON API
@@ -245,12 +245,12 @@ func (g *ChangelogGenerator) generateChangelogJSON(outputDir string) error {
 
 // RSS feed structures for changelog
 type changelogRSSChannel struct {
-	XMLName       xml.Name            `xml:"channel"`
-	Title         string              `xml:"title"`
-	Link          string              `xml:"link"`
-	Description   string              `xml:"description"`
-	LastBuildDate string              `xml:"lastBuildDate"`
-	Items         []changelogRSSItem  `xml:"item"`
+	XMLName       xml.Name           `xml:"channel"`
+	Title         string             `xml:"title"`
+	Link          string             `xml:"link"`
+	Description   string             `xml:"description"`
+	LastBuildDate string             `xml:"lastBuildDate"`
+	Items         []changelogRSSItem `xml:"item"`
 }
 
 type changelogRSSItem struct {

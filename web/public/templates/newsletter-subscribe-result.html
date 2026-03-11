@@ -1,0 +1,28 @@
+{{define "newsletter-subscribe-result.html"}}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Subscription</title>
+    <link rel="stylesheet" href="/theme/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="result-container">
+    {{if .success}}
+        <div class="result-icon">&#10003;</div>
+        <h1 class="result-title">You're subscribed</h1>
+        <span class="result-badge badge-success">Verified via {{.provider}}</span>
+        <p class="result-message">{{.email}} has been added to the newsletter. No verification email needed.</p>
+    {{else}}
+        <div class="result-icon">&#10007;</div>
+        <h1 class="result-title">Subscription failed</h1>
+        <span class="result-badge badge-error">Error</span>
+        <p class="result-message">{{.error}}</p>
+    {{end}}
+        <a href="/" class="result-link">Back to home</a>
+    </div>
+</body>
+</html>
+{{end}}

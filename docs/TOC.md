@@ -25,6 +25,7 @@
   - [Internationalization](features/10-i18n.md)
   - [Analytics](features/11-analytics.md)
   - [Backend Server](features/12-backend.md)
+  - [Forum](features/13-forum.md)
 - OpenAPI/Swagger
   - [Overview](openapi/01-overview.md)
   - [Configuration](openapi/02-configuration.md)

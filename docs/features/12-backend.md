@@ -18,7 +18,10 @@ The backend provides:
 | Feedback | Page rating widget with optional comments |
 | Newsletter | Email subscription with verification |
 | Blog CMS | Markdown editor with live preview, RBAC, comment moderation |
+| Forum | Community discussions with categories, reputation, moderation |
 | Admin Portal | Web-based dashboard for all features |
+
+See [Forum documentation](13-forum.md) for forum-specific configuration and API.
 
 ## Architecture
 

@@ -1,0 +1,181 @@
+/* ========================================
+   Waitlist Landing Page Styles
+   Full-viewport centered page for email collection
+   ======================================== */
+
+/* ========================================
+   Layout
+   ======================================== */
+
+.waitlist-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    background: var(--bg-primary);
+    position: relative;
+}
+
+/* ========================================
+   Content Container
+   ======================================== */
+
+.waitlist-content {
+    text-align: center;
+    max-width: 32rem;
+    width: 100%;
+}
+
+.waitlist-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin-block-end: 1rem;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.waitlist-tagline {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-block-end: 2.5rem;
+}
+
+/* ========================================
+   Email Form
+   ======================================== */
+
+.waitlist-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-block-end: 1rem;
+}
+
+.waitlist-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary, var(--bg-primary));
+    color: var(--text-primary);
+    font-size: var(--font-size-md-lg);
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-base);
+}
+
+.waitlist-input::placeholder {
+    color: var(--text-tertiary, var(--text-secondary));
+}
+
+.waitlist-input:focus {
+    border-color: var(--text-primary);
+    outline: none;
+}
+
+.waitlist-submit {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--transition-base), border-color var(--transition-base);
+    white-space: nowrap;
+}
+
+.waitlist-submit:hover {
+    background: var(--surface, var(--bg-secondary));
+    border-color: var(--text-secondary);
+}
+
+.waitlist-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
+   Messages
+   ======================================== */
+
+.waitlist-message {
+    font-size: var(--font-size-md);
+    min-height: 1.5rem;
+    margin-block-end: 2rem;
+}
+
+.waitlist-message[data-status="success"] {
+    color: var(--text-primary);
+}
+
+.waitlist-message[data-status="error"] {
+    color: var(--color-danger);
+}
+
+/* ========================================
+   Privacy Link
+   ======================================== */
+
+.waitlist-privacy {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary, var(--text-secondary));
+    margin-block-end: 2.5rem;
+}
+
+.waitlist-privacy a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.waitlist-privacy a:hover {
+    color: var(--text-primary);
+}
+
+/* ========================================
+   Social Links
+   ======================================== */
+
+.waitlist-social {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.waitlist-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary, var(--text-secondary));
+    transition: color var(--transition-base);
+}
+
+.waitlist-social-link:hover {
+    color: var(--text-primary);
+}
+
+.waitlist-social-link svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 480px) {
+    .waitlist-form {
+        flex-direction: column;
+    }
+
+    .waitlist-submit {
+        width: 100%;
+    }
+}

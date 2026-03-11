@@ -12,17 +12,17 @@
 
 .contact-content {
     text-align: center;
-    max-width: 600px;
+    max-width: var(--modal-max-width);
 }
 
 .contact-content h1 {
     font-size: clamp(2rem, 4vw, 3rem);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     margin-bottom: 1rem;
 }
 
 .contact-description {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl-2xl);
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 2.5rem;
@@ -43,11 +43,11 @@
     padding: 1rem 2rem;
     background: var(--text-primary);
     color: var(--bg-primary);
-    border-radius: 8px;
-    font-size: 1.125rem;
-    font-weight: 600;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: all var(--transition-base);
 }
 
 .contact-email-btn:hover {
@@ -78,7 +78,7 @@
     padding: 1rem 1.5rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     min-width: 280px;
 }
 
@@ -91,7 +91,7 @@
 
 .contact-info-item span {
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: var(--font-size-md-lg);
 }
 
 /* ========================================
@@ -110,7 +110,7 @@
 
     .contact-email-btn {
         padding: 0.875rem 1.5rem;
-        font-size: 1rem;
+        font-size: var(--font-size-lg);
     }
 
     .contact-info-item {

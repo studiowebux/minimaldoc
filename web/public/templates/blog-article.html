@@ -1,0 +1,51 @@
+{{define "blog-article.html"}}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | {{.site_name}}</title>
+    <link rel="stylesheet" href="/theme/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/public.css">
+    <script src="/static/js/htmx.min.js"></script>
+</head>
+<body>
+    {{template "header" .}}
+
+    <section class="blog-content">
+        <div class="blog-article-container">
+            <div class="blog-breadcrumb">
+                <a href="/blog/">Blog</a> &raquo; <span id="article-title">Loading...</span>
+            </div>
+
+            <div id="blog-article-detail"
+                 hx-get="/api/blog/fragments/posts/{{.slug}}"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+                <div class="blog-loading">Loading article...</div>
+            </div>
+
+            <div id="blog-comments"
+                 hx-get="/api/blog/fragments/posts/{{.slug}}/comments"
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
+            </div>
+        </div>
+    </section>
+
+    {{template "footer"}}
+
+    <script>
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'blog-article-detail') {
+            var titleEl = event.detail.target.querySelector('.blog-article-title, h1');
+            if (titleEl) {
+                document.getElementById('article-title').textContent = titleEl.textContent;
+                document.title = titleEl.textContent + ' | Blog';
+            }
+        }
+    });
+    </script>
+</body>
+</html>
+{{end}}

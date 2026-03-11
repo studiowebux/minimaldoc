@@ -2,9 +2,9 @@ package core
 
 // VersionConfig holds the configuration for multi-version documentation
 type VersionConfig struct {
-	Enabled  bool          `yaml:"enabled"`
-	Default  string        `yaml:"default"`   // Default version slug (e.g., "v2")
-	List     []VersionInfo `yaml:"list"`      // Available versions
+	Enabled  bool            `yaml:"enabled"`
+	Default  string          `yaml:"default"`  // Default version slug (e.g., "v2")
+	List     []VersionInfo   `yaml:"list"`     // Available versions
 	Selector VersionSelector `yaml:"selector"` // UI selector configuration
 }
 

@@ -1,10 +1,18 @@
 # Binaries
 minimaldoc
+minimaldoc-server
 bin/minimaldoc
+bin/minimaldoc-server
 *.exe
 *.dll
 *.so
 *.dylib
+
+# Databases
+*.db
+
+# Uploads
+uploads/
 
 # Test binary, built with `go test -c`
 *.test
@@ -19,7 +27,7 @@ vendor/
 go.work
 
 # Build output
-public/
+/public/
 dist/
 
 # IDE
@@ -42,3 +50,15 @@ dist/
 my-docs/
 test-output/
 test-public/
+
+# Internal planning files (never commit these)
+ROADMAP.md
+TASKS.md
+TODO.md
+progress.md
+PROGRESS.md
+task_plan.md
+findings.md
+HANDOFF.md
+MEMORY.md
+MEMORIES.md

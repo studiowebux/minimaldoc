@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,15 +22,15 @@ func (r *Router) fragmentDashboardStats(c *gin.Context) {
 
 	totalViews, uniqueSessions, err := r.db.GetPageViewStats(c.Request.Context(), siteID, since)
 	if err != nil {
-		log.Printf("Failed to get page view stats: %v", err)
+		slog.Error("failed to get page view stats", "error", err)
 	}
 	avgRating, totalRatings, err := r.db.GetRatingStats(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get rating stats: %v", err)
+		slog.Error("failed to get rating stats", "error", err)
 	}
 	subscriberCount, err := r.db.CountSubscribers(c.Request.Context(), siteID, true)
 	if err != nil {
-		log.Printf("Failed to count subscribers: %v", err)
+		slog.Error("failed to count subscribers", "error", err)
 	}
 
 	html := buildStatCards([]StatCard{
@@ -127,11 +127,11 @@ func (r *Router) fragmentAnalyticsStats(c *gin.Context) {
 	since := parsePeriod(period)
 	totalViews, uniqueSessions, avgDuration, err := r.db.GetPageViewStatsExtended(c.Request.Context(), siteID, since)
 	if err != nil {
-		log.Printf("Failed to get page view stats: %v", err)
+		slog.Error("failed to get page view stats", "error", err)
 	}
 	bounceRate, err := r.db.GetBounceRate(c.Request.Context(), siteID, since)
 	if err != nil {
-		log.Printf("Failed to get bounce rate: %v", err)
+		slog.Error("failed to get bounce rate", "error", err)
 	}
 
 	// Format avg duration as mm:ss
@@ -305,7 +305,7 @@ func (r *Router) fragmentFeedbackStats(c *gin.Context) {
 
 	avgRating, totalRatings, withComments, thisWeek, err := r.db.GetRatingStatsExtended(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get rating stats: %v", err)
+		slog.Error("failed to get rating stats", "error", err)
 	}
 
 	html := buildStatCards([]StatCard{
@@ -371,7 +371,7 @@ func (r *Router) fragmentSubscriberStats(c *gin.Context) {
 
 	total, verified, pending, thisMonth, err := r.db.GetSubscriberStatsExtended(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get subscriber stats: %v", err)
+		slog.Error("failed to get subscriber stats", "error", err)
 	}
 
 	html := buildStatCards([]StatCard{
@@ -435,7 +435,11 @@ func (r *Router) fragmentSubscriberList(c *gin.Context) {
 	for i, s := range subscribers {
 		status := `<span class="status-pending">Pending</span>`
 		if s.Verified {
-			status = `<span class="status-verified">Verified</span>`
+			if s.VerifiedVia != "" {
+				status = `<span class="status-verified">Verified via ` + escapeHTML(s.VerifiedVia) + `</span>`
+			} else {
+				status = `<span class="status-verified">Verified</span>`
+			}
 		}
 		rows[i] = TableRow{Cells: []string{
 			escapeHTML(s.Email),
@@ -531,11 +535,11 @@ func (r *Router) fragmentEventStats(c *gin.Context) {
 	since := parsePeriod(period)
 	totalEvents, err := r.db.GetTotalEventCount(c.Request.Context(), siteID, since)
 	if err != nil {
-		log.Printf("Failed to get total event count: %v", err)
+		slog.Error("failed to get total event count", "error", err)
 	}
 	uniqueNames, err := r.db.GetUniqueEventNames(c.Request.Context(), siteID, since)
 	if err != nil {
-		log.Printf("Failed to get unique event names: %v", err)
+		slog.Error("failed to get unique event names", "error", err)
 	}
 
 	html := buildStatCards([]StatCard{

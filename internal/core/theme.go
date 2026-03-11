@@ -2,10 +2,10 @@ package core
 
 // ThemeConfig holds theme customization settings
 type ThemeConfig struct {
-	Name   string       `yaml:"name"`   // Theme name: "default", "dark", or custom
-	Colors ThemeColors  `yaml:"colors"` // Custom color overrides
-	Fonts  ThemeFonts   `yaml:"fonts"`  // Custom font settings
-	Hero   ThemeHero    `yaml:"hero"`   // Hero section styling
+	Name   string      `yaml:"name"`   // Theme name: "default", "dark", or custom
+	Colors ThemeColors `yaml:"colors"` // Custom color overrides
+	Fonts  ThemeFonts  `yaml:"fonts"`  // Custom font settings
+	Hero   ThemeHero   `yaml:"hero"`   // Hero section styling
 }
 
 // ThemeColors defines customizable color variables
@@ -42,14 +42,20 @@ type ThemeColorSet struct {
 	// Links
 	LinkColor string `yaml:"link_color"`
 	LinkHover string `yaml:"link_hover"`
+
+	// Status colors
+	ColorSuccess string `yaml:"color_success"`
+	ColorWarning string `yaml:"color_warning"`
+	ColorDanger  string `yaml:"color_danger"`
+	ColorInfo    string `yaml:"color_info"`
 }
 
 // ThemeFonts defines custom font settings
 type ThemeFonts struct {
-	Heading    string `yaml:"heading"`     // Font family for headings
-	Body       string `yaml:"body"`        // Font family for body text
-	Code       string `yaml:"code"`        // Font family for code
-	GoogleURL  string `yaml:"google_url"`  // Google Fonts import URL
+	Heading   string `yaml:"heading"`    // Font family for headings
+	Body      string `yaml:"body"`       // Font family for body text
+	Code      string `yaml:"code"`       // Font family for code
+	GoogleURL string `yaml:"google_url"` // Google Fonts import URL
 }
 
 // ThemeHero defines hero section styling
@@ -81,6 +87,10 @@ func DefaultThemeConfig() ThemeConfig {
 				AccentHover:     "#3a3a3a",
 				LinkColor:       "#2563eb",
 				LinkHover:       "#1d4ed8",
+				ColorSuccess:    "#10b981",
+				ColorWarning:    "#f59e0b",
+				ColorDanger:     "#ef4444",
+				ColorInfo:       "#3b82f6",
 			},
 			Dark: ThemeColorSet{
 				BgPrimary:       "#1a1a1a",
@@ -98,6 +108,10 @@ func DefaultThemeConfig() ThemeConfig {
 				AccentHover:     "#f5f5f5",
 				LinkColor:       "#7bb3ff",
 				LinkHover:       "#a5cfff",
+				ColorSuccess:    "#34d399",
+				ColorWarning:    "#fbbf24",
+				ColorDanger:     "#f87171",
+				ColorInfo:       "#60a5fa",
 			},
 		},
 		Fonts: ThemeFonts{

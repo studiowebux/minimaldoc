@@ -109,11 +109,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Create core files
 	files := map[string]string{
-		filepath.Join(targetDir, "config.yaml"):                       finalConfig,
-		filepath.Join(targetDir, "index.md"):                          indexContent,
+		filepath.Join(targetDir, "config.yaml"):                        finalConfig,
+		filepath.Join(targetDir, "index.md"):                           indexContent,
 		filepath.Join(targetDir, "getting-started", "installation.md"): installContent,
-		filepath.Join(targetDir, "getting-started", "quick-start.md"): quickstartContent,
-		filepath.Join(targetDir, "guides", "deployment.md"):           deploymentContent,
+		filepath.Join(targetDir, "getting-started", "quick-start.md"):  quickstartContent,
+		filepath.Join(targetDir, "guides", "deployment.md"):            deploymentContent,
 	}
 
 	// Add optional files

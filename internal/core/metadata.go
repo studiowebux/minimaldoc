@@ -23,9 +23,9 @@ type Metadata struct {
 	SEO SEO `yaml:"seo"`
 
 	// OpenAPI integration
-	OpenAPISpec   string `yaml:"openapi_spec"`    // Reference to OpenAPI spec file/URL
-	OpenAPIPath   string `yaml:"openapi_path"`    // Specific endpoint path to embed
-	OpenAPIMethod string `yaml:"openapi_method"`  // Specific HTTP method to embed
+	OpenAPISpec   string `yaml:"openapi_spec"`   // Reference to OpenAPI spec file/URL
+	OpenAPIPath   string `yaml:"openapi_path"`   // Specific endpoint path to embed
+	OpenAPIMethod string `yaml:"openapi_method"` // Specific HTTP method to embed
 
 	// Stale warning overrides
 	StaleWarning       *bool `yaml:"stale_warning"`        // Override site setting (nil = use site default)
@@ -59,14 +59,14 @@ type MetadataLink struct {
 
 // SEO represents SEO-specific metadata
 type SEO struct {
-	Title       string   `yaml:"title"`        // SEO title (og:title)
-	Description string   `yaml:"description"`  // SEO description (og:description)
-	Keywords    []string `yaml:"keywords"`     // Meta keywords
-	Image       string   `yaml:"image"`        // og:image
-	Author      string   `yaml:"author"`       // Author
-	Canonical   string   `yaml:"canonical"`    // Canonical URL
-	NoIndex     bool     `yaml:"noindex"`      // Don't index this page
-	NoFollow    bool     `yaml:"nofollow"`     // Don't follow links on this page
+	Title       string   `yaml:"title"`       // SEO title (og:title)
+	Description string   `yaml:"description"` // SEO description (og:description)
+	Keywords    []string `yaml:"keywords"`    // Meta keywords
+	Image       string   `yaml:"image"`       // og:image
+	Author      string   `yaml:"author"`      // Author
+	Canonical   string   `yaml:"canonical"`   // Canonical URL
+	NoIndex     bool     `yaml:"noindex"`     // Don't index this page
+	NoFollow    bool     `yaml:"nofollow"`    // Don't follow links on this page
 }
 
 // DefaultMetadata returns a Metadata instance with sensible defaults

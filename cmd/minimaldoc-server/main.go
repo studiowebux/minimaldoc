@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +19,7 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/server/scheduler"
 	"github.com/studiowebux/minimaldoc/internal/server/storage"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
+	"github.com/studiowebux/minimaldoc/internal/server/telemetry"
 	"github.com/studiowebux/minimaldoc/internal/version"
 )
 
@@ -34,34 +35,62 @@ func main() {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		// slog not yet initialized, use fmt+os.Exit
+		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
+		os.Exit(1)
 	}
+
+	// Initialize structured logging
+	var logHandler slog.Handler
+	if cfg.Server.Environment == "production" {
+		logHandler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+	} else {
+		logHandler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	}
+	slog.SetDefault(slog.New(logHandler))
+
+	// Initialize OpenTelemetry
+	otelShutdown, err := telemetry.Init(context.Background(), telemetry.Config{
+		Enabled:     cfg.Telemetry.Enabled,
+		Endpoint:    cfg.Telemetry.Endpoint,
+		ServiceName: cfg.Telemetry.ServiceName,
+		Environment: cfg.Server.Environment,
+	})
+	if err != nil {
+		slog.Error("failed to initialize opentelemetry", "error", err)
+		os.Exit(1)
+	}
+	defer otelShutdown(context.Background())
 
 	// Initialize database
 	db, err := store.New(cfg.Database)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	// Run migrations
 	if err := db.Migrate(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		slog.Error("failed to run migrations", "error", err)
+		os.Exit(1)
 	}
 
 	// Initialize email sender
 	emailSender, err := email.NewSender(cfg.Email)
 	if err != nil {
-		log.Fatalf("Failed to initialize email sender: %v", err)
+		slog.Error("failed to initialize email sender", "error", err)
+		os.Exit(1)
 	}
-	log.Printf("Email provider: %s", cfg.Email.Provider)
+	slog.Info("email provider initialized", "provider", cfg.Email.Provider)
 
 	// Initialize storage
 	fileStorage, err := storage.New(cfg.Storage)
 	if err != nil {
-		log.Fatalf("Failed to initialize storage: %v", err)
+		slog.Error("failed to initialize storage", "error", err)
+		os.Exit(1)
 	}
-	log.Printf("Storage provider: %s", cfg.Storage.Provider)
+	slog.Info("storage provider initialized", "provider", cfg.Storage.Provider)
 
 	// Initialize routers
 	publicRouter := api.NewPublicRouter(cfg, db, emailSender)
@@ -91,18 +120,19 @@ func main() {
 
 	// Start public server
 	go func() {
-		log.Printf("Public API:  http://%s (tracking, feedback, newsletter)", publicAddr)
+		slog.Info("public API started", "addr", publicAddr)
 		if err := publicSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Public server failed: %v", err)
+			slog.Error("public server failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	// Start admin server
 	go func() {
-		log.Printf("Admin API:   http://%s%s", adminAddr, cfg.Server.APIPath)
-		log.Printf("Admin UI:    http://%s%s", adminAddr, cfg.Server.AdminPath)
+		slog.Info("admin API started", "addr", adminAddr, "api_path", cfg.Server.APIPath, "admin_path", cfg.Server.AdminPath)
 		if err := adminSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Admin server failed: %v", err)
+			slog.Error("admin server failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -111,7 +141,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down servers...")
+	slog.Info("shutting down servers")
 
 	// Stop scheduler first
 	sched.Stop()
@@ -122,11 +152,11 @@ func main() {
 
 	// Shutdown both servers
 	if err := publicSrv.Shutdown(ctx); err != nil {
-		log.Printf("Public server forced to shutdown: %v", err)
+		slog.Warn("public server forced to shutdown", "error", err)
 	}
 	if err := adminSrv.Shutdown(ctx); err != nil {
-		log.Printf("Admin server forced to shutdown: %v", err)
+		slog.Warn("admin server forced to shutdown", "error", err)
 	}
 
-	log.Println("Servers stopped")
+	slog.Info("servers stopped")
 }

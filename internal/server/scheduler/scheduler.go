@@ -3,7 +3,7 @@ package scheduler
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 
 // Scheduler runs background jobs on a ticker.
 type Scheduler struct {
-	db       *store.DB
+	db       store.Store
 	interval time.Duration
 	ticker   *time.Ticker
 	done     chan struct{}
@@ -22,7 +22,7 @@ type Scheduler struct {
 }
 
 // New creates a new scheduler with the given interval.
-func New(db *store.DB, interval time.Duration) *Scheduler {
+func New(db store.Store, interval time.Duration) *Scheduler {
 	if interval < time.Second {
 		interval = time.Minute // Default to 1 minute
 	}
@@ -47,7 +47,7 @@ func (s *Scheduler) Start() {
 	s.wg.Add(1)
 	go s.run()
 
-	log.Printf("[Scheduler] Started with interval %v", s.interval)
+	slog.Info("scheduler started", "interval", s.interval)
 }
 
 // Stop gracefully stops the scheduler.
@@ -64,7 +64,7 @@ func (s *Scheduler) Stop() {
 	s.ticker.Stop()
 	s.wg.Wait()
 
-	log.Println("[Scheduler] Stopped")
+	slog.Info("scheduler stopped")
 }
 
 func (s *Scheduler) run() {
@@ -94,10 +94,10 @@ func (s *Scheduler) runJobs() {
 func (s *Scheduler) publishScheduledPosts(ctx context.Context) {
 	count, err := s.db.PublishScheduledPosts(ctx)
 	if err != nil {
-		log.Printf("[Scheduler] Error publishing scheduled posts: %v", err)
+		slog.Error("failed to publish scheduled posts", "error", err)
 		return
 	}
 	if count > 0 {
-		log.Printf("[Scheduler] Published %d scheduled post(s)", count)
+		slog.Info("published scheduled posts", "count", count)
 	}
 }

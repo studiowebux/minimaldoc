@@ -182,4 +182,3 @@ func (g *PortfolioGenerator) getBasePath() string {
 
 	return path
 }
-

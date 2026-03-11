@@ -5,11 +5,11 @@ import (
 
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/text"
 	htmlrenderer "github.com/yuin/goldmark/renderer/html"
-	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	"github.com/yuin/goldmark/text"
 )
 
 // MarkdownParser handles markdown to HTML conversion
@@ -22,10 +22,10 @@ func NewMarkdownParser() *MarkdownParser {
 	md := goldmark.New(
 		// Extensions
 		goldmark.WithExtensions(
-			NewAdmonitionExtension(),       // Custom admonitions (:::info, :::warning, etc.)
-			extension.GFM,                  // GitHub Flavored Markdown (tables, strikethrough, etc.)
-			extension.Typographer,          // Smart quotes, dashes, etc.
-			highlighting.NewHighlighting(   // Syntax highlighting
+			NewAdmonitionExtension(), // Custom admonitions (:::info, :::warning, etc.)
+			extension.GFM,            // GitHub Flavored Markdown (tables, strikethrough, etc.)
+			extension.Typographer,    // Smart quotes, dashes, etc.
+			highlighting.NewHighlighting( // Syntax highlighting
 				highlighting.WithStyle("monokai"),
 				highlighting.WithFormatOptions(
 					html.WithClasses(true),
@@ -78,4 +78,3 @@ func (p *MarkdownParser) ParseWithContext(content []byte, currentPagePath string
 
 	return buf.Bytes(), nil
 }
-

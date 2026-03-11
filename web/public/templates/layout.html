@@ -1,0 +1,22 @@
+{{define "header"}}
+<header class="header">
+    <div class="header-title"><a href="{{.docs_url}}">{{.site_name}}</a></div>
+    <nav class="header-nav">
+        <a href="{{.docs_url}}">Docs</a>
+        <a href="/blog/"{{if eq .current_page "blog"}} class="active"{{end}}>Blog</a>
+        <a href="/forum/"{{if eq .current_page "forum"}} class="active"{{end}}>Forum</a>
+        {{if .authenticated}}
+        <span class="header-user">{{.user.email}}</span>
+        <a href="/logout?site_id={{.site_id}}">Logout</a>
+        {{else}}
+        <a href="/login?site_id={{.site_id}}">Login</a>
+        {{end}}
+    </nav>
+</header>
+{{end}}
+
+{{define "footer"}}
+<footer class="footer">
+    <p>Powered by <a href="https://github.com/studiowebux/minimaldoc" target="_blank" rel="noopener">MinimalDoc</a></p>
+</footer>
+{{end}}

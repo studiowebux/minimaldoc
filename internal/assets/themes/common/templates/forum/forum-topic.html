@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>Topic | Forum | {{.Site.Config.Title}}</title>
+<meta name="description" content="Forum discussion">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+<link rel="stylesheet" href="{{.BasePath}}/css/forum.css?v={{.Version}}">
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main" style="max-width: none; padding: 0;">
+<div class="forum-topic-page" id="forum-topic-page">
+<div class="forum-loading">Loading topic...</div>
+</div>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-scripts" .}}
+<script>
+(function() {
+    var apiEndpoint = '{{.APIEndpoint}}';
+    var slug = window.location.pathname.replace(/^.*\/forum\/topic\//, '').replace(/\/$/, '');
+    var container = document.getElementById('forum-topic-page');
+
+    if (!slug) {
+        container.innerHTML = '<div class="forum-error">Topic not found</div>';
+        return;
+    }
+
+    // Load topic detail
+    htmx.ajax('GET', apiEndpoint + '/api/forum/fragments/topics/' + encodeURIComponent(slug) + '/detail', {
+        target: container,
+        swap: 'innerHTML'
+    }).then(function() {
+        // Add posts header
+        var postsHeader = document.createElement('h3');
+        postsHeader.className = 'forum-posts-header';
+        postsHeader.textContent = 'Replies';
+        container.appendChild(postsHeader);
+
+        // Load posts
+        var postsContainer = document.createElement('div');
+        postsContainer.className = 'forum-posts';
+        postsContainer.id = 'forum-posts';
+        container.appendChild(postsContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/forum/fragments/topics/' + encodeURIComponent(slug) + '/posts', {
+            target: postsContainer,
+            swap: 'innerHTML'
+        });
+
+        // Load reply form
+        var replyContainer = document.createElement('div');
+        replyContainer.id = 'reply-form';
+        container.appendChild(replyContainer);
+        htmx.ajax('GET', apiEndpoint + '/api/forum/fragments/topics/' + encodeURIComponent(slug) + '/reply-form', {
+            target: replyContainer,
+            swap: 'innerHTML'
+        });
+    });
+})();
+</script>
+</body>
+</html>

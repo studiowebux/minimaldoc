@@ -131,4 +131,3 @@ func (g *ContactGenerator) getBasePath() string {
 
 	return path
 }
-

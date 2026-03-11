@@ -4,11 +4,34 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
+
+// DocsConfig holds configuration loaded from the static site's config.yaml.
+type DocsConfig struct {
+	Title   string `yaml:"title"`
+	BaseURL string `yaml:"base_url"`
+	SiteID  string `yaml:"site_id"`
+}
+
+// LoadDocsConfig loads the docs config.yaml from the specified path.
+func LoadDocsConfig(path string) (*DocsConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var cfg DocsConfig
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
 
 // Config holds all server configuration.
 type Config struct {
@@ -35,19 +58,30 @@ type Config struct {
 
 	// Rate limiting settings
 	RateLimit RateLimitConfig
+
+	// OpenTelemetry settings
+	Telemetry TelemetryConfig
+
+	// Forum settings
+	Forum ForumConfig
+
+	// Docs config (loaded from docs/config.yaml)
+	Docs *DocsConfig
 }
 
 // ServerConfig holds HTTP server settings.
 type ServerConfig struct {
-	Host         string
-	Port         int // Public API port (tracking, feedback, newsletter)
-	AdminPort    int // Admin UI and management API port
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	AdminPath    string // Path prefix for admin UI (default: /admin)
-	APIPath      string // Path prefix for API (default: /api)
-	CORSOrigins  []string
-	DocsDir      string // Directory containing static docs (default: public)
+	Host           string
+	Port           int // Public API port (tracking, feedback, newsletter)
+	AdminPort      int // Admin UI and management API port
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
+	AdminPath      string // Path prefix for admin UI (default: /admin)
+	APIPath        string // Path prefix for API (default: /api)
+	CORSOrigins    []string
+	DocsDir        string // Directory containing static docs (default: public)
+	DocsConfigPath string // Path to docs config.yaml (default: docs/config.yaml)
+	Environment    string // "production" or "development" (default: development)
 }
 
 // DatabaseConfig holds database connection settings.
@@ -62,15 +96,16 @@ type DatabaseConfig struct {
 
 // AuthConfig holds authentication settings.
 type AuthConfig struct {
-	JWTSecret        string
-	JWTExpiry        time.Duration
-	RefreshExpiry    time.Duration
-	BCryptCost       int
-	SessionCookieKey string
-	EnableLocal      bool   // Enable email/password auth
-	EnableOAuth      bool   // Enable OAuth providers
-	BootstrapToken   string // Optional token required to call /api/bootstrap
-	SecureCookies    bool   // Set Secure flag on cookies (requires HTTPS)
+	JWTSecret            string
+	JWTExpiry            time.Duration
+	RefreshExpiry        time.Duration
+	BCryptCost           int
+	SessionCookieKey     string
+	EnableLocal          bool   // Enable email/password auth
+	EnableOAuth          bool   // Enable OAuth providers
+	AllowNewsletterOAuth bool   // Allow OAuth subscribe for newsletter
+	BootstrapToken       string // Optional token required to call /api/bootstrap
+	SecureCookies        bool   // Set Secure flag on cookies (requires HTTPS)
 }
 
 // OAuthConfig holds OAuth 2.0 / OIDC provider settings.
@@ -87,10 +122,10 @@ type OAuthProvider struct {
 	Scopes       []string
 
 	// OIDC-specific (for generic OIDC or Cognito)
-	Issuer       string // OIDC issuer URL
-	AuthURL      string // Authorization endpoint (if not using discovery)
-	TokenURL     string // Token endpoint (if not using discovery)
-	UserInfoURL  string // UserInfo endpoint (if not using discovery)
+	Issuer      string // OIDC issuer URL
+	AuthURL     string // Authorization endpoint (if not using discovery)
+	TokenURL    string // Token endpoint (if not using discovery)
+	UserInfoURL string // UserInfo endpoint (if not using discovery)
 }
 
 // EmailConfig holds email sending settings.
@@ -138,19 +173,48 @@ type RateLimitConfig struct {
 	SubmitWindow time.Duration // Submit rate limit window
 }
 
+// TelemetryConfig holds OpenTelemetry settings.
+type TelemetryConfig struct {
+	Enabled     bool   // Enable OpenTelemetry tracing
+	Endpoint    string // OTLP HTTP endpoint (e.g. "localhost:4318")
+	ServiceName string // Service name for traces (default: minimaldoc-server)
+}
+
+// ForumConfig holds forum feature settings.
+type ForumConfig struct {
+	Enabled           bool          // Enable forum feature
+	AllowAnonymous    bool          // Allow viewing without auth
+	RequireAuth       bool          // Require auth to post
+	MaxTopicsPerDay   int           // Rate limit for topic creation
+	MaxPostsPerDay    int           // Rate limit for post creation
+	EditWindow        time.Duration // Time window for editing posts
+	ModerationMode    string        // none, first_post, all
+	EmailEnabled      bool          // Enable email notifications
+	EmailDigest       string        // daily, weekly, none
+	EmailOnReply      bool          // Send email on reply
+	EmailOnMention    bool          // Send email on @mention
+	ReputationEnabled bool          // Enable reputation system
+	RepTopicCreate    int           // Points for creating topic
+	RepPostCreate     int           // Points for posting reply
+	RepLikeReceived   int           // Points when liked
+	RepSolutionMarked int           // Points for accepted solution
+}
+
 // Load loads configuration from environment variables.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
-			Host:         getEnv("SERVER_HOST", "0.0.0.0"),
-			Port:         getEnvInt("SERVER_PORT", 8080),
-			AdminPort:    getEnvInt("SERVER_ADMIN_PORT", 8090),
-			ReadTimeout:  getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
-			WriteTimeout: getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
-			AdminPath:    getEnv("SERVER_ADMIN_PATH", "/admin"),
-			APIPath:      getEnv("SERVER_API_PATH", "/api"),
-			CORSOrigins:  getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
-			DocsDir:      getEnv("SERVER_DOCS_DIR", "public"),
+			Host:           getEnv("SERVER_HOST", "0.0.0.0"),
+			Port:           getEnvInt("SERVER_PORT", 8080),
+			AdminPort:      getEnvInt("SERVER_ADMIN_PORT", 8090),
+			ReadTimeout:    getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
+			WriteTimeout:   getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
+			AdminPath:      getEnv("SERVER_ADMIN_PATH", "/admin"),
+			APIPath:        getEnv("SERVER_API_PATH", "/api"),
+			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
+			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
+			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
+			Environment:    getEnv("SERVER_ENV", "development"),
 		},
 		Database: DatabaseConfig{
 			Driver:          getEnv("DB_DRIVER", "sqlite"),
@@ -161,15 +225,16 @@ func Load() (*Config, error) {
 			MigrationsPath:  getEnv("DB_MIGRATIONS_PATH", "migrations"),
 		},
 		Auth: AuthConfig{
-			JWTSecret:        getEnv("AUTH_JWT_SECRET", ""),
-			JWTExpiry:        getEnvDuration("AUTH_JWT_EXPIRY", 15*time.Minute),
-			RefreshExpiry:    getEnvDuration("AUTH_REFRESH_EXPIRY", 7*24*time.Hour),
-			BCryptCost:       getEnvInt("AUTH_BCRYPT_COST", 12),
-			SessionCookieKey: getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
-			EnableLocal:      getEnvBool("AUTH_ENABLE_LOCAL", true),
-			EnableOAuth:      getEnvBool("AUTH_ENABLE_OAUTH", false),
-			BootstrapToken:   getEnv("BOOTSTRAP_TOKEN", ""),
-			SecureCookies:    getEnvBool("AUTH_SECURE_COOKIES", false),
+			JWTSecret:            getEnv("AUTH_JWT_SECRET", ""),
+			JWTExpiry:            getEnvDuration("AUTH_JWT_EXPIRY", 15*time.Minute),
+			RefreshExpiry:        getEnvDuration("AUTH_REFRESH_EXPIRY", 7*24*time.Hour),
+			BCryptCost:           getEnvInt("AUTH_BCRYPT_COST", 12),
+			SessionCookieKey:     getEnv("AUTH_SESSION_COOKIE", "minimaldoc_session"),
+			EnableLocal:          getEnvBool("AUTH_ENABLE_LOCAL", true),
+			EnableOAuth:          getEnvBool("AUTH_ENABLE_OAUTH", false),
+			AllowNewsletterOAuth: getEnvBool("NEWSLETTER_ALLOW_OAUTH_SUBSCRIBE", false),
+			BootstrapToken:       getEnv("BOOTSTRAP_TOKEN", ""),
+			SecureCookies:        getEnvBool("AUTH_SECURE_COOKIES", false),
 		},
 		OAuth: loadOAuthConfig(),
 		Email: EmailConfig{
@@ -209,6 +274,34 @@ func Load() (*Config, error) {
 			SubmitLimit:  getEnvInt("RATE_LIMIT_SUBMIT_LIMIT", 10),
 			SubmitWindow: getEnvDuration("RATE_LIMIT_SUBMIT_WINDOW", time.Minute),
 		},
+		Telemetry: TelemetryConfig{
+			Enabled:     getEnvBool("OTEL_ENABLED", false),
+			Endpoint:    getEnv("OTEL_ENDPOINT", ""),
+			ServiceName: getEnv("OTEL_SERVICE_NAME", "minimaldoc-server"),
+		},
+		Forum: ForumConfig{
+			Enabled:           getEnvBool("FORUM_ENABLED", true),
+			AllowAnonymous:    getEnvBool("FORUM_ALLOW_ANONYMOUS", true),
+			RequireAuth:       getEnvBool("FORUM_REQUIRE_AUTH", true),
+			MaxTopicsPerDay:   getEnvInt("FORUM_MAX_TOPICS_PER_DAY", 10),
+			MaxPostsPerDay:    getEnvInt("FORUM_MAX_POSTS_PER_DAY", 50),
+			EditWindow:        getEnvDuration("FORUM_EDIT_WINDOW", time.Hour),
+			ModerationMode:    getEnv("FORUM_MODERATION_MODE", "none"),
+			EmailEnabled:      getEnvBool("FORUM_EMAIL_ENABLED", true),
+			EmailDigest:       getEnv("FORUM_EMAIL_DIGEST", "daily"),
+			EmailOnReply:      getEnvBool("FORUM_EMAIL_ON_REPLY", true),
+			EmailOnMention:    getEnvBool("FORUM_EMAIL_ON_MENTION", true),
+			ReputationEnabled: getEnvBool("FORUM_REPUTATION_ENABLED", true),
+			RepTopicCreate:    getEnvInt("FORUM_REP_TOPIC_CREATE", 5),
+			RepPostCreate:     getEnvInt("FORUM_REP_POST_CREATE", 2),
+			RepLikeReceived:   getEnvInt("FORUM_REP_LIKE_RECEIVED", 1),
+			RepSolutionMarked: getEnvInt("FORUM_REP_SOLUTION_MARKED", 10),
+		},
+	}
+
+	// Load docs config (optional - don't fail if not found)
+	if docsConfig, err := LoadDocsConfig(cfg.Server.DocsConfigPath); err == nil {
+		cfg.Docs = docsConfig
 	}
 
 	// Validate required settings
@@ -219,7 +312,8 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// Validate checks that required configuration is present.
+// Validate checks that required configuration is present and logs
+// warnings for production misconfigurations.
 func (c *Config) Validate() error {
 	if c.Auth.JWTSecret == "" {
 		return fmt.Errorf("AUTH_JWT_SECRET is required")
@@ -230,7 +324,69 @@ func (c *Config) Validate() error {
 	if c.Database.URL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
 	}
+
+	c.warnProductionConfig()
 	return nil
+}
+
+// warnProductionConfig logs warnings for settings that are unsafe in production.
+func (c *Config) warnProductionConfig() {
+	isProd := c.Server.Environment == "production"
+
+	// CORS wildcard is unsafe in production
+	for _, origin := range c.Server.CORSOrigins {
+		if origin == "*" {
+			if isProd {
+				slog.Warn("CORS wildcard origin is unsafe in production, set SERVER_CORS_ORIGINS to specific domains")
+			}
+			break
+		}
+	}
+
+	// Insecure cookies in production
+	if isProd && !c.Auth.SecureCookies {
+		slog.Warn("AUTH_SECURE_COOKIES is false in production, cookies will be sent over HTTP")
+	}
+
+	// Email base URL pointing to localhost or HTTP in production
+	if isProd {
+		if strings.Contains(c.Email.BaseURL, "localhost") || strings.Contains(c.Email.BaseURL, "127.0.0.1") {
+			slog.Warn("EMAIL_BASE_URL contains localhost in production", "url", c.Email.BaseURL)
+		}
+		if strings.HasPrefix(c.Email.BaseURL, "http://") {
+			slog.Warn("EMAIL_BASE_URL uses HTTP in production, use HTTPS", "url", c.Email.BaseURL)
+		}
+	}
+
+	// SMTP credentials missing when provider is smtp
+	if c.Email.Provider == "smtp" && (c.Email.SMTPUser == "" || c.Email.SMTPPass == "") {
+		slog.Warn("EMAIL_PROVIDER is smtp but SMTP_USER or SMTP_PASS is empty")
+	}
+
+	// S3 credentials missing when storage provider is s3
+	if c.Storage.Provider == "s3" && (c.Storage.S3AccessKey == "" || c.Storage.S3SecretKey == "") {
+		slog.Warn("STORAGE_PROVIDER is s3 but S3 access key or secret key is empty")
+	}
+
+	// OAuth enabled but no providers configured
+	if c.Auth.EnableOAuth && len(c.OAuth.Providers) == 0 {
+		slog.Warn("AUTH_ENABLE_OAUTH is true but no OAuth providers are configured")
+	}
+
+	// AI enabled without API key
+	if c.AI.Enabled && c.AI.APIKey == "" {
+		slog.Warn("AI_ENABLED is true but ANTHROPIC_API_KEY is empty")
+	}
+
+	// Mock email provider in production
+	if isProd && c.Email.Provider == "mock" {
+		slog.Warn("EMAIL_PROVIDER is mock in production, emails will not be sent")
+	}
+
+	// SQLite in production
+	if isProd && c.Database.Driver == "sqlite" {
+		slog.Warn("DB_DRIVER is sqlite in production, consider using PostgreSQL")
+	}
 }
 
 // loadOAuthConfig loads OAuth provider configurations from environment.

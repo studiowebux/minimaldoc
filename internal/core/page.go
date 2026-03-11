@@ -44,10 +44,10 @@ type TOC struct {
 
 // TOCItem represents a single heading in the table of contents
 type TOCItem struct {
-	ID       string      // Anchor ID (e.g., "getting-started")
-	Title    string      // Heading text
-	Level    int         // Heading level (1-6)
-	Children []*TOCItem  // Nested headings
+	ID       string     // Anchor ID (e.g., "getting-started")
+	Title    string     // Heading text
+	Level    int        // Heading level (1-6)
+	Children []*TOCItem // Nested headings
 }
 
 // NewPage creates a new Page from a file path

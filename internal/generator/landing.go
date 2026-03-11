@@ -118,4 +118,3 @@ func (g *LandingGenerator) getBasePath() string {
 
 	return path
 }
-

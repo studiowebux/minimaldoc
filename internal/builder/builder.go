@@ -22,17 +22,17 @@ type Builder struct {
 	openapiParser     *parser.OpenAPIParser
 
 	// Builders
-	navBuilder        *NavigationBuilder
-	statusBuilder     *StatusBuilder
-	changelogBuilder  *ChangelogBuilder
-	landingBuilder    *LandingBuilder
-	portfolioBuilder  *PortfolioBuilder
-	contactBuilder    *ContactBuilder
-	faqBuilder        *FaqBuilder
-	legalBuilder      *LegalBuilder
-	kbBuilder         *KBBuilder
-	versionBuilder    *VersionBuilder
-	i18nBuilder       *I18nBuilder
+	navBuilder       *NavigationBuilder
+	statusBuilder    *StatusBuilder
+	changelogBuilder *ChangelogBuilder
+	landingBuilder   *LandingBuilder
+	portfolioBuilder *PortfolioBuilder
+	contactBuilder   *ContactBuilder
+	faqBuilder       *FaqBuilder
+	legalBuilder     *LegalBuilder
+	kbBuilder        *KBBuilder
+	versionBuilder   *VersionBuilder
+	i18nBuilder      *I18nBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -339,9 +339,7 @@ func (b *Builder) getOutputPath(page *core.Page) string {
 		}
 
 		// For other pages, trim trailing /index and create directory structure
-		if strings.HasSuffix(slug, "/index") {
-			slug = strings.TrimSuffix(slug, "/index")
-		}
+		slug = strings.TrimSuffix(slug, "/index")
 		return filepath.Join(b.site.OutputRoot, slug, "index.html")
 	}
 

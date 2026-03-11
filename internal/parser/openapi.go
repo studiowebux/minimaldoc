@@ -23,8 +23,8 @@ import (
 // OpenAPIParser handles parsing of OpenAPI specifications
 type OpenAPIParser struct {
 	cacheDir string
-	doc      *openapi3.T        // Current document being parsed (for resolving $refs)
-	md       goldmark.Markdown  // Markdown renderer for descriptions
+	doc      *openapi3.T       // Current document being parsed (for resolving $refs)
+	md       goldmark.Markdown // Markdown renderer for descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser
@@ -32,8 +32,8 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 	// Create a simple markdown renderer for descriptions
 	md := goldmark.New(
 		goldmark.WithExtensions(
-			extension.GFM,          // GitHub Flavored Markdown
-			extension.Typographer,  // Smart quotes, dashes
+			extension.GFM,         // GitHub Flavored Markdown
+			extension.Typographer, // Smart quotes, dashes
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
@@ -140,15 +140,15 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 // convertSpec converts an openapi3.T to our internal APISpec
 func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
 	spec := &core.APISpec{
-		Title:          doc.Info.Title,
-		Description:    p.renderMarkdown(doc.Info.Description),
-		Version:        doc.Info.Version,
-		OpenAPIVersion: doc.OpenAPI,
-		Servers:        p.convertServers(doc.Servers),
-		Tags:           p.convertTags(doc.Tags),
+		Title:           doc.Info.Title,
+		Description:     p.renderMarkdown(doc.Info.Description),
+		Version:         doc.Info.Version,
+		OpenAPIVersion:  doc.OpenAPI,
+		Servers:         p.convertServers(doc.Servers),
+		Tags:            p.convertTags(doc.Tags),
 		SecuritySchemes: p.convertSecuritySchemes(doc.Components.SecuritySchemes),
-		Schemas:        p.convertSchemas(doc.Components.Schemas),
-		Endpoints:      []*core.APIEndpoint{},
+		Schemas:         p.convertSchemas(doc.Components.Schemas),
+		Endpoints:       []*core.APIEndpoint{},
 	}
 
 	// Parse all paths
@@ -567,48 +567,6 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 	return s
 }
 
-// resolveSchemaRef resolves a schema reference like "#/components/schemas/Error"
-func (p *OpenAPIParser) resolveSchemaRef(ref string) *openapi3.SchemaRef {
-	if p.doc == nil || p.doc.Components == nil {
-		return nil
-	}
-
-	// Handle #/components/schemas/SchemaName format
-	if strings.HasPrefix(ref, "#/components/schemas/") {
-		schemaName := strings.TrimPrefix(ref, "#/components/schemas/")
-		if schemaRef, ok := p.doc.Components.Schemas[schemaName]; ok {
-			return schemaRef
-		}
-	}
-
-	// Handle #/components/responses/ResponseName format
-	if strings.HasPrefix(ref, "#/components/responses/") {
-		responseName := strings.TrimPrefix(ref, "#/components/responses/")
-		if responseRef, ok := p.doc.Components.Responses[responseName]; ok {
-			if responseRef.Value != nil && responseRef.Value.Content != nil {
-				// Return the first content schema
-				for _, mediaType := range responseRef.Value.Content {
-					if mediaType.Schema != nil {
-						return mediaType.Schema
-					}
-				}
-			}
-		}
-	}
-
-	// Handle #/components/parameters/ParameterName format
-	if strings.HasPrefix(ref, "#/components/parameters/") {
-		paramName := strings.TrimPrefix(ref, "#/components/parameters/")
-		if paramRef, ok := p.doc.Components.Parameters[paramName]; ok {
-			if paramRef.Value != nil && paramRef.Value.Schema != nil {
-				return paramRef.Value.Schema
-			}
-		}
-	}
-
-	return nil
-}
-
 // renderMarkdown converts markdown description to HTML
 func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 	if markdown == "" {
@@ -728,21 +686,6 @@ func (p *OpenAPIParser) pathNodesToGroups(node *pathNode, pathPrefix string) []*
 	}
 
 	return groups
-}
-
-// flattenPathTree converts a path tree map to a sorted slice
-func (p *OpenAPIParser) flattenPathTree(tree map[string]*core.APIPathGroup) []*core.APIPathGroup {
-	result := make([]*core.APIPathGroup, 0, len(tree))
-	for _, group := range tree {
-		result = append(result, group)
-	}
-
-	// Sort by path
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Path < result[j].Path
-	})
-
-	return result
 }
 
 // organizeByTag organizes endpoints by tags

@@ -60,10 +60,10 @@ func (p ParameterLocation) IsValid() bool {
 type SecuritySchemeType string
 
 const (
-	SecurityAPIKey         SecuritySchemeType = "apiKey"
-	SecurityHTTP           SecuritySchemeType = "http"
-	SecurityOAuth2         SecuritySchemeType = "oauth2"
-	SecurityOpenIDConnect  SecuritySchemeType = "openIdConnect"
+	SecurityAPIKey        SecuritySchemeType = "apiKey"
+	SecurityHTTP          SecuritySchemeType = "http"
+	SecurityOAuth2        SecuritySchemeType = "oauth2"
+	SecurityOpenIDConnect SecuritySchemeType = "openIdConnect"
 )
 
 // IsValid checks if the security scheme type is valid

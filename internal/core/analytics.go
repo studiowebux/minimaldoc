@@ -10,7 +10,7 @@ type AnalyticsConfig struct {
 
 // AnalyticsProvider represents a single analytics provider configuration
 type AnalyticsProvider struct {
-	Type    string         `yaml:"type"`    // ga4, plausible, umami, matomo, fathom, simple, custom
+	Type    string         `yaml:"type"` // ga4, plausible, umami, matomo, fathom, simple, custom
 	Enabled bool           `yaml:"enabled"`
 	Config  map[string]any `yaml:"config"` // Provider-specific configuration
 }

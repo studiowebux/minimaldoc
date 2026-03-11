@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+{{template "landing-head" .}}
+<title>Forum | {{.Site.Config.Title}}</title>
+<meta name="description" content="Community discussions and support">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/landing.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+<link rel="stylesheet" href="{{.BasePath}}/css/forum.css?v={{.Version}}">
+</head>
+<body hx-headers='{"X-API-Key": "{{.SiteID}}"}'>
+<a href="#main" class="skip-link">Skip to main content</a>
+<div class="landing-page">
+{{template "landing-header" .}}
+
+<main id="main" class="landing-main" style="max-width: none; padding: 0;">
+<section class="forum-hero">
+<div class="forum-hero-content">
+<h1>Forum</h1>
+<p class="forum-hero-description">Community discussions and support</p>
+<div class="forum-search-container">
+<input type="text"
+       name="q"
+       class="forum-search-input"
+       placeholder="Search discussions..."
+       autocomplete="off"
+       hx-get="{{.APIEndpoint}}/api/forum/fragments/search"
+       hx-trigger="input changed delay:300ms, search"
+       hx-target="#forum-search-dropdown">
+<svg class="forum-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="11" cy="11" r="8"/>
+<path d="m21 21-4.35-4.35"/>
+</svg>
+<div class="forum-search-dropdown" id="forum-search-dropdown"></div>
+</div>
+<div class="forum-hero-stats"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/stats"
+     hx-trigger="load">
+<div class="forum-loading">Loading stats...</div>
+</div>
+</div>
+</section>
+
+<section class="forum-content">
+<div class="forum-layout">
+<div class="forum-main">
+<div class="forum-section-header">
+<h2 class="forum-section-title">Categories</h2>
+</div>
+<div id="forum-categories"
+     class="forum-categories"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/categories"
+     hx-trigger="load">
+<div class="forum-loading">Loading categories...</div>
+</div>
+
+<div class="forum-section-header" style="margin-top: 2rem;">
+<h2 class="forum-section-title">Recent Discussions</h2>
+<a href="{{.BasePath}}/forum/topics/" class="forum-section-link">View all</a>
+</div>
+<div id="forum-topics"
+     class="forum-topics"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/topics"
+     hx-trigger="load">
+<div class="forum-loading">Loading topics...</div>
+</div>
+</div>
+
+<aside class="forum-sidebar">
+<div class="forum-sidebar-section">
+<h3>Start a Discussion</h3>
+<a href="{{.BasePath}}/forum/new/" class="forum-new-topic-btn">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<line x1="12" y1="5" x2="12" y2="19"/>
+<line x1="5" y1="12" x2="19" y2="12"/>
+</svg>
+New Topic
+</a>
+</div>
+
+<div class="forum-sidebar-section">
+<h3>Top Contributors</h3>
+<div id="forum-leaderboard"
+     class="forum-leaderboard"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/leaderboard"
+     hx-trigger="load">
+<div class="forum-loading" style="padding: 1rem 0;">Loading...</div>
+</div>
+</div>
+
+<div class="forum-sidebar-section">
+<h3>Popular Tags</h3>
+<div id="forum-tags"
+     class="forum-tags-list"
+     hx-get="{{.APIEndpoint}}/api/forum/fragments/tags"
+     hx-trigger="load">
+<div class="forum-loading" style="padding: 0.5rem 0;">Loading...</div>
+</div>
+</div>
+</aside>
+</div>
+</section>
+</main>
+
+{{template "landing-footer" .}}
+</div>
+{{template "landing-scripts" .}}
+</body>
+</html>

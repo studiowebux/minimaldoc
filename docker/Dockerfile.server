@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /minimaldoc-server ./cmd/minimaldoc-server
 
 # Runtime stage
-FROM alpine:3.19
+FROM alpine:3.21
 
 WORKDIR /app
 
@@ -31,15 +31,16 @@ USER minimaldoc
 # Copy binary from builder
 COPY --from=builder /minimaldoc-server /app/minimaldoc-server
 
-# Copy web assets
+# Copy web assets (admin templates + public templates)
 COPY --from=builder /app/web/admin /app/web/admin
+COPY --from=builder /app/web/public /app/web/public
 
-# Expose port
-EXPOSE 8080
+# Expose public API and admin UI ports
+EXPOSE 8080 8090
 
-# Health check
+# Health check using liveness endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/healthz || exit 1
 
 # Run the server
 ENTRYPOINT ["/app/minimaldoc-server"]

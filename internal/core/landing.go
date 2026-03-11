@@ -2,12 +2,12 @@ package core
 
 // SectionBackground holds background styling for any section
 type SectionBackground struct {
-	Image       string `yaml:"image"`        // Background image URL
-	Overlay     string `yaml:"overlay"`      // Overlay color (e.g., "rgba(0,0,0,0.6)")
-	Color       string `yaml:"color"`        // Background color
-	Position    string `yaml:"position"`     // Background position (default: "center")
-	Size        string `yaml:"size"`         // Background size (default: "cover")
-	Attachment  string `yaml:"attachment"`   // Background attachment (scroll/fixed)
+	Image      string `yaml:"image"`      // Background image URL
+	Overlay    string `yaml:"overlay"`    // Overlay color (e.g., "rgba(0,0,0,0.6)")
+	Color      string `yaml:"color"`      // Background color
+	Position   string `yaml:"position"`   // Background position (default: "center")
+	Size       string `yaml:"size"`       // Background size (default: "cover")
+	Attachment string `yaml:"attachment"` // Background attachment (scroll/fixed)
 }
 
 // HasBackground returns true if any background is configured
@@ -158,7 +158,7 @@ type LinkItem struct {
 
 // ImageTextSection represents an image + content side-by-side section
 type ImageTextSection struct {
-	ID            string            `yaml:"id"`             // Section ID for ordering
+	ID            string            `yaml:"id"` // Section ID for ordering
 	Title         string            `yaml:"title"`
 	Description   string            `yaml:"description"`
 	Content       string            `yaml:"content"`        // Markdown content
@@ -168,7 +168,7 @@ type ImageTextSection struct {
 	Items         []ImageTextItem   `yaml:"items"`          // Optional bullet points
 	Buttons       []HeroButton      `yaml:"buttons"`        // Optional CTA buttons
 	Background    SectionBackground `yaml:"background"`
-	Order         int               `yaml:"order"`          // Display order
+	Order         int               `yaml:"order"` // Display order
 }
 
 // ImageTextItem represents a bullet point in an image-text section
@@ -180,33 +180,33 @@ type ImageTextItem struct {
 
 // TextSection represents a simple text block section
 type TextSection struct {
-	ID          string            `yaml:"id"`          // Section ID for ordering
-	Title       string            `yaml:"title"`
-	Subtitle    string            `yaml:"subtitle"`
-	Content     string            `yaml:"content"`     // Markdown content
-	Alignment   string            `yaml:"alignment"`   // left, center, right (default: center)
-	MaxWidth    string            `yaml:"max_width"`   // Max width (e.g., "800px")
-	Buttons     []HeroButton      `yaml:"buttons"`     // Optional CTA buttons
-	Background  SectionBackground `yaml:"background"`
-	Order       int               `yaml:"order"`       // Display order
+	ID         string            `yaml:"id"` // Section ID for ordering
+	Title      string            `yaml:"title"`
+	Subtitle   string            `yaml:"subtitle"`
+	Content    string            `yaml:"content"`   // Markdown content
+	Alignment  string            `yaml:"alignment"` // left, center, right (default: center)
+	MaxWidth   string            `yaml:"max_width"` // Max width (e.g., "800px")
+	Buttons    []HeroButton      `yaml:"buttons"`   // Optional CTA buttons
+	Background SectionBackground `yaml:"background"`
+	Order      int               `yaml:"order"` // Display order
 }
 
 // LinksGridSection represents a grid of external link cards
 type LinksGridSection struct {
-	ID          string            `yaml:"id"`          // Section ID for ordering
+	ID          string            `yaml:"id"` // Section ID for ordering
 	Title       string            `yaml:"title"`
 	Description string            `yaml:"description"`
-	Columns     int               `yaml:"columns"`     // Number of columns (default: 4)
+	Columns     int               `yaml:"columns"` // Number of columns (default: 4)
 	Items       []LinksGridItem   `yaml:"items"`
 	Background  SectionBackground `yaml:"background"`
-	Order       int               `yaml:"order"`       // Display order
+	Order       int               `yaml:"order"` // Display order
 }
 
 // LinksGridItem represents a single card in the links grid
 type LinksGridItem struct {
-	Icon        string `yaml:"icon"`        // Icon identifier or emoji
+	Icon        string `yaml:"icon"` // Icon identifier or emoji
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
 	URL         string `yaml:"url"`
-	External    bool   `yaml:"external"`    // Opens in new tab (default: true for http/https)
+	External    bool   `yaml:"external"` // Opens in new tab (default: true for http/https)
 }

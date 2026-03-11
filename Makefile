@@ -1,4 +1,4 @@
-.PHONY: build build-server run run-server clean test docs install uninstall
+.PHONY: build build-server run run-server clean test docs install uninstall lint check security coverage ci
 
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
@@ -52,6 +52,20 @@ clean:
 
 test:
 	go test ./...
+
+lint:
+	gofmt -l . && go vet ./...
+
+check:
+	staticcheck ./...
+
+security:
+	gosec ./...
+
+coverage:
+	go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
+
+ci: lint test
 
 docs: build
 	./minimaldoc build docs -o public

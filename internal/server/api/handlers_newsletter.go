@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,21 +20,21 @@ type SubscribeRequest struct {
 func (r *Router) subscribe(c *gin.Context) {
 	var req SubscribeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Get site name for email
 	site, err := r.db.GetSiteByID(c.Request.Context(), req.SiteID)
 	if err != nil || site == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site_id"})
+		respondBadRequest(c, ErrSiteInvalid, "invalid site_id")
 		return
 	}
 
 	// Check if already subscribed
 	existing, err := r.db.GetSubscriberByEmail(c.Request.Context(), req.SiteID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if existing != nil {
@@ -51,18 +51,18 @@ func (r *Router) subscribe(c *gin.Context) {
 	// Create subscriber with verification token
 	id, err := auth.GenerateSessionToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate ID"})
+		respondInternalError(c, ErrIDGenFailed, "failed to generate ID")
 		return
 	}
 	verifyToken, err := auth.GenerateVerificationToken()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
 	err = r.db.CreateSubscriber(c.Request.Context(), id, req.SiteID, req.Email, verifyToken)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to subscribe"})
+		respondInternalError(c, ErrSubscribeFailed, "failed to subscribe")
 		return
 	}
 
@@ -77,7 +77,7 @@ func (r *Router) sendVerificationEmail(siteName, siteID, emailAddr, token string
 	msg := templates.VerificationEmail(emailAddr, siteID, token)
 
 	if err := r.email.Send(context.Background(), msg); err != nil {
-		log.Printf("Failed to send verification email to %s: %v", emailAddr, err)
+		slog.Error("failed to send verification email", "email", emailAddr, "error", err)
 	}
 }
 
@@ -86,31 +86,31 @@ func (r *Router) verifySubscription(c *gin.Context) {
 	token := c.Query("token")
 
 	if siteID == "" || token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing parameters"})
+		respondBadRequest(c, ErrMissingParams, "missing parameters")
 		return
 	}
 
 	// Get subscriber before verification to get email
 	subscriber, err := r.db.GetSubscriberByToken(c.Request.Context(), siteID, token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if subscriber == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+		respondBadRequest(c, ErrInvalidVerifyToken, "invalid or expired token")
 		return
 	}
 
 	err = r.db.VerifySubscriber(c.Request.Context(), siteID, token)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+		respondBadRequest(c, ErrInvalidVerifyToken, "invalid or expired token")
 		return
 	}
 
 	// Send welcome email
 	site, err := r.db.GetSiteByID(c.Request.Context(), siteID)
 	if err != nil {
-		log.Printf("Failed to get site for welcome email: %v", err)
+		slog.Error("failed to get site for welcome email", "error", err)
 	} else if site != nil {
 		r.sendWelcomeEmail(site.Name, siteID, subscriber.Email)
 	}
@@ -123,20 +123,20 @@ func (r *Router) sendWelcomeEmail(siteName, siteID, emailAddr string) {
 	msg := templates.WelcomeEmail(emailAddr, siteID)
 
 	if err := r.email.Send(context.Background(), msg); err != nil {
-		log.Printf("Failed to send welcome email to %s: %v", emailAddr, err)
+		slog.Error("failed to send welcome email", "email", emailAddr, "error", err)
 	}
 }
 
 func (r *Router) unsubscribe(c *gin.Context) {
 	var req SubscribeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	err := r.db.UnsubscribeByEmail(c.Request.Context(), req.SiteID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unsubscribe"})
+		respondInternalError(c, ErrUnsubscribeFailed, "failed to unsubscribe")
 		return
 	}
 
@@ -146,19 +146,19 @@ func (r *Router) unsubscribe(c *gin.Context) {
 func (r *Router) listSubscribers(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	subscribers, err := r.db.ListSubscribers(c.Request.Context(), siteID, false)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
 	count, err := r.db.CountSubscribers(c.Request.Context(), siteID, true)
 	if err != nil {
-		log.Printf("Failed to count subscribers: %v", err)
+		slog.Error("failed to count subscribers", "error", err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{

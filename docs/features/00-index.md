@@ -156,6 +156,19 @@ Complete list of all MinimalDoc features with one-liner descriptions.
 | API | REST endpoints for all features |
 | Docker Ready | Dockerfile and docker-compose included |
 
+## Forum (Optional)
+
+| Feature | Description |
+|---------|-------------|
+| Categories | Organize discussions by topic with icons and colors |
+| Topics & Replies | Markdown content with threading and pagination |
+| Tags | Label topics for filtering and discovery |
+| Search | Full-text search across topics and posts |
+| Reputation | Points for creating content, receiving likes, solutions |
+| Moderation | Content flags, user bans, topic locking |
+| Notifications | Alerts for replies, likes, solutions, watched topics |
+| Leaderboard | Top contributors by reputation |
+
 ## Build
 
 | Feature | Description |

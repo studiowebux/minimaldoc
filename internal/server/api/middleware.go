@@ -1,16 +1,43 @@
 package api
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 )
+
+// TracingMiddleware creates a span per HTTP request with method, path, and status attributes.
+func TracingMiddleware() gin.HandlerFunc {
+	tracer := otel.Tracer("minimaldoc-server")
+
+	return func(c *gin.Context) {
+		spanName := fmt.Sprintf("%s %s", c.Request.Method, c.FullPath())
+		ctx, span := tracer.Start(c.Request.Context(), spanName,
+			trace.WithSpanKind(trace.SpanKindServer),
+		)
+		defer span.End()
+
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Next()
+
+		span.SetAttributes(
+			attribute.String("http.method", c.Request.Method),
+			attribute.String("http.route", c.FullPath()),
+			attribute.Int("http.status_code", c.Writer.Status()),
+		)
+	}
+}
 
 // SecurityHeadersMiddleware adds common security headers to responses.
 func SecurityHeadersMiddleware() gin.HandlerFunc {
@@ -45,7 +72,7 @@ func LoggerMiddleware() gin.HandlerFunc {
 		status := c.Writer.Status()
 		method := c.Request.Method
 
-		log.Printf("%s %s %d %v", method, path, status, latency)
+		slog.Info("request", "method", method, "path", path, "status", status, "latency", latency)
 	}
 }
 
@@ -140,6 +167,50 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			c.Abort()
+			return
+		}
+
+		// Set user info in context
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_role", claims.Role)
+		c.Set("site_id", claims.SiteID)
+
+		c.Next()
+	}
+}
+
+// OptionalAuthMiddleware tries to authenticate the user but doesn't require it.
+// If a valid token is present, it sets user info in context.
+// If not, it continues without setting user info (for anonymous access).
+func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var token string
+
+		// Check Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			token = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+
+		// Check session cookie
+		if token == "" {
+			if sessionCookie, err := c.Cookie(cfg.Auth.SessionCookieKey); err == nil && sessionCookie != "" {
+				token = sessionCookie
+			}
+		}
+
+		// If no token, continue as anonymous
+		if token == "" {
+			c.Next()
+			return
+		}
+
+		// Try to validate JWT
+		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
+		if err != nil {
+			// Invalid token, continue as anonymous
+			c.Next()
 			return
 		}
 
