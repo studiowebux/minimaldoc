@@ -79,8 +79,11 @@ func (r *Router) logAuditAction(c *gin.Context, action, entityType, entityID, en
 
 	id := uuid.New().String()
 
+	// Capture context before goroutine — gin.Context must not be accessed after handler returns.
+	ctx := c.Request.Context()
+
 	// Log asynchronously to avoid slowing down the main request
 	go func() {
-		_ = r.db.CreateAuditLog(c.Request.Context(), id, siteID, userID, userEmail, action, entityType, entityID, entityName, details, ipAddress, userAgent)
+		_ = r.db.CreateAuditLog(ctx, id, siteID, userID, userEmail, action, entityType, entityID, entityName, details, ipAddress, userAgent)
 	}()
 }
