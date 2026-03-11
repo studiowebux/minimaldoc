@@ -1,8 +1,6 @@
 title: MinimalDoc
 description: A minimal static site generator for documentation. Fast, clean, and easy to use.
-# base_url: https://studiowebux.github.io/minimaldoc
-base_url: http://localhost:8889
-site_id: "HG6wguOhe-t4zcO55ViLwAGR3zO70NOzUmeLn8N6k1o="
+base_url: https://minimaldoc.com
 author: Studio Webux
 theme: default
 dark_mode: false
@@ -42,10 +40,6 @@ landing:
       url: "/getting-started/installation.html"
     - text: "Features"
       url: "/features/overview.html"
-    - text: "Blog"
-      url: "http://localhost:8080/blog/"
-    - text: "Forum"
-      url: "http://localhost:8080/forum/"
     - text: "Status"
       url: "/status/"
   hero:
@@ -316,10 +310,6 @@ footer:
           url: "/guides/deployment.html"
     - title: "Resources"
       items:
-        - text: "Blog"
-          url: "http://localhost:8080/blog/"
-        - text: "Forum"
-          url: "http://localhost:8080/forum/"
         - text: "Knowledge Base"
           url: "/kb/"
         - text: "Status"
@@ -385,12 +375,4 @@ claude_assist:
   # prompt: "Custom prompt prefix (optional)"
 
 analytics:
-  enabled: true
-  providers:
-    - type: minimaldoc
-      enabled: true
-      config:
-        endpoint: "http://localhost:8080"
-        site_id: "HG6wguOhe-t4zcO55ViLwAGR3zO70NOzUmeLn8N6k1o="
-        features: "analytics,feedback,newsletter,blog,forum"
-        debug: "true"
+  enabled: false

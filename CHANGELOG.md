@@ -3,25 +3,17 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-- Structured logging with `slog` (JSON in production, text in development)
-- Health check endpoints: `/healthz` (liveness), `/readyz` (readiness with DB ping)
-- Makefile targets: `lint`, `check`, `security`, `coverage`, `ci`
-- CI pipeline with GitHub Actions (lint, test, security)
-- This CHANGELOG
-
-### Changed
-- Replaced all `log.*` calls in server code with `slog` structured logging
-- Added `SERVER_ENV` environment variable (default: `development`)
-
-## [1.4.0] - Unreleased
+## [1.4.0] - 2026-03-11
 
 ### Added
-- Forum system: categories, topics, posts, tags, likes, reputation, moderation, bans
+
+- Forum system: categories, topics, posts, tags, likes, reputation, moderation,
+  bans
 - Public authentication: login/register pages, email verification
 - OAuth on public router for newsletter subscribe
 - Blog comment authentication: auto-fill name/email for logged-in users
@@ -29,12 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Waitlist landing page type with newsletter CTA
 - Copy-to-markdown button for documentation pages
 - llms.txt footer link for AI discoverability
+- Roadmap page generator (board and timeline layouts, tag filtering)
+- CSS design system with unified token architecture
+- Structured logging with `slog` (JSON in production, text in development)
+- Health check endpoints: `/healthz` (liveness), `/readyz` (readiness with DB
+  ping)
+- Makefile targets: `lint`, `check`, `security`, `coverage`, `ci`
+- CI pipeline with GitHub Actions (lint, test, security)
 
 ### Changed
+
 - Split `queries.go` (1,471 lines) into domain-specific files
 - Split `handlers.go` (1,337 lines) into domain-specific files
+- Replaced all `log.*` calls in server code with `slog` structured logging
+- Added `SERVER_ENV` environment variable (default: `development`)
+- Eliminated CSS duplication, tokenized all hardcoded values
 
 ### Fixed
+
 - 12 security vulnerabilities (CSP headers, input validation, error discarding)
 - Rate limiting for login, API, and submission endpoints
 - Code deduplication across handler files
@@ -42,7 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.3.0] - 2025-12-15
 
 ### Added
-- Backend server (`minimaldoc-server`) with dual-port architecture (public :8080, admin :8090)
+
+- Backend server (`minimaldoc-server`) with dual-port architecture (public
+  :8080, admin :8090)
 - Cookie-free analytics (page views, duration, bounce rate, session tracking)
 - Feedback collection widget
 - Newsletter subscription with email verification
@@ -58,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-10-01
 
 ### Added
+
 - Multi-version documentation with version selector
 - Internationalization (i18n) with directory-based structure
 - RTL language support
@@ -65,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2025-08-01
 
 ### Added
+
 - Knowledge base page type
 - Landing page builder (YAML + Markdown)
 - Footer version display
@@ -72,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-06-01
 
 ### Added
+
 - Static site generator for documentation
 - FAQ, legal pages, knowledge base page types
 - Broken link checker

@@ -50,3 +50,15 @@ dist/
 my-docs/
 test-output/
 test-public/
+
+# Internal planning files (never commit these)
+ROADMAP.md
+TASKS.md
+TODO.md
+progress.md
+PROGRESS.md
+task_plan.md
+findings.md
+HANDOFF.md
+MEMORY.md
+MEMORIES.md
