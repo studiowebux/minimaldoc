@@ -494,31 +494,31 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 
 	// String constraints
 	if schema.MinLength > 0 {
-		ml := int(schema.MinLength) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		ml := int(schema.MinLength)
 		s.MinLength = &ml
 	}
 	if schema.MaxLength != nil {
-		ml := int(*schema.MaxLength) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		ml := int(*schema.MaxLength)
 		s.MaxLength = &ml
 	}
 
 	// Array constraints
 	if schema.MinItems > 0 {
-		mi := int(schema.MinItems) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		mi := int(schema.MinItems)
 		s.MinItems = &mi
 	}
 	if schema.MaxItems != nil {
-		mi := int(*schema.MaxItems) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		mi := int(*schema.MaxItems)
 		s.MaxItems = &mi
 	}
 
 	// Object constraints
 	if schema.MinProps > 0 {
-		mp := int(schema.MinProps) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		mp := int(schema.MinProps)
 		s.MinProperties = &mp
 	}
 	if schema.MaxProps != nil {
-		mp := int(*schema.MaxProps) //nolint:gosec // OpenAPI spec values never exceed math.MaxInt
+		mp := int(*schema.MaxProps)
 		s.MaxProperties = &mp
 	}
 
