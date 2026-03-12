@@ -325,7 +325,7 @@ func (v *LinkValidator) validateFragment(htmlPath, fragment string) bool {
 func (v *LinkValidator) extractHeadingIDs(htmlPath string) map[string]bool {
 	ids := make(map[string]bool)
 
-	content, err := os.ReadFile(htmlPath)
+	content, err := os.ReadFile(htmlPath) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return ids
 	}

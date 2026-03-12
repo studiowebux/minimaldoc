@@ -31,7 +31,7 @@ func NewTOCFileParser(docsDir string) *TOCFileParser {
 
 // Parse parses a TOC.md file and returns the navigation structure
 func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
-	file, err := os.Open(tocFilePath)
+	file, err := os.Open(tocFilePath) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return nil, err
 	}

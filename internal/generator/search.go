@@ -3,7 +3,6 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -251,12 +250,12 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 		indexPath = filepath.Join(g.site.OutputRoot, "search-index.json")
 	} else {
 		indexPath = filepath.Join(g.site.OutputRoot, versionInfo.Path, "search-index.json")
-		if err := os.MkdirAll(filepath.Dir(indexPath), 0755); err != nil {
+		if err := makeWebDir(filepath.Dir(indexPath)); err != nil {
 			return fmt.Errorf("failed to create version directory: %w", err)
 		}
 	}
 
-	if err := os.WriteFile(indexPath, indexData, 0644); err != nil {
+	if err := writeWebFile(indexPath, indexData); err != nil {
 		return fmt.Errorf("failed to write search index: %w", err)
 	}
 
@@ -437,7 +436,7 @@ func (g *SearchGenerator) generateMainIndex() error {
 	}
 
 	indexPath := filepath.Join(g.site.OutputRoot, "search-index.json")
-	if err := os.WriteFile(indexPath, indexData, 0644); err != nil {
+	if err := writeWebFile(indexPath, indexData); err != nil {
 		return fmt.Errorf("failed to write search index: %w", err)
 	}
 
@@ -763,13 +762,13 @@ func (g *SearchGenerator) writeShardedIndex(index SearchIndex, outputDir string)
 	}
 
 	manifestPath := filepath.Join(outputDir, "search-manifest.json")
-	if err := os.WriteFile(manifestPath, manifestData, 0644); err != nil {
+	if err := writeWebFile(manifestPath, manifestData); err != nil {
 		return 0, fmt.Errorf("failed to write search manifest: %w", err)
 	}
 
 	// Create shards directory
 	shardsDir := filepath.Join(outputDir, "search-shards")
-	if err := os.MkdirAll(shardsDir, 0755); err != nil {
+	if err := makeWebDir(shardsDir); err != nil {
 		return 0, fmt.Errorf("failed to create shards directory: %w", err)
 	}
 
@@ -786,7 +785,7 @@ func (g *SearchGenerator) writeShardedIndex(index SearchIndex, outputDir string)
 		}
 
 		shardPath := filepath.Join(shardsDir, prefix+".json")
-		if err := os.WriteFile(shardPath, shardData, 0644); err != nil {
+		if err := writeWebFile(shardPath, shardData); err != nil {
 			return 0, fmt.Errorf("failed to write shard %s: %w", prefix, err)
 		}
 	}

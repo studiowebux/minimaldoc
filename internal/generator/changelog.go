@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -67,7 +66,7 @@ func (g *ChangelogGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, changelogPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create changelog output directory: %w", err)
 	}
 
@@ -118,7 +117,7 @@ func (g *ChangelogGenerator) generateIndexPage(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write changelog page: %w", err)
 	}
 
@@ -157,7 +156,7 @@ func (g *ChangelogGenerator) generateReleasePage(outputDir string, release core.
 	}
 
 	outputPath := filepath.Join(outputDir, release.Slug+".html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write release page: %w", err)
 	}
 
@@ -236,7 +235,7 @@ func (g *ChangelogGenerator) generateChangelogJSON(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "changelog.json")
-	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+	if err := writeWebFile(outputPath, data); err != nil {
 		return fmt.Errorf("failed to write changelog.json: %w", err)
 	}
 
@@ -331,7 +330,7 @@ func (g *ChangelogGenerator) generateRSSFeed(outputDir string) error {
 	xmlData := []byte(xml.Header + string(data))
 
 	outputPath := filepath.Join(outputDir, "feed.xml")
-	if err := os.WriteFile(outputPath, xmlData, 0644); err != nil {
+	if err := writeWebFile(outputPath, xmlData); err != nil {
 		return fmt.Errorf("failed to write RSS feed: %w", err)
 	}
 

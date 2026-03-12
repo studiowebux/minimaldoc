@@ -77,13 +77,8 @@ jobs:
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Run gosec
-        # Exclude rules that are false positives for a static site generator:
+        # Exclude rules that are true false positives for a static site generator:
         # G101 - error code string constants flagged as credentials
-        # G107 - intentional HTTP fetch from user-configured OpenAPI spec URLs
         # G115 - uint64->int for OpenAPI schema values (never exceed math.MaxInt)
         # G203 - template.HTML intentionally used for trusted generated output
-        # G301 - 0755 permissions required for web-served output directories
-        # G304 - intentional file reads from user-configured paths
-        # G104 - pre-existing unhandled errors (LOW severity, tracked separately)
-        # G306 - 0644 is acceptable for read-only cache files
-        run: gosec -exclude=G101,G104,G107,G115,G203,G301,G304,G306 ./...
+        run: gosec -exclude=G101,G115,G203 ./...

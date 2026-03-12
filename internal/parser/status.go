@@ -112,7 +112,7 @@ func (p *StatusParser) ParseStatusDir(statusDir string) (*core.StatusPage, error
 func (p *StatusParser) ParseConfig(path string) (core.StatusConfig, error) {
 	config := core.DefaultStatusConfig()
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return config, err
 	}
@@ -126,7 +126,7 @@ func (p *StatusParser) ParseConfig(path string) (core.StatusConfig, error) {
 
 // ParseComponents parses the components.yaml file
 func (p *StatusParser) ParseComponents(path string) ([]core.StatusComponent, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (p *StatusParser) ParseIncident(path string) (core.Incident, error) {
 	incident.Slug = strings.TrimSuffix(filename, ".md")
 
 	// Read file
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return incident, err
 	}
@@ -270,7 +270,7 @@ func (p *StatusParser) parseIncidentUpdates(content []byte, baseDate time.Time) 
 			if currentUpdate != nil {
 				currentUpdate.RawMD = strings.TrimSpace(strings.Join(currentContent, "\n"))
 				var buf bytes.Buffer
-				p.md.Convert([]byte(currentUpdate.RawMD), &buf)
+				_ = p.md.Convert([]byte(currentUpdate.RawMD), &buf) // goldmark Convert rarely errors on valid markdown
 				currentUpdate.Message = buf.String()
 				updates = append(updates, *currentUpdate)
 			}
@@ -291,7 +291,7 @@ func (p *StatusParser) parseIncidentUpdates(content []byte, baseDate time.Time) 
 	if currentUpdate != nil {
 		currentUpdate.RawMD = strings.TrimSpace(strings.Join(currentContent, "\n"))
 		var buf bytes.Buffer
-		p.md.Convert([]byte(currentUpdate.RawMD), &buf)
+		_ = p.md.Convert([]byte(currentUpdate.RawMD), &buf) // goldmark Convert rarely errors on valid markdown
 		currentUpdate.Message = buf.String()
 		updates = append(updates, *currentUpdate)
 	}
@@ -403,7 +403,7 @@ func (p *StatusParser) ParseMaintenanceFile(path string) (core.Maintenance, erro
 	m.Slug = strings.TrimSuffix(filename, ".md")
 
 	// Read file
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return m, err
 	}

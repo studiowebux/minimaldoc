@@ -107,7 +107,7 @@ func (g *SitemapGenerator) Generate() error {
 
 	// Write to file
 	sitemapPath := filepath.Join(g.site.OutputRoot, "sitemap.xml")
-	if err := os.WriteFile(sitemapPath, xmlContent, 0644); err != nil {
+	if err := writeWebFile(sitemapPath, xmlContent); err != nil {
 		return fmt.Errorf("failed to write sitemap: %w", err)
 	}
 

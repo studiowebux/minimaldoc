@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -80,12 +81,18 @@ func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
 // ParseURL fetches and parses an OpenAPI spec from a URL
 func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 	// Create cache directory if it doesn't exist
-	if err := os.MkdirAll(p.cacheDir, 0755); err != nil {
+	if err := os.MkdirAll(p.cacheDir, 0755); err != nil { // #nosec G301 -- cache directory is not sensitive
 		return nil, fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
+	// Validate URL scheme before fetching (G107)
+	parsed, parseErr := neturl.Parse(url)
+	if parseErr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+		return nil, fmt.Errorf("invalid OpenAPI spec URL (must be http or https): %s", url)
+	}
+
 	// Fetch the spec
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // #nosec G107 -- scheme validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: %w", url, err)
 	}
@@ -129,7 +136,7 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 
 	// Cache the spec
 	cachePath := filepath.Join(p.cacheDir, spec.Name+".json")
-	if err := os.WriteFile(cachePath, body, 0644); err != nil {
+	if err := os.WriteFile(cachePath, body, 0644); err != nil { // #nosec G306 -- OpenAPI spec cache is not sensitive
 		// Non-fatal: continue even if caching fails
 		fmt.Fprintf(os.Stderr, "Warning: failed to cache OpenAPI spec: %v\n", err)
 	}

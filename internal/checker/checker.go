@@ -93,14 +93,14 @@ func (c *LinkChecker) collectLinks() error {
 			continue
 		}
 
-		filepath.WalkDir(dirPath, func(path string, d os.DirEntry, err error) error {
+		_ = filepath.WalkDir(dirPath, func(path string, d os.DirEntry, err error) error {
 			if err != nil || d.IsDir() {
 				return nil
 			}
 			if filepath.Ext(path) != ".md" {
 				return nil
 			}
-			c.collector.CollectFromFile(path)
+			_ = c.collector.CollectFromFile(path) // best-effort; walk continues on per-file errors
 			return nil
 		})
 	}

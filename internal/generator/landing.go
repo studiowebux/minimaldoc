@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -84,7 +83,7 @@ func (g *LandingGenerator) generateMainPage() error {
 	}
 
 	outputPath := filepath.Join(g.site.OutputRoot, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write landing page: %w", err)
 	}
 

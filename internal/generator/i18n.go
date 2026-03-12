@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -198,12 +197,12 @@ func (g *I18nGenerator) generateLocalePages(localeInfo core.LocaleInfo, pages []
 
 		// Create output directory
 		outputDir := filepath.Dir(outputPath)
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if err := makeWebDir(outputDir); err != nil {
 			return fmt.Errorf("failed to create output directory: %w", err)
 		}
 
 		// Write HTML file
-		if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("failed to write file: %w", err)
 		}
 	}
@@ -249,12 +248,12 @@ func (g *I18nGenerator) generateLocaleVersionedPages(localeInfo core.LocaleInfo,
 
 		// Create output directory
 		outputDir := filepath.Dir(outputPath)
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
+		if err := makeWebDir(outputDir); err != nil {
 			return fmt.Errorf("failed to create output directory: %w", err)
 		}
 
 		// Write HTML file
-		if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+		if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("failed to write file: %w", err)
 		}
 	}
@@ -287,7 +286,7 @@ func (g *I18nGenerator) generateLocalesJSON(defaultLocale string) error {
 	}
 
 	outputPath := filepath.Join(g.site.OutputRoot, "locales.json")
-	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+	if err := writeWebFile(outputPath, data); err != nil {
 		return fmt.Errorf("failed to write locales.json: %w", err)
 	}
 

@@ -103,7 +103,7 @@ func parseVersion(v string) [3]int {
 		// Handle pre-release suffixes (e.g., "1.0.0-beta")
 		numStr := strings.Split(parts[i], "-")[0]
 		var num int
-		fmt.Sscanf(numStr, "%d", &num)
+		_, _ = fmt.Sscanf(numStr, "%d", &num) // non-numeric string defaults num to 0
 		result[i] = num
 	}
 

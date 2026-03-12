@@ -38,7 +38,7 @@ var (
 
 // CollectFromFile extracts all links from a markdown file
 func (c *LinkCollector) CollectFromFile(filePath string) error {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return err
 	}

@@ -90,7 +90,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0755); err != nil { // #nosec G301 -- project source directories need broad access
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
 	}
@@ -135,7 +135,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	for path, content := range files {
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil { // #nosec G306 -- documentation source files are not sensitive
 			return fmt.Errorf("failed to create file %s: %w", path, err)
 		}
 	}
