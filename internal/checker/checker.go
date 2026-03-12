@@ -100,7 +100,7 @@ func (c *LinkChecker) collectLinks() error {
 			if filepath.Ext(path) != ".md" {
 				return nil
 			}
-			c.collector.CollectFromFile(path)
+			_ = c.collector.CollectFromFile(path) // best-effort; walk continues on per-file errors
 			return nil
 		})
 	}
