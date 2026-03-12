@@ -8,6 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-03-12
+
+### Fixed
+
+- `code-copy.js` was incorrectly excluded from build output when OpenAPI was
+  disabled, causing a 404 on code block copy buttons across all deployed sites
+- Documentation article pages were capped at 768px width; now matches the
+  category page width at 1280px
+
 ## [1.4.0] - 2026-03-11
 
 ### Added
