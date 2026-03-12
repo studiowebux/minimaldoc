@@ -438,7 +438,7 @@
 /* Article Page */
 .kb-article-page {
     padding: 2rem;
-    max-width: var(--max-w-md);
+    max-width: var(--max-w-xl);
     margin: 0 auto;
 }
 

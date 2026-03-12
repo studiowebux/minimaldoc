@@ -171,7 +171,6 @@ func (g *HTMLGenerator) copyStaticAssets() error {
 					filename == "api-tester.js" ||
 					filename == "oauth-handler.js" ||
 					filename == "export.js" ||
-					filename == "code-copy.js" ||
 					filename == "sidebar-resize.js" {
 					return nil
 				}
