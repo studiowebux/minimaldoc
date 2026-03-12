@@ -8,6 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-03-12
+
+### Fixed
+
+- Address all excluded gosec rules: G104 (unhandled errors), G107 (URL
+  validation before HTTP fetch), G301/G306 (file/directory permissions),
+  G304 (file inclusion via variable)
+- `internal/generator/fs.go`: centralise web output file/dir helpers with
+  explicit nosec annotations for G301/G306
+- gosec CI exclusion list reduced from 8 rules to 3 (G101, G115, G203)
+
 ## [1.4.1] - 2026-03-12
 
 ### Fixed
