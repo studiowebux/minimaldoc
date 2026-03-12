@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -62,7 +61,7 @@ func (g *KBGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, kbPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create KB output directory: %w", err)
 	}
 
@@ -114,7 +113,7 @@ func (g *KBGenerator) generateLanding(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write KB landing: %w", err)
 	}
 
@@ -129,7 +128,7 @@ func (g *KBGenerator) generateCategory(outputDir string, cat core.KBCategory) er
 	}
 
 	catDir := filepath.Join(outputDir, cat.Slug)
-	if err := os.MkdirAll(catDir, 0755); err != nil {
+	if err := makeWebDir(catDir); err != nil {
 		return err
 	}
 
@@ -152,7 +151,7 @@ func (g *KBGenerator) generateCategory(outputDir string, cat core.KBCategory) er
 	}
 
 	outputPath := filepath.Join(catDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write category page: %w", err)
 	}
 
@@ -192,7 +191,7 @@ func (g *KBGenerator) generateArticle(catDir string, cat core.KBCategory, articl
 	}
 
 	outputPath := filepath.Join(catDir, article.Slug+".html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write article page: %w", err)
 	}
 
@@ -255,7 +254,7 @@ func (g *KBGenerator) generateSearchIndex(outputDir string) error {
 	buf.WriteString("\n]")
 
 	outputPath := filepath.Join(outputDir, "kb-search.json")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write KB search index: %w", err)
 	}
 

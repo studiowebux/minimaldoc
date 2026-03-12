@@ -3,7 +3,6 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -115,7 +114,7 @@ func (g *LLMSGenerator) generateIndex() error {
 
 	// Write file
 	outputPath := filepath.Join(g.site.OutputRoot, "llms.txt")
-	return os.WriteFile(outputPath, buf.Bytes(), 0644)
+	return writeWebFile(outputPath, buf.Bytes())
 }
 
 // generateMarkdownFiles creates individual .md files for each page
@@ -154,12 +153,12 @@ func (g *LLMSGenerator) generatePageMarkdown(page *core.Page) error {
 	mdDir := filepath.Dir(mdPath)
 
 	// Create directory
-	if err := os.MkdirAll(mdDir, 0755); err != nil {
+	if err := makeWebDir(mdDir); err != nil {
 		return err
 	}
 
 	// Write file
-	return os.WriteFile(mdPath, buf.Bytes(), 0644)
+	return writeWebFile(mdPath, buf.Bytes())
 }
 
 // generateFullVersion creates llms-full.txt with all documentation content
@@ -206,7 +205,7 @@ func (g *LLMSGenerator) generateFullVersion() error {
 
 	// Write file
 	outputPath := filepath.Join(g.site.OutputRoot, "llms-full.txt")
-	return os.WriteFile(outputPath, buf.Bytes(), 0644)
+	return writeWebFile(outputPath, buf.Bytes())
 }
 
 // shiftHeadings shifts markdown heading levels down by n levels

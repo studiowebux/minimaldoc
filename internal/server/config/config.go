@@ -22,7 +22,7 @@ type DocsConfig struct {
 
 // LoadDocsConfig loads the docs config.yaml from the specified path.
 func LoadDocsConfig(path string) (*DocsConfig, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return nil, err
 	}

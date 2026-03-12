@@ -37,7 +37,7 @@ func (p *FrontmatterParser) ParseFile(path string) (core.Metadata, []byte, error
 	meta := core.DefaultMetadata()
 
 	// Read file
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return meta, nil, err
 	}

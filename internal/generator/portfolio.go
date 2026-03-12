@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -62,7 +61,7 @@ func (g *PortfolioGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, portfolioPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create portfolio output directory: %w", err)
 	}
 
@@ -102,7 +101,7 @@ func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write portfolio page: %w", err)
 	}
 
@@ -112,7 +111,7 @@ func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
 // generateProjectPages generates individual project pages
 func (g *PortfolioGenerator) generateProjectPages(outputDir string) error {
 	projectDir := filepath.Join(outputDir, "project")
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
+	if err := makeWebDir(projectDir); err != nil {
 		return fmt.Errorf("failed to create project directory: %w", err)
 	}
 
@@ -148,7 +147,7 @@ func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core
 	}
 
 	outputPath := filepath.Join(projectDir, project.Slug+".html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write project page: %w", err)
 	}
 

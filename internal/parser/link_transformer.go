@@ -12,7 +12,7 @@ import (
 // It applies slug transformation logic to match the navigation URL structure
 // basePath is prepended to all transformed links (e.g., "/docs")
 func TransformMarkdownLinks(doc ast.Node, currentPagePath string, basePath string) {
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) { // walk never errors; closure always returns nil
 		if !entering {
 			return ast.WalkContinue, nil
 		}
@@ -98,7 +98,7 @@ func resolveRelativePath(linkPath string, currentPagePath string) string {
 
 // TransformExternalLinks adds target="_blank" and rel="noopener noreferrer" to external links
 func TransformExternalLinks(doc ast.Node) {
-	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+	_ = ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) { // walk never errors; closure always returns nil
 		if !entering {
 			return ast.WalkContinue, nil
 		}

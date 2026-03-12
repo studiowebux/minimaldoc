@@ -100,7 +100,7 @@ func LoadConfig(docsDir string) (*FileConfig, error) {
 	}
 
 	// Read config file
-	data, err := os.ReadFile(configPath)
+	data, err := os.ReadFile(configPath) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}

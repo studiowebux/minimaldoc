@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -62,7 +61,7 @@ func (g *FaqGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, faqPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create FAQ output directory: %w", err)
 	}
 
@@ -104,7 +103,7 @@ func (g *FaqGenerator) generateMainPage(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write FAQ page: %w", err)
 	}
 

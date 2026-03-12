@@ -93,7 +93,7 @@ func (c *LinkChecker) collectLinks() error {
 			continue
 		}
 
-		filepath.WalkDir(dirPath, func(path string, d os.DirEntry, err error) error {
+		_ = filepath.WalkDir(dirPath, func(path string, d os.DirEntry, err error) error {
 			if err != nil || d.IsDir() {
 				return nil
 			}

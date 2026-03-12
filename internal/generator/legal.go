@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -62,7 +61,7 @@ func (g *LegalGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, legalPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create legal output directory: %w", err)
 	}
 
@@ -95,12 +94,12 @@ func (g *LegalGenerator) generatePage(outputDir string, page *core.LegalPage) er
 
 	// Create page directory
 	pageDir := filepath.Join(outputDir, page.Slug)
-	if err := os.MkdirAll(pageDir, 0755); err != nil {
+	if err := makeWebDir(pageDir); err != nil {
 		return fmt.Errorf("failed to create page directory: %w", err)
 	}
 
 	outputPath := filepath.Join(pageDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write legal page: %w", err)
 	}
 

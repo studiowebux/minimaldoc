@@ -64,7 +64,7 @@ func (g *OpenAPIGenerator) Generate() error {
 
 	// Create API directory
 	apiDir := filepath.Join(g.site.OutputRoot, "api")
-	if err := os.MkdirAll(apiDir, 0755); err != nil {
+	if err := makeWebDir(apiDir); err != nil {
 		return fmt.Errorf("failed to create API directory: %w", err)
 	}
 
@@ -94,7 +94,7 @@ func (g *OpenAPIGenerator) generateSpec(spec *core.APISpec, apiDir string) error
 	specName = strings.TrimSuffix(specName, ".json")
 
 	specDir := filepath.Join(apiDir, specName)
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := makeWebDir(specDir); err != nil {
 		return fmt.Errorf("failed to create spec directory: %w", err)
 	}
 
@@ -140,7 +140,7 @@ func (g *OpenAPIGenerator) generateSpecHTML(spec *core.APISpec, specDir string) 
 
 	// Write HTML file
 	outputPath := filepath.Join(specDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write HTML file: %w", err)
 	}
 
@@ -195,7 +195,7 @@ func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) 
 		return fmt.Errorf("failed to marshal spec data: %w", err)
 	}
 
-	if err := os.WriteFile(filepath.Join(specDir, "spec-data.json"), specDataJSON, 0644); err != nil {
+	if err := writeWebFile(filepath.Join(specDir, "spec-data.json"), specDataJSON); err != nil {
 		return fmt.Errorf("failed to write spec data JSON: %w", err)
 	}
 
@@ -205,7 +205,7 @@ func (g *OpenAPIGenerator) generateSpecJSON(spec *core.APISpec, specDir string) 
 		return fmt.Errorf("failed to marshal endpoints: %w", err)
 	}
 
-	if err := os.WriteFile(filepath.Join(specDir, "endpoints.json"), endpointsJSON, 0644); err != nil {
+	if err := writeWebFile(filepath.Join(specDir, "endpoints.json"), endpointsJSON); err != nil {
 		return fmt.Errorf("failed to write endpoints JSON: %w", err)
 	}
 
@@ -235,7 +235,7 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 </html>`, basePath, specSlug, basePath, specSlug, basePath, specSlug)
 
 		indexPath := filepath.Join(apiDir, "index.html")
-		if err := os.WriteFile(indexPath, []byte(redirectHTML), 0644); err != nil {
+		if err := writeWebFile(indexPath, []byte(redirectHTML)); err != nil {
 			return fmt.Errorf("failed to write API redirect: %w", err)
 		}
 		return nil
@@ -356,7 +356,7 @@ a{color:var(--link-color)}
 
 	// Write index file
 	indexPath := filepath.Join(apiDir, "index.html")
-	if err := os.WriteFile(indexPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(indexPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write API index: %w", err)
 	}
 

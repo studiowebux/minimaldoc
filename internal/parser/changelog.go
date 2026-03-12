@@ -73,7 +73,7 @@ func (p *ChangelogParser) ParseChangelogDir(changelogDir string) (*core.Changelo
 func (p *ChangelogParser) ParseConfig(path string) (core.ChangelogConfig, error) {
 	config := core.DefaultChangelogConfig()
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return config, err
 	}
@@ -128,7 +128,7 @@ func (p *ChangelogParser) ParseRelease(path string) (core.Release, error) {
 	release.Slug = strings.TrimSuffix(filename, ".md")
 
 	// Read file
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(path) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return release, err
 	}
@@ -231,7 +231,7 @@ func (p *ChangelogParser) parseEntries(lines []string) []core.ChangeEntry {
 			if currentEntry != nil {
 				currentEntry.RawMD = strings.TrimSpace(strings.Join(currentLines, "\n"))
 				var buf bytes.Buffer
-				p.md.Convert([]byte(currentEntry.RawMD), &buf)
+				_ = p.md.Convert([]byte(currentEntry.RawMD), &buf) // goldmark Convert rarely errors on valid markdown
 				currentEntry.HTML = buf.String()
 				currentEntry.Description = extractDescription(currentEntry.RawMD)
 				entries = append(entries, *currentEntry)
@@ -251,7 +251,7 @@ func (p *ChangelogParser) parseEntries(lines []string) []core.ChangeEntry {
 	if currentEntry != nil {
 		currentEntry.RawMD = strings.TrimSpace(strings.Join(currentLines, "\n"))
 		var buf bytes.Buffer
-		p.md.Convert([]byte(currentEntry.RawMD), &buf)
+		_ = p.md.Convert([]byte(currentEntry.RawMD), &buf) // goldmark Convert rarely errors on valid markdown
 		currentEntry.HTML = buf.String()
 		currentEntry.Description = extractDescription(currentEntry.RawMD)
 		entries = append(entries, *currentEntry)

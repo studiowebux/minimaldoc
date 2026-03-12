@@ -43,7 +43,7 @@ func (s *LocalStorage) Upload(ctx context.Context, filename string, contentType 
 	}
 
 	// Create file
-	file, err := os.Create(fullPath)
+	file, err := os.Create(fullPath) // #nosec G304 -- path from trusted user configuration
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create file: %w", err)
 	}

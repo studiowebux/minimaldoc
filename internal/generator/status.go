@@ -7,7 +7,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"html/template"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -67,7 +66,7 @@ func (g *StatusGenerator) Generate() error {
 	}
 
 	outputDir := filepath.Join(g.site.OutputRoot, statusPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create status output directory: %w", err)
 	}
 
@@ -130,7 +129,7 @@ func (g *StatusGenerator) generateMainPage(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "index.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write status page: %w", err)
 	}
 
@@ -140,7 +139,7 @@ func (g *StatusGenerator) generateMainPage(outputDir string) error {
 // generateIncidentPages generates individual incident detail pages
 func (g *StatusGenerator) generateIncidentPages(outputDir string) error {
 	incidentDir := filepath.Join(outputDir, "incident")
-	if err := os.MkdirAll(incidentDir, 0755); err != nil {
+	if err := makeWebDir(incidentDir); err != nil {
 		return fmt.Errorf("failed to create incident directory: %w", err)
 	}
 
@@ -178,7 +177,7 @@ func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core
 	}
 
 	outputPath := filepath.Join(incidentDir, incident.Slug+".html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write incident page: %w", err)
 	}
 
@@ -188,7 +187,7 @@ func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core
 // generateMaintenancePages generates individual maintenance detail pages
 func (g *StatusGenerator) generateMaintenancePages(outputDir string) error {
 	maintenanceDir := filepath.Join(outputDir, "maintenance")
-	if err := os.MkdirAll(maintenanceDir, 0755); err != nil {
+	if err := makeWebDir(maintenanceDir); err != nil {
 		return fmt.Errorf("failed to create maintenance directory: %w", err)
 	}
 
@@ -226,7 +225,7 @@ func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, mainten
 	}
 
 	outputPath := filepath.Join(maintenanceDir, maintenance.Slug+".html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write maintenance page: %w", err)
 	}
 
@@ -255,7 +254,7 @@ func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "history.html")
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write history page: %w", err)
 	}
 
@@ -399,7 +398,7 @@ func (g *StatusGenerator) generateStatusJSON(outputDir string) error {
 	}
 
 	outputPath := filepath.Join(outputDir, "status.json")
-	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+	if err := writeWebFile(outputPath, data); err != nil {
 		return fmt.Errorf("failed to write status.json: %w", err)
 	}
 
@@ -501,7 +500,7 @@ func (g *StatusGenerator) generateRSSFeed(outputDir string) error {
 	xmlData := []byte(xml.Header + string(data))
 
 	outputPath := filepath.Join(outputDir, "feed.xml")
-	if err := os.WriteFile(outputPath, xmlData, 0644); err != nil {
+	if err := writeWebFile(outputPath, xmlData); err != nil {
 		return fmt.Errorf("failed to write RSS feed: %w", err)
 	}
 

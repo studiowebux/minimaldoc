@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -135,11 +134,11 @@ func (g *ThemeGenerator) Generate() error {
 
 	// Ensure css directory exists
 	cssDir := filepath.Dir(cssPath)
-	if err := os.MkdirAll(cssDir, 0755); err != nil {
+	if err := makeWebDir(cssDir); err != nil {
 		return fmt.Errorf("failed to create css directory: %w", err)
 	}
 
-	if err := os.WriteFile(cssPath, []byte(css.String()), 0644); err != nil {
+	if err := writeWebFile(cssPath, []byte(css.String())); err != nil {
 		return fmt.Errorf("failed to write custom theme CSS: %w", err)
 	}
 

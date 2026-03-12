@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -57,7 +56,7 @@ func (g *HTMLGenerator) Generate() error {
 	fmt.Println("Generating HTML files...")
 
 	// Create output directory
-	if err := os.MkdirAll(g.site.OutputRoot, 0755); err != nil {
+	if err := makeWebDir(g.site.OutputRoot); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -125,12 +124,12 @@ func (g *HTMLGenerator) generatePage(page *core.Page) error {
 
 	// Create output directory
 	outputDir := filepath.Dir(page.OutputPath)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	if err := makeWebDir(outputDir); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
 	// Write HTML file
-	if err := os.WriteFile(page.OutputPath, buf.Bytes(), 0644); err != nil {
+	if err := writeWebFile(page.OutputPath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
@@ -187,12 +186,12 @@ func (g *HTMLGenerator) copyStaticAssets() error {
 			outPath := filepath.Join(g.site.OutputRoot, relPath)
 
 			// Create output directory
-			if err := os.MkdirAll(filepath.Dir(outPath), 0755); err != nil {
+			if err := makeWebDir(filepath.Dir(outPath)); err != nil {
 				return fmt.Errorf("failed to create directory: %w", err)
 			}
 
 			// Write to destination
-			if err := os.WriteFile(outPath, content, 0644); err != nil {
+			if err := writeWebFile(outPath, content); err != nil {
 				return fmt.Errorf("failed to write file %s: %w", outPath, err)
 			}
 
