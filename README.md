@@ -39,6 +39,8 @@ minimaldoc init my-docs && cd my-docs && minimaldoc build
 
 ## Documentation
 
+The `docs/` directory is a **demo site** — it exists to showcase what MinimalDoc can generate and to test the generator itself. It is not the authoritative documentation for this project.
+
 | Topic           | Link                                                       |
 | --------------- | ---------------------------------------------------------- |
 | Getting Started | [docs/getting-started/](docs/getting-started/)             |
