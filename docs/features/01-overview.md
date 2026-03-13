@@ -42,7 +42,7 @@ Pure static output designed for CI/CD integration—automate updates to document
 |                | Knowledge Base      | Self-service support hub with categories and scoped search      | v1.1  |
 |                | Status              | Service health with incidents, maintenance, uptime              | v1.0  |
 |                | Changelog           | Version history with RSS feed                                   | v1.0  |
-|                | Roadmap             | Version-based timeline with tag filtering                       | v1.6  |
+|                | Roadmap             | Version-based timeline with tag filtering                       | v1.4  |
 | **Versioning** | Multi-Version       | Documentation for multiple software versions                    | v1.2  |
 |                | Version Selector    | Dropdown to switch between versions                             | v1.2  |
 |                | EOL Warnings        | Warning banners for end-of-life versions                        | v1.2  |
