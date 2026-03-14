@@ -32,8 +32,34 @@ type mcpRawTool struct {
 	InputSchema *mcpRawSchema `json:"inputSchema"`
 }
 
+// mcpSchemaType handles JSON Schema's "type" field which can be a string or
+// an array of strings (e.g. ["string","null"]). We keep the first non-null type.
+type mcpSchemaType string
+
+func (t *mcpSchemaType) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		*t = mcpSchemaType(s)
+		return nil
+	}
+	var arr []string
+	if err := json.Unmarshal(data, &arr); err != nil {
+		return fmt.Errorf("schema type: %w", err)
+	}
+	for _, v := range arr {
+		if v != "null" {
+			*t = mcpSchemaType(v)
+			return nil
+		}
+	}
+	if len(arr) > 0 {
+		*t = mcpSchemaType(arr[0])
+	}
+	return nil
+}
+
 type mcpRawSchema struct {
-	Type        string                   `json:"type"`
+	Type        mcpSchemaType            `json:"type"`
 	Description string                   `json:"description"`
 	Properties  map[string]*mcpRawSchema `json:"properties"`
 	Required    []string                 `json:"required"`
@@ -115,7 +141,7 @@ func convertSchema(r *mcpRawSchema) *core.MCPSchema {
 		return nil
 	}
 	s := &core.MCPSchema{
-		Type:        r.Type,
+		Type:        string(r.Type),
 		Description: r.Description,
 		Required:    r.Required,
 		Enum:        r.Enum,
