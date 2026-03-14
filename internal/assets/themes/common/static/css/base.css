@@ -38,6 +38,11 @@ html {
     white-space: normal;
 }
 
+.copy-fallback-textarea {
+    position: fixed;
+    left: -9999px;
+}
+
 /* ========================================
    Accessibility - Focus Indicators
    ======================================== */
