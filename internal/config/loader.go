@@ -84,6 +84,7 @@ type FileConfig struct {
 	PDFExport     core.PDFExportConfig    `yaml:"pdf_export"`
 	ClaudeAssist  core.ClaudeAssistConfig `yaml:"claude_assist"`
 	Analytics     core.AnalyticsConfig    `yaml:"analytics"`
+	MCP           core.MCPConfig          `yaml:"mcp"`
 
 	SocialLinks []SocialLinkConfig `yaml:"social_links"`
 }
@@ -222,6 +223,13 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	}
 	if cfg.Analytics.Enabled {
 		result.Analytics = cfg.Analytics
+	}
+
+	// MCP config
+	mergeBool(&result.MCP.Enabled, cfg.MCP.Enabled, cliFlags, "mcp")
+	if result.MCP.Enabled {
+		mergeStringSlice(&result.MCP.SpecFiles, cfg.MCP.SpecFiles, cliFlags, "mcp-dir")
+		mergeStringNoFlag(&result.MCP.Path, cfg.MCP.Path)
 	}
 
 	// Social Links

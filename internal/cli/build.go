@@ -49,6 +49,8 @@ var (
 	staleThreshold  int
 	linkCheckMode   string
 	checkExternal   bool
+	enableMCP       bool
+	mcpDir          string
 )
 
 func init() {
@@ -71,6 +73,8 @@ func init() {
 	BuildCmd.Flags().IntVar(&staleThreshold, "stale-threshold", 365, "Days before content is considered stale")
 	BuildCmd.Flags().StringVar(&linkCheckMode, "link-check", "warn", "Link check mode: error, warn, ignore")
 	BuildCmd.Flags().BoolVar(&checkExternal, "check-external", false, "Check external URLs (slower)")
+	BuildCmd.Flags().BoolVar(&enableMCP, "mcp", false, "Enable MCP server documentation")
+	BuildCmd.Flags().StringVar(&mcpDir, "mcp-dir", "mcp", "Directory containing *.mcp.json manifest files (relative to docs root)")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -160,6 +164,13 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		linkCheckConfig.Enabled = false
 	}
 
+	// Create MCP configuration
+	mcpConfig := core.DefaultMCPConfig()
+	mcpConfig.Enabled = enableMCP
+	if enableMCP {
+		mcpConfig.SpecFiles = []string{mcpDir + "/*.mcp.json"}
+	}
+
 	siteConfig := core.SiteConfig{
 		Title:        siteTitle,
 		Description:  siteDesc,
@@ -173,6 +184,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		Changelog:    changelogConfig,
 		StaleWarning: staleWarningConfig,
 		LinkCheck:    linkCheckConfig,
+		MCP:          mcpConfig,
 	}
 
 	// Merge with config.yaml if it exists (CLI flags take precedence)
@@ -233,6 +245,17 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	if openapiGen != nil {
 		if err := openapiGen.Generate(); err != nil {
 			return fmt.Errorf("OpenAPI generation failed: %w", err)
+		}
+	}
+
+	// Generate MCP server documentation (if enabled)
+	mcpGen, err := generator.NewMCPGenerator(site, assets.ThemeFS, version.Version)
+	if err != nil {
+		return fmt.Errorf("failed to create MCP generator: %w", err)
+	}
+	if mcpGen != nil {
+		if err := mcpGen.Generate(); err != nil {
+			return fmt.Errorf("MCP documentation generation failed: %w", err)
 		}
 	}
 

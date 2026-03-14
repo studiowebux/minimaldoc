@@ -20,6 +20,7 @@ type Site struct {
 	KBPage        *KBPage        // Knowledge Base data (if enabled)
 	WaitlistPage  *WaitlistPage  // Waitlist page data (if enabled)
 	RoadmapPage   *RoadmapPage   // Roadmap page data (if enabled)
+	MCPSpecs      []*MCPSpec     // MCP server documentation (if enabled)
 
 	// Versioning
 	VersionedPages map[string][]*Page // Pages per version (key = version name)
@@ -128,6 +129,9 @@ type SiteConfig struct {
 	// Analytics
 	Analytics AnalyticsConfig `yaml:"analytics"` // Analytics providers configuration
 
+	// MCP Server Documentation
+	MCP MCPConfig `yaml:"mcp"` // MCP server documentation configuration
+
 	// Custom
 	Custom map[string]any `yaml:"custom"`
 }
@@ -211,6 +215,7 @@ func DefaultSiteConfig() SiteConfig {
 		PDFExport:     DefaultPDFExportConfig(),
 		ClaudeAssist:  DefaultClaudeAssistConfig(),
 		Analytics:     DefaultAnalyticsConfig(),
+		MCP:           DefaultMCPConfig(),
 		Custom:        make(map[string]any),
 	}
 }
@@ -239,6 +244,7 @@ func NewSite(docsRoot, outputRoot string, config SiteConfig) *Site {
 		RootPages:  []*Page{},
 		Navigation: &Navigation{Items: []*NavItem{}},
 		APISpecs:   []*APISpec{},
+		MCPSpecs:   []*MCPSpec{},
 		DocsRoot:   docsRoot,
 		OutputRoot: outputRoot,
 	}
