@@ -21,6 +21,53 @@ type MCPGenerator struct {
 	version   string
 }
 
+// skipTokens are common action verbs and modifiers stripped from the front of
+// a tool name when deriving its group. The first non-skip token becomes the
+// group name. Extend this list if your server uses other leading verbs.
+var skipTokens = map[string]bool{
+	// CRUD + common actions
+	"list": true, "get": true, "create": true, "update": true, "delete": true,
+	"add": true, "remove": true, "set": true, "unset": true,
+	"read": true, "write": true, "fetch": true, "send": true,
+	"push": true, "pull": true, "run": true, "execute": true,
+	"check": true, "validate": true, "parse": true, "build": true,
+	"mark": true, "unmark": true, "move": true, "copy": true,
+	"approve": true, "reject": true, "claim": true, "release": true,
+	"request": true, "sync": true, "search": true, "sweep": true,
+	"upload": true, "download": true, "import": true, "export": true,
+	// common modifiers / adjectives
+	"batch": true, "bulk": true, "stale": true, "next": true,
+	"pending": true, "active": true, "all": true,
+}
+
+func mcpSingularize(s string) string {
+	if strings.HasSuffix(s, "ies") && len(s) > 3 {
+		return s[:len(s)-3] + "y"
+	}
+	if strings.HasSuffix(s, "s") && len(s) > 2 {
+		return s[:len(s)-1]
+	}
+	return s
+}
+
+// mcpToolGroupName derives a group name from a tool name by skipping leading
+// action verbs and returning the first meaningful entity token, singularized.
+// Works with any verb_entity or namespace_verb_entity naming convention.
+func mcpToolGroupName(name string) string {
+	parts := strings.Split(strings.ToLower(name), "_")
+	if len(parts) == 0 {
+		return "Other"
+	}
+	for _, part := range parts {
+		if !skipTokens[part] {
+			entity := mcpSingularize(part)
+			return strings.ToUpper(entity[:1]) + entity[1:]
+		}
+	}
+	last := parts[len(parts)-1]
+	return strings.ToUpper(last[:1]) + last[1:]
+}
+
 // MCPFuncMap returns template functions specific to MCP documentation
 func MCPFuncMap() template.FuncMap {
 	return template.FuncMap{
@@ -35,9 +82,22 @@ func MCPFuncMap() template.FuncMap {
 		"mcpSlug": func(name string) string {
 			re := regexp.MustCompile(`[^a-zA-Z0-9-]`)
 			slug := re.ReplaceAllString(strings.ToLower(name), "-")
-			// Collapse multiple dashes
 			multi := regexp.MustCompile(`-+`)
 			return strings.Trim(multi.ReplaceAllString(slug, "-"), "-")
+		},
+		"mcpGroupTools": func(tools []*core.MCPTool) []core.MCPToolGroup {
+			var groups []core.MCPToolGroup
+			index := map[string]int{}
+			for _, t := range tools {
+				g := mcpToolGroupName(t.Name)
+				if i, ok := index[g]; ok {
+					groups[i].Tools = append(groups[i].Tools, t)
+				} else {
+					index[g] = len(groups)
+					groups = append(groups, core.MCPToolGroup{Name: g, Tools: []*core.MCPTool{t}})
+				}
+			}
+			return groups
 		},
 	}
 }

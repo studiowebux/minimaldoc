@@ -56,6 +56,12 @@ type MCPPromptArgument struct {
 	Required    bool
 }
 
+// MCPToolGroup is a named group of tools used for rendering grouped sections
+type MCPToolGroup struct {
+	Name  string
+	Tools []*MCPTool
+}
+
 // DefaultMCPConfig returns an MCPConfig with sensible defaults
 func DefaultMCPConfig() MCPConfig {
 	return MCPConfig{

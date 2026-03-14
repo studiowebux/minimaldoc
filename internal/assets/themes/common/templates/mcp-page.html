@@ -27,43 +27,57 @@ a{color:var(--link-color)}
 
   <!-- Sidebar -->
   <aside class="mcp-sidebar" aria-label="MCP server navigation">
+    <div class="mcp-sidebar-back">
+      <a href="{{.BasePath}}/" class="mcp-back-link">&#8592; Back to Docs</a>
+    </div>
     <div class="mcp-sidebar-header">
       <h1 class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></h1>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
         <span class="theme-icon"></span>
       </button>
     </div>
+    {{if .Spec.Tools}}
+    <div class="mcp-sidebar-search">
+      <input id="mcp-search" type="search" placeholder="Filter tools..." autocomplete="off" aria-label="Filter tools">
+      <span id="mcp-count" class="mcp-count"></span>
+    </div>
+    {{end}}
 
     <nav class="mcp-sidebar-nav" aria-label="MCP contents">
       {{if .Spec.Tools}}
-      <div class="mcp-nav-section">
-        <p class="mcp-nav-section-title">Tools ({{len .Spec.Tools}})</p>
-        <ul class="mcp-nav-list">
-          {{range .Spec.Tools}}
-          <li class="mcp-nav-item">
-            <a href="#tool-{{mcpSlug .Name}}">{{.Name}}</a>
-          </li>
-          {{end}}
-        </ul>
-      </div>
+      <details class="mcp-nav-section" open>
+        <summary class="mcp-nav-section-title">Tools ({{len .Spec.Tools}})</summary>
+        {{range mcpGroupTools .Spec.Tools}}
+        <div class="mcp-nav-group" data-group="{{.Name}}">
+          <p class="mcp-nav-group-label">{{.Name}}</p>
+          <ul class="mcp-nav-list">
+            {{range .Tools}}
+            <li class="mcp-nav-item" data-tool="{{.Name}}">
+              <a href="#tool-{{mcpSlug .Name}}">{{.Name}}</a>
+            </li>
+            {{end}}
+          </ul>
+        </div>
+        {{end}}
+      </details>
       {{end}}
 
       {{if .Spec.Resources}}
-      <div class="mcp-nav-section">
-        <p class="mcp-nav-section-title">Resources ({{len .Spec.Resources}})</p>
+      <details class="mcp-nav-section" open>
+        <summary class="mcp-nav-section-title">Resources ({{len .Spec.Resources}})</summary>
         <ul class="mcp-nav-list">
           {{range .Spec.Resources}}
           <li class="mcp-nav-item">
-            <a href="#resources">{{if .Name}}{{.Name}}{{else}}{{.URI}}{{end}}</a>
+            <a href="#resource-{{mcpSlug .Name}}">{{if .Name}}{{.Name}}{{else}}{{.URI}}{{end}}</a>
           </li>
           {{end}}
         </ul>
-      </div>
+      </details>
       {{end}}
 
       {{if .Spec.Prompts}}
-      <div class="mcp-nav-section">
-        <p class="mcp-nav-section-title">Prompts ({{len .Spec.Prompts}})</p>
+      <details class="mcp-nav-section" open>
+        <summary class="mcp-nav-section-title">Prompts ({{len .Spec.Prompts}})</summary>
         <ul class="mcp-nav-list">
           {{range .Spec.Prompts}}
           <li class="mcp-nav-item">
@@ -71,13 +85,9 @@ a{color:var(--link-color)}
           </li>
           {{end}}
         </ul>
-      </div>
+      </details>
       {{end}}
     </nav>
-
-    <div class="mcp-sidebar-footer">
-      <a href="{{.BasePath}}/">← Back to Docs</a>
-    </div>
   </aside>
 
   <!-- Main content -->
@@ -96,66 +106,74 @@ a{color:var(--link-color)}
     {{if .Spec.Tools}}
     <section class="mcp-section" id="tools">
       <h2 class="mcp-section-title">Tools</h2>
-      {{range .Spec.Tools}}
-      <div class="mcp-tool" id="tool-{{mcpSlug .Name}}">
-        <h3 class="mcp-tool-name"><a href="#tool-{{mcpSlug .Name}}">{{.Name}}</a></h3>
-        {{if .Description}}<p class="mcp-tool-description">{{.Description}}</p>{{end}}
+      <p id="mcp-no-results" class="mcp-no-results" style="display:none">No tools match your filter.</p>
+      {{range mcpGroupTools .Spec.Tools}}
+      <div class="mcp-group" id="group-{{mcpSlug .Name}}">
+        <h3 class="mcp-group-title">{{.Name}} <span class="mcp-group-count">({{len .Tools}})</span></h3>
+        {{range .Tools}}
+        <details class="mcp-tool" id="tool-{{mcpSlug .Name}}">
+          <summary class="mcp-tool-summary">
+            <span class="mcp-tool-name">{{.Name}}</span>
+            {{if .Description}}<span class="mcp-tool-description">{{.Description}}</span>{{end}}
+          </summary>
 
-        {{if and .InputSchema (gt (len .InputSchema.Properties) 0)}}
-        <table class="mcp-params-table" aria-label="Input parameters for {{.Name}}">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Required</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{$schema := .InputSchema}}
-            {{range $propName, $prop := $schema.Properties}}
-            <tr>
-              <td class="mcp-param-name">{{$propName}}</td>
-              <td class="mcp-param-type">{{if $prop.Type}}{{$prop.Type}}{{else}}any{{end}}</td>
-              <td>
-                {{if mcpIsRequired $propName $schema.Required}}
-                <span class="mcp-badge mcp-badge-required">required</span>
-                {{else}}
-                <span class="mcp-badge mcp-badge-optional">optional</span>
-                {{end}}
-              </td>
-              <td class="mcp-param-desc">
-                {{$prop.Description}}
-                {{if and (eq $prop.Type "object") (gt (len $prop.Properties) 0)}}
-                <table class="mcp-params-table" style="margin-top:0.5rem">
-                  <thead>
-                    <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                  </thead>
-                  <tbody>
-                    {{range $nestedName, $nested := $prop.Properties}}
-                    <tr>
-                      <td class="mcp-param-name">{{$nestedName}}</td>
-                      <td class="mcp-param-type">{{if $nested.Type}}{{$nested.Type}}{{else}}any{{end}}</td>
-                      <td>
-                        {{if mcpIsRequired $nestedName $prop.Required}}
-                        <span class="mcp-badge mcp-badge-required">required</span>
-                        {{else}}
-                        <span class="mcp-badge mcp-badge-optional">optional</span>
-                        {{end}}
-                      </td>
-                      <td class="mcp-param-desc">{{$nested.Description}}</td>
-                    </tr>
-                    {{end}}
-                  </tbody>
-                </table>
-                {{end}}
-              </td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
-        {{else}}
-        <p class="mcp-no-params">No input parameters.</p>
+          {{if and .InputSchema (gt (len .InputSchema.Properties) 0)}}
+          <table class="mcp-params-table" aria-label="Input parameters for {{.Name}}">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{$schema := .InputSchema}}
+              {{range $propName, $prop := $schema.Properties}}
+              <tr>
+                <td class="mcp-param-name">{{$propName}}</td>
+                <td class="mcp-param-type">{{if $prop.Type}}{{$prop.Type}}{{else}}any{{end}}</td>
+                <td>
+                  {{if mcpIsRequired $propName $schema.Required}}
+                  <span class="mcp-badge mcp-badge-required">required</span>
+                  {{else}}
+                  <span class="mcp-badge mcp-badge-optional">optional</span>
+                  {{end}}
+                </td>
+                <td class="mcp-param-desc">
+                  {{$prop.Description}}
+                  {{if and (eq $prop.Type "object") (gt (len $prop.Properties) 0)}}
+                  <table class="mcp-params-table" style="margin-top:0.5rem">
+                    <thead>
+                      <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                      {{range $nestedName, $nested := $prop.Properties}}
+                      <tr>
+                        <td class="mcp-param-name">{{$nestedName}}</td>
+                        <td class="mcp-param-type">{{if $nested.Type}}{{$nested.Type}}{{else}}any{{end}}</td>
+                        <td>
+                          {{if mcpIsRequired $nestedName $prop.Required}}
+                          <span class="mcp-badge mcp-badge-required">required</span>
+                          {{else}}
+                          <span class="mcp-badge mcp-badge-optional">optional</span>
+                          {{end}}
+                        </td>
+                        <td class="mcp-param-desc">{{$nested.Description}}</td>
+                      </tr>
+                      {{end}}
+                    </tbody>
+                  </table>
+                  {{end}}
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+          {{else}}
+          <p class="mcp-no-params">No input parameters.</p>
+          {{end}}
+        </details>
         {{end}}
       </div>
       {{end}}
@@ -166,26 +184,22 @@ a{color:var(--link-color)}
     {{if .Spec.Resources}}
     <section class="mcp-section" id="resources">
       <h2 class="mcp-section-title">Resources</h2>
-      <table class="mcp-resource-table" aria-label="Available resources">
-        <thead>
-          <tr>
-            <th>URI</th>
-            <th>Name</th>
-            <th>MIME Type</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Spec.Resources}}
-          <tr>
-            <td class="mcp-resource-uri">{{.URI}}</td>
-            <td>{{.Name}}</td>
-            <td class="mcp-mimetype">{{if .MimeType}}{{.MimeType}}{{else}}—{{end}}</td>
-            <td class="mcp-param-desc">{{.Description}}</td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
+      {{range .Spec.Resources}}
+      <details class="mcp-tool" id="resource-{{mcpSlug .Name}}">
+        <summary class="mcp-tool-summary">
+          <span class="mcp-tool-name">{{if .Name}}{{.Name}}{{else}}{{.URI}}{{end}}</span>
+          {{if .MimeType}}<span class="mcp-tool-description">{{.MimeType}}</span>{{end}}
+        </summary>
+        <table class="mcp-params-table">
+          <tbody>
+            <tr><td class="mcp-param-name">URI</td><td class="mcp-resource-uri">{{.URI}}</td></tr>
+            {{if .Name}}<tr><td class="mcp-param-name">Name</td><td>{{.Name}}</td></tr>{{end}}
+            {{if .MimeType}}<tr><td class="mcp-param-name">MIME Type</td><td class="mcp-mimetype">{{.MimeType}}</td></tr>{{end}}
+            {{if .Description}}<tr><td class="mcp-param-name">Description</td><td class="mcp-param-desc">{{.Description}}</td></tr>{{end}}
+          </tbody>
+        </table>
+      </details>
+      {{end}}
     </section>
     {{end}}
 
@@ -194,9 +208,11 @@ a{color:var(--link-color)}
     <section class="mcp-section" id="prompts">
       <h2 class="mcp-section-title">Prompts</h2>
       {{range .Spec.Prompts}}
-      <div class="mcp-prompt" id="prompt-{{mcpSlug .Name}}">
-        <h3 class="mcp-prompt-name"><a href="#prompt-{{mcpSlug .Name}}">{{.Name}}</a></h3>
-        {{if .Description}}<p class="mcp-prompt-description">{{.Description}}</p>{{end}}
+      <details class="mcp-prompt" id="prompt-{{mcpSlug .Name}}">
+        <summary class="mcp-tool-summary">
+          <span class="mcp-tool-name">{{.Name}}</span>
+          {{if .Description}}<span class="mcp-tool-description">{{.Description}}</span>{{end}}
+        </summary>
 
         {{if .Arguments}}
         <table class="mcp-prompt-table" aria-label="Arguments for {{.Name}}">
@@ -226,7 +242,7 @@ a{color:var(--link-color)}
         {{else}}
         <p class="mcp-no-params">No arguments.</p>
         {{end}}
-      </div>
+      </details>
       {{end}}
     </section>
     {{end}}
@@ -234,6 +250,59 @@ a{color:var(--link-color)}
   </main>
 </div>
 <script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+<script>
+(function(){
+  var total=document.querySelectorAll('.mcp-tool[id^="tool-"]').length;
+
+  function applyFilter(q){
+    var visible=0;
+    document.querySelectorAll('.mcp-tool[id^="tool-"]').forEach(function(el){
+      var name=(el.querySelector('.mcp-tool-name')||{}).textContent||'';
+      var desc=(el.querySelector('.mcp-tool-description')||{}).textContent||'';
+      var show=!q||name.toLowerCase().indexOf(q)!==-1||desc.toLowerCase().indexOf(q)!==-1;
+      el.style.display=show?'':'none';
+      if(show)visible++;
+      var nav=document.querySelector('.mcp-sidebar-nav a[href="#'+el.id+'"]');
+      if(nav)nav.closest('.mcp-nav-item').style.display=show?'':'none';
+    });
+    // hide group headers with no visible tools
+    document.querySelectorAll('.mcp-group').forEach(function(g){
+      var any=Array.from(g.querySelectorAll('.mcp-tool')).some(function(el){return el.style.display!=='none';});
+      g.style.display=any?'':'none';
+      var navG=document.querySelector('.mcp-nav-group[data-group="'+g.querySelector('.mcp-group-title').firstChild.textContent.trim()+'"]');
+      if(navG)navG.style.display=any?'':'none';
+    });
+    var count=document.getElementById('mcp-count');
+    if(count)count.textContent=q?(visible+'/'+total+' tools'):'';
+    var noResults=document.getElementById('mcp-no-results');
+    if(noResults)noResults.style.display=(q&&visible===0)?'':'none';
+  }
+
+  // Restore filter after browser back/forward
+  function restoreFilter(){
+    var input=document.getElementById('mcp-search');
+    if(input&&input.value)applyFilter(input.value.toLowerCase().trim());
+  }
+  window.addEventListener('pageshow',restoreFilter);
+
+  var input=document.getElementById('mcp-search');
+  if(input){
+    input.addEventListener('input',function(){
+      applyFilter(this.value.toLowerCase().trim());
+    });
+  }
+
+  // Auto-open <details> when navigating via anchor
+  function openAnchor(){
+    var id=location.hash.slice(1);
+    if(!id)return;
+    var el=document.getElementById(id);
+    if(el&&el.tagName==='DETAILS')el.open=true;
+  }
+  openAnchor();
+  window.addEventListener('hashchange',openAnchor);
+})();
+</script>
 {{if .Site.Config.Analytics.Enabled}}{{analyticsBodyScripts .Site.Config.Analytics}}{{end}}
 </body>
 </html>

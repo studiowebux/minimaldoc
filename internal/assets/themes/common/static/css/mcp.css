@@ -95,7 +95,8 @@
 }
 
 .mcp-nav-section {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
+  border: none;
 }
 
 .mcp-nav-section-title {
@@ -106,6 +107,39 @@
   color: var(--mcp-fg-muted);
   padding: var(--space-2) var(--space-5);
   margin: 0;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mcp-nav-section-title::-webkit-details-marker { display: none; }
+
+.mcp-nav-section-title::before {
+  content: '▶';
+  font-size: 0.55em;
+  transition: transform 0.15s;
+  flex-shrink: 0;
+}
+
+details.mcp-nav-section[open] > .mcp-nav-section-title::before {
+  transform: rotate(90deg);
+}
+
+.mcp-nav-group {
+  margin-bottom: var(--space-1);
+}
+
+.mcp-nav-group-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--mcp-fg-muted);
+  padding: var(--space-1) var(--space-5) var(--space-1) calc(var(--space-5) + var(--space-3));
+  margin: 0;
+  text-transform: capitalize;
+  opacity: 0.7;
 }
 
 .mcp-nav-list {
@@ -130,19 +164,47 @@
   border-left-color: var(--mcp-tool-accent);
 }
 
-.mcp-sidebar-footer {
-  padding: var(--space-4) var(--space-5);
-  border-top: 1px solid var(--mcp-border);
-  font-size: var(--font-size-sm);
+.mcp-sidebar-back {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--mcp-border);
 }
 
-.mcp-sidebar-footer a {
+.mcp-back-link {
+  font-size: var(--font-size-sm);
   color: var(--mcp-fg-muted);
   text-decoration: none;
 }
 
-.mcp-sidebar-footer a:hover {
+.mcp-back-link:hover {
   color: var(--mcp-link);
+}
+
+.mcp-sidebar-search {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--mcp-border);
+}
+
+.mcp-sidebar-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--mcp-border);
+  border-radius: var(--radius-md);
+  background: var(--mcp-card-bg);
+  color: var(--mcp-fg);
+  outline: none;
+}
+
+.mcp-sidebar-search input:focus {
+  border-color: var(--mcp-tool-accent);
+}
+
+.mcp-no-results {
+  color: var(--mcp-fg-muted);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  padding: var(--space-4) 0;
 }
 
 /* Main content */
@@ -150,7 +212,6 @@
   flex: 1;
   min-width: 0;
   padding: var(--space-8) var(--space-9);
-  max-width: 900px;
 }
 
 .mcp-header {
@@ -201,40 +262,82 @@
   border-bottom: 2px solid var(--mcp-border);
 }
 
-/* Tool cards */
-.mcp-tool {
-  margin-bottom: var(--space-7);
+/* Tool / prompt collapsible cards */
+.mcp-tool,
+.mcp-prompt {
+  margin-bottom: var(--space-3);
   scroll-margin-top: var(--space-6);
+  border: 1px solid var(--mcp-border);
+  border-radius: 12px;
+  background: var(--mcp-card-bg);
+  overflow: hidden;
 }
 
-.mcp-tool-header {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+.mcp-tool-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.mcp-tool-summary::-webkit-details-marker { display: none; }
+
+.mcp-tool-summary::before {
+  content: '▶';
+  font-size: 0.6em;
+  color: var(--mcp-fg-muted);
+  transition: transform 0.15s;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  align-self: center;
 }
 
 .mcp-tool-name {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  font-family: var(--font-mono);
-  color: var(--mcp-fg);
-  margin: 0;
-}
-
-.mcp-tool-name a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.mcp-tool-name a:hover {
-  color: var(--mcp-link);
+  grid-column: 2;
 }
 
 .mcp-tool-description {
-  color: var(--mcp-fg-secondary);
-  margin: 0 0 var(--space-4) 0;
+  grid-column: 2;
+}
+
+details[open] > .mcp-tool-summary::before {
+  transform: rotate(90deg);
+}
+
+.mcp-tool-summary:hover {
+  background: var(--mcp-hover);
+}
+
+details[open] > .mcp-tool-summary {
+  border-bottom: 1px solid var(--mcp-border);
+}
+
+.mcp-tool > .mcp-params-table,
+.mcp-prompt > .mcp-prompt-table {
+  margin: var(--space-3) var(--space-4) var(--space-4);
+  width: calc(100% - var(--space-4) * 2);
+}
+
+.mcp-tool > .mcp-no-params,
+.mcp-prompt > .mcp-no-params {
+  margin: var(--space-4);
+}
+
+.mcp-tool-name {
   font-size: var(--font-size-md);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--mcp-fg);
+  flex-shrink: 0;
+}
+
+.mcp-tool-description {
+  color: var(--mcp-fg-muted);
+  font-size: var(--font-size-sm);
 }
 
 .mcp-no-params {
@@ -249,7 +352,13 @@
   border-collapse: collapse;
   font-size: var(--font-size-sm);
   margin-top: var(--space-3);
+  table-layout: fixed;
 }
+
+.mcp-params-table th:nth-child(1) { width: 15%; }
+.mcp-params-table th:nth-child(2) { width: 8%; }
+.mcp-params-table th:nth-child(3) { width: 10%; }
+.mcp-params-table th:nth-child(4) { width: 67%; }
 
 .mcp-params-table th {
   text-align: left;
@@ -293,6 +402,8 @@
 
 .mcp-param-desc {
   color: var(--mcp-fg-secondary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Required / optional badges */
