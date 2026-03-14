@@ -108,6 +108,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	fmt.Println("║     Minimal Doc - Static Site        ║")
 	fmt.Println("║          Generator                   ║")
 	fmt.Println("╚══════════════════════════════════════╝")
+	fmt.Printf("version %s\n", version.Version)
 	fmt.Println()
 
 	// Load config.yaml if it exists
