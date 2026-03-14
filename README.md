@@ -20,7 +20,7 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 | **Versioning** | Multi-version docs, Version selector, EOL warnings                                                    | Stable |
 | **i18n**       | Multi-locale, Translation files, RTL support                                                          | Stable |
 | **Pages**      | Landing, Knowledge Base, Portfolio, FAQ, Legal, Status, Changelog, Roadmap                           | Stable |
-| **API Docs**   | OpenAPI/Swagger, Live testing, Code samples, Schema viewer                                            | Stable |
+| **API Docs**   | OpenAPI/Swagger, Live testing, Code samples, Schema viewer, MCP server docs from JSON manifests       | Stable |
 | **SEO**        | Sitemap, Open Graph, Twitter Cards, llms.txt                                                          | Stable |
 | **Analytics**  | GA4, Plausible, Umami, Matomo provider integrations                                                   | Stable |
 | **Backend**    | Optional server (`minimaldoc-server`): cookie-free analytics, feedback widget, newsletter, blog CMS (RBAC, scheduling, RSS, comments), private docs, image uploads (local + S3), OAuth/JWT auth, admin portal, custom events, PDF export | WIP    |

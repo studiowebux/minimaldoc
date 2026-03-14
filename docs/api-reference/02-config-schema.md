@@ -62,6 +62,12 @@ enable_llms: boolean             # Generate llms.txt (default: true)
 enable_search: boolean           # Enable search (default: true)
 clean_urls: boolean              # Use /page/ URLs (default: false)
 
+# MCP Server Documentation
+mcp:
+  enabled: boolean               # Enable MCP server docs (default: false)
+  spec_files: [string]           # Manifest file paths/globs (auto-discovers *.mcp.json if empty)
+  path: string                   # Output URL path (default: "mcp")
+
 # OpenAPI Configuration
 openapi:
   enabled: boolean               # Enable OpenAPI docs (default: false)
@@ -504,6 +510,45 @@ openapi:
 
 Type: `integer`
 Default: `51200` (50KB)
+
+## MCP Server Documentation Settings
+
+### mcp.enabled
+
+Enable MCP server documentation generation.
+
+```yaml
+mcp:
+  enabled: true
+```
+
+Type: `boolean`
+Default: `false`
+
+### mcp.spec_files
+
+Manifest file paths or glob patterns relative to the docs root. When empty, minimaldoc auto-discovers all `*.mcp.json` files under the docs root.
+
+```yaml
+mcp:
+  spec_files:
+    - "mcp/*.mcp.json"
+```
+
+Type: `array of string`
+Default: `[]`
+
+### mcp.path
+
+Output URL path for generated MCP documentation.
+
+```yaml
+mcp:
+  path: "mcp"
+```
+
+Type: `string`
+Default: `"mcp"`
 
 ## Status Page Settings
 
