@@ -175,6 +175,13 @@ func (g *HTMLGenerator) copyStaticAssets() error {
 				}
 			}
 
+			// Skip MCP files if MCP is not enabled
+			if !g.site.Config.MCP.Enabled {
+				if filepath.Base(path) == "mcp.css" {
+					return nil
+				}
+			}
+
 			// Read from embedded FS
 			content, err := g.themeFS.ReadFile(path)
 			if err != nil {

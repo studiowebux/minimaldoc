@@ -33,6 +33,7 @@ type Builder struct {
 	kbBuilder        *KBBuilder
 	versionBuilder   *VersionBuilder
 	i18nBuilder      *I18nBuilder
+	mcpBuilder       *MCPBuilder
 }
 
 // NewBuilder creates a new site builder
@@ -55,6 +56,7 @@ func NewBuilder(site *core.Site) *Builder {
 		kbBuilder:         NewKBBuilder(),
 		versionBuilder:    NewVersionBuilder(),
 		i18nBuilder:       NewI18nBuilder(),
+		mcpBuilder:        NewMCPBuilder(),
 	}
 }
 
@@ -77,7 +79,16 @@ func (b *Builder) Build() error {
 		}
 	}
 
-	// 4. Discover and parse OpenAPI specs (if enabled)
+	// 4. Discover and parse MCP server manifests (if enabled)
+	if b.site.Config.MCP.Enabled {
+		specs, err := b.mcpBuilder.Build(b.site.DocsRoot, b.site.Config.MCP)
+		if err != nil {
+			return fmt.Errorf("failed to parse MCP manifests: %w", err)
+		}
+		b.site.MCPSpecs = specs
+	}
+
+	// 4b. Discover and parse OpenAPI specs (if enabled)
 	if b.site.Config.OpenAPI.Enabled {
 		if err := b.discoverAndParseOpenAPISpecs(); err != nil {
 			return fmt.Errorf("failed to parse OpenAPI specs: %w", err)

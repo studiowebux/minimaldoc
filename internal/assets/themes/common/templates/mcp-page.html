@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-base-path="{{.BasePath}}">
+<head>
+<script>
+(function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
+</script>
+<style>
+:root{--bg-primary:#fafafa;--text-primary:#1a1a1a;--link-color:#2563eb}
+:root[data-theme="dark"]{--bg-primary:#1a1a1a;--text-primary:#fff;--link-color:#7bb3ff}
+html,body{background-color:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--link-color)}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>{{.Spec.Name}} | {{.Site.Config.Title}}</title>
+<meta name="description" content="{{.Spec.Description}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/tokens.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/base.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/main.css?v={{.Version}}">
+<link rel="stylesheet" href="{{.BasePath}}/css/mcp.css?v={{.Version}}">
+{{if hasCustomTheme .Site.Config.ThemeConfig}}<link rel="stylesheet" href="{{.BasePath}}/css/custom-theme.css?v={{.Version}}">{{end}}
+{{if .Site.Config.Analytics.Enabled}}{{analyticsHeadScripts .Site.Config.Analytics}}{{end}}
+</head>
+<body class="mcp-body">
+<a href="#mcp-main" class="skip-link">Skip to main content</a>
+<div class="mcp-container">
+
+  <!-- Sidebar -->
+  <aside class="mcp-sidebar" aria-label="MCP server navigation">
+    <div class="mcp-sidebar-header">
+      <h1 class="site-title"><a href="{{.BasePath}}/">{{.Site.Config.Title}}</a></h1>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon"></span>
+      </button>
+    </div>
+
+    <nav class="mcp-sidebar-nav" aria-label="MCP contents">
+      {{if .Spec.Tools}}
+      <div class="mcp-nav-section">
+        <p class="mcp-nav-section-title">Tools ({{len .Spec.Tools}})</p>
+        <ul class="mcp-nav-list">
+          {{range .Spec.Tools}}
+          <li class="mcp-nav-item">
+            <a href="#tool-{{mcpSlug .Name}}">{{.Name}}</a>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+      {{end}}
+
+      {{if .Spec.Resources}}
+      <div class="mcp-nav-section">
+        <p class="mcp-nav-section-title">Resources ({{len .Spec.Resources}})</p>
+        <ul class="mcp-nav-list">
+          {{range .Spec.Resources}}
+          <li class="mcp-nav-item">
+            <a href="#resources">{{if .Name}}{{.Name}}{{else}}{{.URI}}{{end}}</a>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+      {{end}}
+
+      {{if .Spec.Prompts}}
+      <div class="mcp-nav-section">
+        <p class="mcp-nav-section-title">Prompts ({{len .Spec.Prompts}})</p>
+        <ul class="mcp-nav-list">
+          {{range .Spec.Prompts}}
+          <li class="mcp-nav-item">
+            <a href="#prompt-{{mcpSlug .Name}}">{{.Name}}</a>
+          </li>
+          {{end}}
+        </ul>
+      </div>
+      {{end}}
+    </nav>
+
+    <div class="mcp-sidebar-footer">
+      <a href="{{.BasePath}}/">← Back to Docs</a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main id="mcp-main" class="mcp-main">
+    <div class="mcp-header">
+      <h1>{{.Spec.Name}}</h1>
+      {{if .Spec.Description}}<p class="mcp-header-description">{{.Spec.Description}}</p>{{end}}
+      <div class="mcp-stats">
+        {{if .Spec.Tools}}<span class="mcp-stat">{{len .Spec.Tools}} tools</span>{{end}}
+        {{if .Spec.Resources}}<span class="mcp-stat">{{len .Spec.Resources}} resources</span>{{end}}
+        {{if .Spec.Prompts}}<span class="mcp-stat">{{len .Spec.Prompts}} prompts</span>{{end}}
+      </div>
+    </div>
+
+    <!-- Tools section -->
+    {{if .Spec.Tools}}
+    <section class="mcp-section" id="tools">
+      <h2 class="mcp-section-title">Tools</h2>
+      {{range .Spec.Tools}}
+      <div class="mcp-tool" id="tool-{{mcpSlug .Name}}">
+        <h3 class="mcp-tool-name"><a href="#tool-{{mcpSlug .Name}}">{{.Name}}</a></h3>
+        {{if .Description}}<p class="mcp-tool-description">{{.Description}}</p>{{end}}
+
+        {{if and .InputSchema (gt (len .InputSchema.Properties) 0)}}
+        <table class="mcp-params-table" aria-label="Input parameters for {{.Name}}">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{$schema := .InputSchema}}
+            {{range $propName, $prop := $schema.Properties}}
+            <tr>
+              <td class="mcp-param-name">{{$propName}}</td>
+              <td class="mcp-param-type">{{if $prop.Type}}{{$prop.Type}}{{else}}any{{end}}</td>
+              <td>
+                {{if mcpIsRequired $propName $schema.Required}}
+                <span class="mcp-badge mcp-badge-required">required</span>
+                {{else}}
+                <span class="mcp-badge mcp-badge-optional">optional</span>
+                {{end}}
+              </td>
+              <td class="mcp-param-desc">
+                {{$prop.Description}}
+                {{if and (eq $prop.Type "object") (gt (len $prop.Properties) 0)}}
+                <table class="mcp-params-table" style="margin-top:0.5rem">
+                  <thead>
+                    <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
+                  </thead>
+                  <tbody>
+                    {{range $nestedName, $nested := $prop.Properties}}
+                    <tr>
+                      <td class="mcp-param-name">{{$nestedName}}</td>
+                      <td class="mcp-param-type">{{if $nested.Type}}{{$nested.Type}}{{else}}any{{end}}</td>
+                      <td>
+                        {{if mcpIsRequired $nestedName $prop.Required}}
+                        <span class="mcp-badge mcp-badge-required">required</span>
+                        {{else}}
+                        <span class="mcp-badge mcp-badge-optional">optional</span>
+                        {{end}}
+                      </td>
+                      <td class="mcp-param-desc">{{$nested.Description}}</td>
+                    </tr>
+                    {{end}}
+                  </tbody>
+                </table>
+                {{end}}
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+        {{else}}
+        <p class="mcp-no-params">No input parameters.</p>
+        {{end}}
+      </div>
+      {{end}}
+    </section>
+    {{end}}
+
+    <!-- Resources section -->
+    {{if .Spec.Resources}}
+    <section class="mcp-section" id="resources">
+      <h2 class="mcp-section-title">Resources</h2>
+      <table class="mcp-resource-table" aria-label="Available resources">
+        <thead>
+          <tr>
+            <th>URI</th>
+            <th>Name</th>
+            <th>MIME Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Spec.Resources}}
+          <tr>
+            <td class="mcp-resource-uri">{{.URI}}</td>
+            <td>{{.Name}}</td>
+            <td class="mcp-mimetype">{{if .MimeType}}{{.MimeType}}{{else}}—{{end}}</td>
+            <td class="mcp-param-desc">{{.Description}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </section>
+    {{end}}
+
+    <!-- Prompts section -->
+    {{if .Spec.Prompts}}
+    <section class="mcp-section" id="prompts">
+      <h2 class="mcp-section-title">Prompts</h2>
+      {{range .Spec.Prompts}}
+      <div class="mcp-prompt" id="prompt-{{mcpSlug .Name}}">
+        <h3 class="mcp-prompt-name"><a href="#prompt-{{mcpSlug .Name}}">{{.Name}}</a></h3>
+        {{if .Description}}<p class="mcp-prompt-description">{{.Description}}</p>{{end}}
+
+        {{if .Arguments}}
+        <table class="mcp-prompt-table" aria-label="Arguments for {{.Name}}">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Arguments}}
+            <tr>
+              <td class="mcp-param-name">{{.Name}}</td>
+              <td>
+                {{if .Required}}
+                <span class="mcp-badge mcp-badge-required">required</span>
+                {{else}}
+                <span class="mcp-badge mcp-badge-optional">optional</span>
+                {{end}}
+              </td>
+              <td class="mcp-param-desc">{{.Description}}</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+        {{else}}
+        <p class="mcp-no-params">No arguments.</p>
+        {{end}}
+      </div>
+      {{end}}
+    </section>
+    {{end}}
+
+  </main>
+</div>
+<script defer src="{{.BasePath}}/js/theme-toggle.js?v={{.Version}}"></script>
+{{if .Site.Config.Analytics.Enabled}}{{analyticsBodyScripts .Site.Config.Analytics}}{{end}}
+</body>
+</html>

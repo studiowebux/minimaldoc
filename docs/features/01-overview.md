@@ -53,6 +53,7 @@ Pure static output designed for CI/CD integration—automate updates to document
 | **API**        | OpenAPI             | Interactive docs with testing UI                                | v1.0  |
 |                | Code Samples        | curl, JavaScript, Go, Python, Swift                             | v1.0  |
 |                | Schema Viewer       | Request/response visualization                                  | v1.0  |
+|                | MCP Server Docs     | Static reference pages from JSON manifests (no server needed)   | v1.5  |
 
 ## Design Philosophy
 
