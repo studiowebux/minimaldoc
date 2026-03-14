@@ -19,17 +19,17 @@ func NewMCPParser() *MCPParser {
 
 // mcpManifest is the raw JSON structure of an MCP server manifest file
 type mcpManifest struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Tools       []mcpRawTool  `json:"tools"`
-	Resources   []mcpRawRes   `json:"resources"`
-	Prompts     []mcpRawProm  `json:"prompts"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Tools       []mcpRawTool `json:"tools"`
+	Resources   []mcpRawRes  `json:"resources"`
+	Prompts     []mcpRawProm `json:"prompts"`
 }
 
 type mcpRawTool struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	InputSchema *mcpRawSchema  `json:"inputSchema"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	InputSchema *mcpRawSchema `json:"inputSchema"`
 }
 
 type mcpRawSchema struct {
@@ -49,9 +49,9 @@ type mcpRawRes struct {
 }
 
 type mcpRawProm struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Arguments   []mcpRawPromArg  `json:"arguments"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Arguments   []mcpRawPromArg `json:"arguments"`
 }
 
 type mcpRawPromArg struct {
