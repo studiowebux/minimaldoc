@@ -62,7 +62,7 @@ type mcpRawPromArg struct {
 
 // ParseFile parses an MCP server manifest JSON file into an MCPSpec
 func (p *MCPParser) ParseFile(filePath string) (*core.MCPSpec, error) {
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath) // #nosec G304 -- path comes from glob discovery within the docs root, not user input
 	if err != nil {
 		return nil, fmt.Errorf("read manifest: %w", err)
 	}
