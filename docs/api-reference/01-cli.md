@@ -68,6 +68,7 @@ When a `.md` file is passed instead of a directory, MinimalDoc generates only th
 | `--check-external` | | bool | `false` | Validate external URLs |
 | `--mcp` | | bool | `false` | Enable MCP server documentation |
 | `--mcp-dir` | | string | `mcp` | MCP manifests directory |
+| `--force` | | bool | `false` | Overwrite output directory without build marker |
 
 ### Examples
 

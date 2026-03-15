@@ -29,6 +29,10 @@ to the 'public' directory.`,
 	RunE: runBuild,
 }
 
+// buildMarkerFile is written to the output directory after a successful build.
+// Its presence indicates the directory was created by minimaldoc and is safe to overwrite.
+const buildMarkerFile = ".minimaldoc-build"
+
 var (
 	outputDir       string
 	themeName       string
@@ -51,6 +55,7 @@ var (
 	checkExternal   bool
 	enableMCP       bool
 	mcpDir          string
+	forceOutput     bool
 )
 
 func init() {
@@ -75,6 +80,7 @@ func init() {
 	BuildCmd.Flags().BoolVar(&checkExternal, "check-external", false, "Check external URLs (slower)")
 	BuildCmd.Flags().BoolVar(&enableMCP, "mcp", false, "Enable MCP server documentation")
 	BuildCmd.Flags().StringVar(&mcpDir, "mcp-dir", "mcp", "Directory containing *.mcp.json manifest files (relative to docs root)")
+	BuildCmd.Flags().BoolVar(&forceOutput, "force", false, "Overwrite output directory even without build marker")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -203,6 +209,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	if singleFile != "" {
 		siteConfig.Entrypoint = singleFile
 		siteConfig.SingleFileMode = true
+	}
+
+	// Output directory safety check
+	if err := checkOutputDir(outputDir, forceOutput); err != nil {
+		return err
 	}
 
 	// Create site
@@ -424,10 +435,53 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Write build marker so future builds know this directory is safe to overwrite
+	markerPath := filepath.Join(outputDir, buildMarkerFile)
+	if err := os.WriteFile(markerPath, []byte("minimaldoc build output\n"), 0644); err != nil { // #nosec G306
+		fmt.Printf("Warning: could not write build marker: %v\n", err)
+	}
+
 	fmt.Println()
 	fmt.Println("✓ Build complete!")
 	fmt.Printf("✓ Output: %s\n", outputDir)
 	fmt.Println()
 
 	return nil
+}
+
+// checkOutputDir verifies the output directory is safe to write to.
+// If the directory exists and contains files but no .minimaldoc-build marker,
+// it refuses to overwrite unless --force is set.
+func checkOutputDir(dir string, force bool) error {
+	info, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil // directory doesn't exist yet, safe to create
+	}
+	if err != nil {
+		return fmt.Errorf("failed to check output directory: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("output path %q exists but is not a directory", dir)
+	}
+
+	// Check for build marker
+	if _, err := os.Stat(filepath.Join(dir, buildMarkerFile)); err == nil {
+		return nil // marker exists, safe to overwrite
+	}
+
+	// Directory exists without marker — check if it has contents
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("failed to read output directory: %w", err)
+	}
+	if len(entries) == 0 {
+		return nil // empty directory, safe to use
+	}
+
+	if force {
+		fmt.Printf("Warning: overwriting %q (no build marker found, --force used)\n", dir)
+		return nil
+	}
+
+	return fmt.Errorf("output directory %q exists and was not created by minimaldoc (no %s marker). Use --force to overwrite", dir, buildMarkerFile)
 }
