@@ -221,6 +221,12 @@ func (r *Router) listOAuthProviders(c *gin.Context) {
 
 func (r *Router) oauthLogin(c *gin.Context) {
 	provider := c.Param("provider")
+	siteID := c.Query("site_id")
+
+	if siteID == "" {
+		respondBadRequest(c, ErrSiteIDRequired, "site_id query parameter required")
+		return
+	}
 
 	// Find provider config
 	var providerCfg *auth.OAuthProvider
@@ -244,9 +250,10 @@ func (r *Router) oauthLogin(c *gin.Context) {
 		return
 	}
 
-	// Store state in cookie (short-lived) with SameSite=Lax for CSRF protection
+	// Store state and site_id in cookies (short-lived) with SameSite=Lax for CSRF protection
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", state, 600, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_site_id", siteID, 600, "/", "", r.config.Auth.SecureCookies, true)
 
 	// Redirect to provider
 	authURL := providerCfg.GetAuthURL(state)
@@ -265,9 +272,17 @@ func (r *Router) oauthCallback(c *gin.Context) {
 		return
 	}
 
-	// Clear state cookie
+	// Get site_id from cookie
+	siteID, siteErr := c.Cookie("oauth_site_id")
+	if siteErr != nil || siteID == "" {
+		respondBadRequest(c, ErrMissingSiteContext, "missing site context")
+		return
+	}
+
+	// Clear state and site_id cookies
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", "", -1, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_site_id", "", -1, "/", "", r.config.Auth.SecureCookies, true)
 
 	// Find provider
 	var providerCfg *auth.OAuthProvider
@@ -291,8 +306,8 @@ func (r *Router) oauthCallback(c *gin.Context) {
 		return
 	}
 
-	// Find or create user
-	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
+	// Find user scoped to site
+	user, err := r.db.GetUserByOAuth(c.Request.Context(), siteID, provider, userInfo.ProviderID)
 	if err != nil {
 		respondInternalError(c, ErrDatabaseError, "database error")
 		return
@@ -588,8 +603,8 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	// Default flow: find or create user account
-	user, err := r.db.GetUserByOAuth(c.Request.Context(), provider, userInfo.ProviderID)
+	// Default flow: find or create user account (scoped to site)
+	user, err := r.db.GetUserByOAuth(c.Request.Context(), siteID, provider, userInfo.ProviderID)
 	if err != nil {
 		respondInternalError(c, ErrDatabaseError, "database error")
 		return

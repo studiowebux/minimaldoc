@@ -267,7 +267,7 @@ type UserStore interface {
 	CreateUser(ctx context.Context, id, siteID, email, passwordHash, role, name string) (*User, error)
 	GetUserByID(ctx context.Context, id string) (*User, error)
 	GetUserByEmail(ctx context.Context, siteID, email string) (*User, error)
-	GetUserByOAuth(ctx context.Context, provider, providerID string) (*User, error)
+	GetUserByOAuth(ctx context.Context, siteID, provider, providerID string) (*User, error)
 	ListUsers(ctx context.Context, siteID string) ([]User, error)
 	UpdateUserLastLogin(ctx context.Context, userID string) error
 	DeleteUser(ctx context.Context, id string) error

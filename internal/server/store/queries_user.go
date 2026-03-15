@@ -54,13 +54,13 @@ func (db *DB) GetUserByEmail(ctx context.Context, siteID, email string) (*User, 
 	return &u, err
 }
 
-func (db *DB) GetUserByOAuth(ctx context.Context, provider, providerID string) (*User, error) {
+func (db *DB) GetUserByOAuth(ctx context.Context, siteID, provider, providerID string) (*User, error) {
 	query := `
 		SELECT id, site_id, email, password_hash, role, oauth_provider, oauth_id, name, avatar_url, email_verified, created_at, updated_at, last_login_at
-		FROM users WHERE oauth_provider = $1 AND oauth_id = $2
+		FROM users WHERE site_id = $1 AND oauth_provider = $2 AND oauth_id = $3
 	`
 	var u User
-	err := db.QueryRowContext(ctx, query, provider, providerID).Scan(
+	err := db.QueryRowContext(ctx, query, siteID, provider, providerID).Scan(
 		&u.ID, &u.SiteID, &u.Email, &u.PasswordHash, &u.Role, &u.OAuthProvider, &u.OAuthID,
 		&u.Name, &u.AvatarURL, &u.EmailVerified, &u.CreatedAt, &u.UpdatedAt, &u.LastLoginAt,
 	)
