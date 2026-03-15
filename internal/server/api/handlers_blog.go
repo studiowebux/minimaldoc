@@ -463,16 +463,21 @@ func (r *Router) createPost(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"post": post})
 }
 
-// getPost returns a single post by ID.
+// getPost returns a single post by ID (scoped to authenticated user's site).
 func (r *Router) getPost(c *gin.Context) {
 	id := c.Param("id")
+	siteID, err := getSiteID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
 	}
-	if post == nil {
+	if post == nil || post.SiteID != siteID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
 		return
 	}
@@ -549,18 +554,33 @@ func (r *Router) updatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "updated"})
 }
 
-// deletePost deletes a post (admin only).
+// deletePost deletes a post (enforces author ownership and site scoping).
 func (r *Router) deletePost(c *gin.Context) {
 	id := c.Param("id")
-
-	// Get post info for audit log before deletion
-	post, _ := r.db.GetBlogPostByID(c.Request.Context(), id)
-	postTitle := ""
-	if post != nil {
-		postTitle = post.Title
+	siteID, err := getSiteID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
 	}
 
-	err := r.db.DeleteBlogPost(c.Request.Context(), id)
+	// Get post info for ownership check and audit log
+	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		return
+	}
+	if post == nil || post.SiteID != siteID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		return
+	}
+
+	if !canAuthorEditPost(c, post) {
+		denyAuthorEdit(c, "delete")
+		return
+	}
+
+	postTitle := post.Title
+	err = r.db.DeleteBlogPost(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete post"})
 		return
