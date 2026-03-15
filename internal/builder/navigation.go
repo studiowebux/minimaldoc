@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -211,6 +212,17 @@ func (b *NavigationBuilder) groupToNavItems(group *pathGroup, depth int, maxDept
 		}
 		return items[i].Title < items[j].Title
 	})
+
+	// Warn about duplicate labels at this level
+	seen := make(map[string]string) // label -> first directory path
+	for _, child := range group.children {
+		label := cleanPathSegment(child.path)
+		if prev, exists := seen[label]; exists {
+			fmt.Fprintf(os.Stderr, "Warning: navigation label collision — directories %q and %q both produce label %q. Rename one to avoid duplicate sidebar entries.\n", prev, child.path, label)
+		} else {
+			seen[label] = child.path
+		}
+	}
 
 	return items
 }
