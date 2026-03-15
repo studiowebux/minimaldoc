@@ -86,12 +86,8 @@ func resolveRelativePath(linkPath string, currentPagePath string) string {
 	// Get directory of current page
 	currentDir := filepath.Dir(currentPagePath)
 
-	// Join and clean the path
-	resolved := filepath.Join(currentDir, linkPath)
-	resolved = filepath.Clean(resolved)
-
-	// Convert back to forward slashes (filepath.Join uses OS separator)
-	resolved = strings.ReplaceAll(resolved, "\\", "/")
+	// Join, clean, then normalise to forward slashes for URL construction.
+	resolved := filepath.ToSlash(filepath.Clean(filepath.Join(currentDir, linkPath)))
 
 	return resolved
 }

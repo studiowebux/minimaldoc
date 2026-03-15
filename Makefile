@@ -65,7 +65,7 @@ security:
 coverage:
 	go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out
 
-ci: lint test
+ci: lint test security
 
 docs: build
 	./minimaldoc build docs -o public

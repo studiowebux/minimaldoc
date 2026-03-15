@@ -4,11 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
+
+// truncate returns s truncated to at most n bytes. Safe when len(s) < n.
+func truncate(s string, n int) string {
+	if len(s) > n {
+		return s[:n]
+	}
+	return s
+}
 
 // SearchPage represents a page in the search index
 type SearchPage struct {
@@ -187,10 +196,7 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 				if item.AnswerHTML != "" {
 					answerText = extractPlainText([]byte(item.AnswerHTML))
 				}
-				if len(answerText) > 1000 {
-					answerText = answerText[:1000]
-				}
-				g.indexText(index.Index, answerText, pageID, 1)
+				g.indexText(index.Index, truncate(answerText, 1000), pageID, 1)
 
 				pageID++
 			}
@@ -223,11 +229,7 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 					g.indexText(index.Index, tag, pageID, 2)
 				}
 
-				contentText := extractPlainText([]byte(article.HTML))
-				if len(contentText) > 1000 {
-					contentText = contentText[:1000]
-				}
-				g.indexText(index.Index, contentText, pageID, 1)
+				g.indexText(index.Index, truncate(extractPlainText([]byte(article.HTML)), 1000), pageID, 1)
 
 				pageID++
 			}
@@ -367,10 +369,7 @@ func (g *SearchGenerator) generateMainIndex() error {
 				if item.AnswerHTML != "" {
 					answerText = extractPlainText([]byte(item.AnswerHTML))
 				}
-				if len(answerText) > 1000 {
-					answerText = answerText[:1000]
-				}
-				g.indexText(index.Index, answerText, pageID, 1)
+				g.indexText(index.Index, truncate(answerText, 1000), pageID, 1)
 
 				pageID++
 			}
@@ -410,11 +409,7 @@ func (g *SearchGenerator) generateMainIndex() error {
 				}
 
 				// Index content (low weight)
-				contentText := extractPlainText([]byte(article.HTML))
-				if len(contentText) > 1000 {
-					contentText = contentText[:1000]
-				}
-				g.indexText(index.Index, contentText, pageID, 1)
+				g.indexText(index.Index, truncate(extractPlainText([]byte(article.HTML)), 1000), pageID, 1)
 
 				pageID++
 			}
@@ -451,23 +446,26 @@ func (g *SearchGenerator) generateMainIndex() error {
 	return nil
 }
 
-// sortPostingList sorts posting list pairs by score descending
+// sortPostingList sorts posting list pairs [pageID, score, ...] by score descending.
 func sortPostingList(list PostingList) {
 	n := len(list) / 2
 	if n <= 1 {
 		return
 	}
-
-	// Simple bubble sort for pairs (usually small lists)
-	for i := 0; i < n-1; i++ {
-		for j := 0; j < n-i-1; j++ {
-			if list[j*2+1] < list[(j+1)*2+1] {
-				// Swap pairs
-				list[j*2], list[(j+1)*2] = list[(j+1)*2], list[j*2]
-				list[j*2+1], list[(j+1)*2+1] = list[(j+1)*2+1], list[j*2+1]
-			}
-		}
+	// Build an index slice, sort by score, then reconstruct list in sorted order.
+	indices := make([]int, n)
+	for i := range indices {
+		indices[i] = i
 	}
+	sort.Slice(indices, func(i, j int) bool {
+		return list[indices[i]*2+1] > list[indices[j]*2+1]
+	})
+	tmp := make(PostingList, len(list))
+	for i, idx := range indices {
+		tmp[i*2] = list[idx*2]
+		tmp[i*2+1] = list[idx*2+1]
+	}
+	copy(list, tmp)
 }
 
 // indexText tokenizes text and adds to inverted index
@@ -552,14 +550,10 @@ func (g *SearchGenerator) extractSections(md []byte) []sectionData {
 		if strings.HasPrefix(trimmed, "#") {
 			// Save previous section
 			if currentHeading != "" && len(currentContent) > 0 {
-				content := extractPlainText([]byte(strings.Join(currentContent, "\n")))
-				if len(content) > 1000 {
-					content = content[:1000]
-				}
 				sections = append(sections, sectionData{
 					title:   currentHeading,
 					anchor:  currentAnchor,
-					content: content,
+					content: truncate(extractPlainText([]byte(strings.Join(currentContent, "\n"))), 1000),
 				})
 			}
 
@@ -578,14 +572,10 @@ func (g *SearchGenerator) extractSections(md []byte) []sectionData {
 
 	// Save last section
 	if currentHeading != "" && len(currentContent) > 0 {
-		content := extractPlainText([]byte(strings.Join(currentContent, "\n")))
-		if len(content) > 1000 {
-			content = content[:1000]
-		}
 		sections = append(sections, sectionData{
 			title:   currentHeading,
 			anchor:  currentAnchor,
-			content: content,
+			content: truncate(extractPlainText([]byte(strings.Join(currentContent, "\n"))), 1000),
 		})
 	}
 
