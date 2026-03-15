@@ -55,36 +55,3 @@ func ValidateToken(tokenString, secret string) (*Claims, error) {
 	return claims, nil
 }
 
-// GenerateRefreshToken creates a longer-lived refresh token.
-func GenerateRefreshToken(userID, secret string, expiry time.Duration) (string, error) {
-	claims := &jwt.RegisteredClaims{
-		Subject:   userID,
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		Issuer:    "minimaldoc-server",
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
-}
-
-// ValidateRefreshToken parses and validates a refresh token.
-func ValidateRefreshToken(tokenString, secret string) (string, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(secret), nil
-	})
-
-	if err != nil {
-		return "", fmt.Errorf("failed to parse refresh token: %w", err)
-	}
-
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
-	if !ok || !token.Valid {
-		return "", fmt.Errorf("invalid refresh token")
-	}
-
-	return claims.Subject, nil
-}

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -102,16 +103,24 @@ func (r *Router) login(c *gin.Context) {
 		return
 	}
 
-	// Generate tokens
+	// Generate access token
 	accessToken, err := auth.GenerateToken(user.ID, user.Email, user.Role, user.SiteID, r.config.Auth.JWTSecret, r.config.Auth.JWTExpiry)
 	if err != nil {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
 
-	refreshToken, err := auth.GenerateRefreshToken(user.ID, r.config.Auth.JWTSecret, r.config.Auth.RefreshExpiry)
+	// Generate opaque refresh token stored in sessions table
+	rawRefreshToken, err := auth.GenerateSessionToken()
 	if err != nil {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate refresh token")
+		return
+	}
+	tokenHash := auth.HashSessionToken(rawRefreshToken)
+	sessionID := uuid.New().String()
+	expiresAt := time.Now().Add(r.config.Auth.RefreshExpiry)
+	if err := r.db.CreateSession(c.Request.Context(), sessionID, user.ID, tokenHash, c.ClientIP(), c.Request.UserAgent(), expiresAt); err != nil {
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to store refresh token")
 		return
 	}
 
@@ -130,7 +139,7 @@ func (r *Router) login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"refresh_token": rawRefreshToken,
 		"expires_in":    int(r.config.Auth.JWTExpiry.Seconds()),
 		"user": gin.H{
 			"id":    user.ID,
@@ -144,6 +153,12 @@ func (r *Router) login(c *gin.Context) {
 func (r *Router) logout(c *gin.Context) {
 	// Audit log: logout (best effort - user may not be authenticated)
 	r.logAuditAction(c, "logout", "session", "", "", "")
+
+	// Revoke all refresh tokens for this user
+	userID, err := getUserID(c)
+	if err == nil {
+		_ = r.db.DeleteUserSessions(c.Request.Context(), userID)
+	}
 
 	// Clear cookie
 	c.SetSameSite(http.SameSiteLaxMode)
@@ -160,17 +175,38 @@ func (r *Router) refreshToken(c *gin.Context) {
 		return
 	}
 
-	// Validate refresh token
-	userID, err := auth.ValidateRefreshToken(req.RefreshToken, r.config.Auth.JWTSecret)
+	// Look up refresh token in sessions table
+	tokenHash := auth.HashSessionToken(req.RefreshToken)
+	session, err := r.db.GetSessionByToken(c.Request.Context(), tokenHash)
 	if err != nil {
+		respondInternalError(c, ErrDatabaseError, "database error")
+		return
+	}
+	if session == nil {
 		respondUnauthorized(c, ErrInvalidRefreshToken, "invalid refresh token")
 		return
 	}
 
 	// Get user
-	user, err := r.db.GetUserByID(c.Request.Context(), userID)
+	user, err := r.db.GetUserByID(c.Request.Context(), session.UserID)
 	if err != nil || user == nil {
 		respondUnauthorized(c, ErrUserNotFound, "user not found")
+		return
+	}
+
+	// Token rotation: delete old session, create new one
+	_ = r.db.DeleteSession(c.Request.Context(), tokenHash)
+
+	newRawToken, err := auth.GenerateSessionToken()
+	if err != nil {
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate refresh token")
+		return
+	}
+	newTokenHash := auth.HashSessionToken(newRawToken)
+	newSessionID := uuid.New().String()
+	expiresAt := time.Now().Add(r.config.Auth.RefreshExpiry)
+	if err := r.db.CreateSession(c.Request.Context(), newSessionID, user.ID, newTokenHash, c.ClientIP(), c.Request.UserAgent(), expiresAt); err != nil {
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to store refresh token")
 		return
 	}
 
@@ -182,8 +218,9 @@ func (r *Router) refreshToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"access_token": accessToken,
-		"expires_in":   int(r.config.Auth.JWTExpiry.Seconds()),
+		"access_token":  accessToken,
+		"refresh_token": newRawToken,
+		"expires_in":    int(r.config.Auth.JWTExpiry.Seconds()),
 	})
 }
 
@@ -947,6 +984,12 @@ func (r *Router) renderRegisterError(c *gin.Context, siteID, errMsg string) {
 // publicLogout handles logout and redirects.
 func (r *Router) publicLogout(c *gin.Context) {
 	siteID := c.Query("site_id")
+
+	// Revoke all refresh tokens for this user
+	userID, err := getUserID(c)
+	if err == nil {
+		_ = r.db.DeleteUserSessions(c.Request.Context(), userID)
+	}
 
 	// Clear cookie
 	c.SetSameSite(http.SameSiteLaxMode)
