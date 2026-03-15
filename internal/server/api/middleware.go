@@ -14,6 +14,7 @@ import (
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
+	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
 // TracingMiddleware creates a span per HTTP request with method, path, and status attributes.
@@ -128,9 +129,26 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	}
 }
 
-// AuthMiddleware validates JWT tokens or session cookies.
-func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+// AuthMiddleware validates JWT tokens, session cookies, or API keys.
+// API keys are validated against the database; valid keys set site_id in context.
+func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Check API key header first
+		apiKey := c.GetHeader("X-API-Key")
+		if apiKey != "" {
+			keyHash := auth.HashAPIKey(apiKey)
+			site, err := db.GetSiteByAPIKey(c.Request.Context(), keyHash)
+			if err != nil || site == nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid API key"})
+				c.Abort()
+				return
+			}
+			c.Set("site_id", site.ID)
+			c.Set("auth_method", "api_key")
+			c.Next()
+			return
+		}
+
 		var token string
 
 		// Check Authorization header
@@ -145,15 +163,6 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			if err == nil {
 				token = cookie
 			}
-		}
-
-		// API key header is handled by individual handlers for public routes
-		// This middleware is primarily for JWT-based admin auth
-		apiKey := c.GetHeader("X-API-Key")
-		if apiKey != "" {
-			// API key routes don't need JWT - handlers validate the key themselves
-			c.Next()
-			return
 		}
 
 		if token == "" {
@@ -175,6 +184,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		c.Set("user_email", claims.Email)
 		c.Set("user_role", claims.Role)
 		c.Set("site_id", claims.SiteID)
+		c.Set("auth_method", "jwt")
 
 		c.Next()
 	}

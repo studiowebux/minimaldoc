@@ -145,7 +145,7 @@ func setupTestRouter(t *testing.T) (*Router, *store.DB, *email.MockSender) {
 			auth.POST("/login", r.login)
 			auth.POST("/logout", r.logout)
 			auth.POST("/refresh", r.refreshToken)
-			auth.GET("/me", AuthMiddleware(cfg), r.getCurrentUser)
+			auth.GET("/me", AuthMiddleware(cfg, r.db), r.getCurrentUser)
 		}
 
 		newsletter := api.Group("/newsletter")

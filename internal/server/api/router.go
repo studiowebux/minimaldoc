@@ -99,7 +99,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 			}
 			auth.POST("/logout", r.logout)
 			auth.POST("/refresh", r.refreshToken)
-			auth.GET("/me", AuthMiddleware(cfg), r.getCurrentUser)
+			auth.GET("/me", AuthMiddleware(cfg, r.db), r.getCurrentUser)
 
 			// Registration (if local auth enabled)
 			if cfg.Auth.EnableLocal {
@@ -175,7 +175,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 		{
 			docs.GET("/check", r.checkDocAccess)
 			// Content endpoint requires auth via middleware
-			docs.GET("/content/*path", AuthMiddleware(cfg), r.getDocContent)
+			docs.GET("/content/*path", AuthMiddleware(cfg, r.db), r.getDocContent)
 		}
 
 		// Sitemap with blog posts
@@ -196,7 +196,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 
 			// Authenticated forum actions
 			authForum := forum.Group("")
-			authForum.Use(AuthMiddleware(cfg))
+			authForum.Use(AuthMiddleware(cfg, r.db))
 			{
 				authForum.POST("/topics", r.createForumTopic)
 				authForum.POST("/topics/by-slug/:slug/posts", r.createForumPost)
@@ -339,7 +339,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 			}
 			auth.POST("/logout", r.logout)
 			auth.POST("/refresh", r.refreshToken)
-			auth.GET("/me", AuthMiddleware(cfg), r.getCurrentUser)
+			auth.GET("/me", AuthMiddleware(cfg, r.db), r.getCurrentUser)
 
 			if cfg.Auth.EnableOAuth {
 				auth.GET("/providers", r.listOAuthProviders)
@@ -350,7 +350,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Analytics - admin viewing
 		analytics := api.Group("/analytics")
-		analytics.Use(AuthMiddleware(cfg))
+		analytics.Use(AuthMiddleware(cfg, r.db))
 		{
 			analytics.GET("/summary", r.analyticsSummary)
 			analytics.GET("/pages", r.analyticsPages)
@@ -358,7 +358,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Feedback - admin viewing
 		feedback := api.Group("/feedback")
-		feedback.Use(AuthMiddleware(cfg))
+		feedback.Use(AuthMiddleware(cfg, r.db))
 		{
 			feedback.GET("/stats", r.feedbackStats)
 			feedback.GET("/list", r.feedbackList)
@@ -366,14 +366,14 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Newsletter - admin management
 		newsletter := api.Group("/newsletter")
-		newsletter.Use(AuthMiddleware(cfg))
+		newsletter.Use(AuthMiddleware(cfg, r.db))
 		{
 			newsletter.GET("/subscribers", r.listSubscribers)
 		}
 
 		// Site management (admin only)
 		sites := api.Group("/sites")
-		sites.Use(AuthMiddleware(cfg), AdminMiddleware())
+		sites.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			sites.GET("", r.listSites)
 			sites.POST("", r.createSite)
@@ -385,7 +385,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// User management (admin only)
 		users := api.Group("/users")
-		users.Use(AuthMiddleware(cfg), AdminMiddleware())
+		users.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			users.GET("", r.listUsers)
 			users.POST("", r.createUser)
@@ -396,7 +396,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Blog management
 		blog := api.Group("/blog")
-		blog.Use(AuthMiddleware(cfg))
+		blog.Use(AuthMiddleware(cfg, r.db))
 		{
 			blog.GET("/posts", r.listAllPosts)
 			blog.POST("/posts", AuthorOrAboveMiddleware(), r.createPost)
@@ -418,7 +418,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Doc access management (admin only)
 		docs := api.Group("/docs")
-		docs.Use(AuthMiddleware(cfg), AdminMiddleware())
+		docs.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			docs.GET("/rules", r.listDocAccessRules)
 			docs.POST("/rules", r.createDocAccessRule)
@@ -428,7 +428,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Forum management
 		forum := api.Group("/forum")
-		forum.Use(AuthMiddleware(cfg))
+		forum.Use(AuthMiddleware(cfg, r.db))
 		{
 			forum.GET("/stats", r.getForumStats)
 			forum.GET("/topics", r.adminListForumTopics)
@@ -468,7 +468,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Upload management
 		uploads := api.Group("/uploads")
-		uploads.Use(AuthMiddleware(cfg), AuthorOrAboveMiddleware())
+		uploads.Use(AuthMiddleware(cfg, r.db), AuthorOrAboveMiddleware())
 		{
 			uploads.POST("", r.uploadImage)
 			uploads.GET("", r.listUploads)
@@ -476,7 +476,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 		}
 
 		// Audit log API (admin only)
-		api.GET("/audit-logs", AuthMiddleware(cfg), AdminMiddleware(), r.listAuditLogsAPI)
+		api.GET("/audit-logs", AuthMiddleware(cfg, r.db), AdminMiddleware(), r.listAuditLogsAPI)
 	}
 
 	// Admin UI routes
