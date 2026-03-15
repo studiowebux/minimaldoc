@@ -65,8 +65,8 @@ func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
 	}
 
 	doc, err := libopenapi.NewDocumentWithConfiguration(specBytes, &datamodel.DocumentConfiguration{
-		AllowFileReferences:   true,
-		AllowRemoteReferences: true,
+		AllowFileReferences:   true,  // Needed for multi-file specs ($ref: "./schemas/user.yaml")
+		AllowRemoteReferences: false, // Disabled: local specs should not trigger HTTP requests (SSRF risk)
 		BasePath:              filepath.Dir(filePath),
 	})
 	if err != nil {
@@ -96,7 +96,8 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 		return nil, fmt.Errorf("invalid OpenAPI spec URL (must be http or https): %s", url)
 	}
 
-	resp, err := http.Get(url) // #nosec G107 -- scheme validated above
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(url) // #nosec G107 -- scheme validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: %w", url, err)
 	}
