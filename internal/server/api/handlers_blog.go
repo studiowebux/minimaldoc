@@ -11,22 +11,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/studiowebux/minimaldoc/internal/server/markdown"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
-// htmlTagRegex matches HTML tags for sanitization
-var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
+// commentSanitizer strips all HTML from comments — plaintext only.
+var commentSanitizer = bluemonday.StrictPolicy()
 
-// sanitizeComment removes HTML tags and escapes special characters.
-// This is a basic sanitization - for richer content, use a library like bluemonday.
+// sanitizeComment strips all HTML and trims whitespace from user comment input.
 func sanitizeComment(s string) string {
-	// Remove HTML tags
-	s = htmlTagRegex.ReplaceAllString(s, "")
-	// Escape HTML entities
-	s = escapeHTML(s)
-	// Trim whitespace
+	s = commentSanitizer.Sanitize(s)
 	s = strings.TrimSpace(s)
 	return s
 }
