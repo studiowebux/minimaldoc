@@ -83,12 +83,14 @@ Create `TOC.md` in your docs root for full control.
 
 ### Format Rules
 
-| Syntax | Result |
-|--------|--------|
-| `- [Title](path.md)` | Page link |
-| `- Section Name` | Section header (no link) |
-| `- [External](https://...)` | External link |
-| 2-space indent | Nesting level |
+Supported syntax:
+
+```markdown
+- [Title](path.md)           # Page link
+- Section Name                # Section header (no link)
+- [External](https://...)    # External link
+  - [Nested](child.md)       # 2-space indent for nesting
+```
 
 ### Nesting
 
