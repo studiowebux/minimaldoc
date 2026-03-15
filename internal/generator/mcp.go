@@ -164,6 +164,7 @@ func (g *MCPGenerator) Generate() error {
 // generateSpec renders the HTML page for a single MCP spec
 func (g *MCPGenerator) generateSpec(spec *core.MCPSpec, mcpDir, basePath string) error {
 	slug := specSlug(spec.Name)
+	spec.Slug = slug
 	specDir := filepath.Join(mcpDir, slug)
 	if err := makeWebDir(specDir); err != nil {
 		return fmt.Errorf("create spec directory: %w", err)
