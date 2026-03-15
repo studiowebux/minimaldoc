@@ -13,6 +13,7 @@
   - [Frontmatter](core-concepts/03-frontmatter.md)
   - [Navigation](core-concepts/04-navigation.md)
 - Features
+  - [Feature Index](features/00-index.md)
   - [Overview](features/01-overview.md)
   - [Search](features/02-search.md)
   - [Theming](features/03-theming.md)
@@ -26,6 +27,10 @@
   - [Analytics](features/11-analytics.md)
   - [Backend Server](features/12-backend.md)
   - [Forum](features/13-forum.md)
+  - [MCP Server Docs](features/14-mcp-docs.md)
+  - [PDF Export](features/15-pdf-export.md)
+  - [Claude Assist](features/16-claude-assist.md)
+  - [Waitlist](features/17-waitlist.md)
 - OpenAPI/Swagger
   - [Overview](openapi/01-overview.md)
   - [Configuration](openapi/02-configuration.md)
@@ -41,7 +46,6 @@
   - [Maintenance](status-page/04-maintenance.md)
   - [Uptime Tracking](status-page/05-uptime-tracking.md)
   - [Health Checks](status-page/06-health-checks.md)
-  - [API & Integrations](status-page/07-api-integration.md)
 - Changelog
   - [Overview](changelog/01-overview.md)
   - [Format](changelog/02-format.md)
@@ -50,7 +54,12 @@
   - [GitHub Pages](guides/02-github-pages.md)
   - [Custom Themes](guides/03-custom-themes.md)
   - [Prometheus Integration](guides/04-prometheus-integration.md)
-  - [CI/CD Pipelines](guides/05-ci-cd.md)
+  - [Roadmap Pages](guides/05-roadmap-pages.md)
+  - [Portfolio](guides/06-portfolio.md)
+  - [Knowledge Base](guides/07-knowledge-base.md)
+  - [FAQ Pages](guides/08-faq.md)
+  - [Contact Page](guides/09-contact-page.md)
+  - [Legal Pages](guides/10-legal-pages.md)
 - API Reference
   - [CLI Commands](api-reference/01-cli.md)
   - [Config Schema](api-reference/02-config-schema.md)

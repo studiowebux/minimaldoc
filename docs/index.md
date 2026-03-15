@@ -76,4 +76,4 @@ Output in `public/`. Open `public/index.html` to preview.
 
 ## License
 
-MIT License. See [LICENSE](https://github.com/studiowebux/minimaldoc/blob/main/LICENSE).
+[GPL-3.0](https://github.com/studiowebux/minimaldoc/blob/main/LICENSE)

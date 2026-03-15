@@ -124,21 +124,28 @@ a{color:var(--link-color)}
 <kbd class="search-kbd-hint">⌘K</kbd>
 </button>
 {{template "nav" .}}
-{{if .Site.Config.OpenAPI.Enabled}}{{if .Site.APISpecs}}
+{{if or (and .Site.Config.OpenAPI.Enabled .Site.APISpecs) (and .Site.Config.MCP.Enabled .Site.MCPSpecs)}}
 <div class="api-link-separator"></div>
 <nav class="api-navigation">
 <div class="api-nav-header">API Documentation</div>
 <ul class="nav-list">
-{{range .Site.APISpecs}}
+{{if .Site.Config.OpenAPI.Enabled}}{{range .Site.APISpecs}}
 <li class="nav-item">
 <a href="{{$.BasePath}}/api/{{.Name | stripSpecExt}}" class="nav-link api-link">
 {{.Title}}
 </a>
 </li>
-{{end}}
+{{end}}{{end}}
+{{if .Site.Config.MCP.Enabled}}{{range .Site.MCPSpecs}}
+<li class="nav-item">
+<a href="{{$.BasePath}}/{{$.Site.Config.MCP.Path}}/{{.Slug}}/" class="nav-link api-link">
+{{.Name}}
+</a>
+</li>
+{{end}}{{end}}
 </ul>
 </nav>
-{{end}}{{end}}
+{{end}}
 {{if .Site.Config.Status.Enabled}}
 <div class="status-link-separator"></div>
 <a href="{{.BasePath}}/{{.Site.Config.Status.Path}}/" class="status-page-link">

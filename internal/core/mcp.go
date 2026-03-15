@@ -11,6 +11,7 @@ type MCPConfig struct {
 type MCPSpec struct {
 	Name        string
 	Description string
+	Slug        string
 	Tools       []*MCPTool
 	Resources   []*MCPResource
 	Prompts     []*MCPPrompt

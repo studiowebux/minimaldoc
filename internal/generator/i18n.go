@@ -39,7 +39,7 @@ type LocaleInfoJSON struct {
 
 // NewI18nGenerator creates a new i18n generator
 func NewI18nGenerator(site *core.Site, themeFS embed.FS, version string) (*I18nGenerator, error) {
-	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(AnalyticsFuncMap())
+	tmpl := template.New("").Funcs(OpenAPIFuncMap()).Funcs(MCPFuncMap()).Funcs(AnalyticsFuncMap())
 
 	tmpl, err := tmpl.ParseFS(
 		themeFS,
