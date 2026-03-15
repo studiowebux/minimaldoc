@@ -31,8 +31,8 @@ import (
 // HTML is sanitized with bluemonday to prevent XSS from untrusted specs.
 type OpenAPIParser struct {
 	cacheDir  string
-	md        goldmark.Markdown      // Markdown renderer for descriptions
-	sanitizer *bluemonday.Policy     // HTML sanitizer for rendered descriptions
+	md        goldmark.Markdown  // Markdown renderer for descriptions
+	sanitizer *bluemonday.Policy // HTML sanitizer for rendered descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser

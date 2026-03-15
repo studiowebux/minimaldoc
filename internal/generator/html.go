@@ -104,8 +104,8 @@ func (g *HTMLGenerator) generatePage(page *core.Page) error {
 	}
 
 	data := map[string]any{
-		"Site":           g.site,
-		"Page":           page,
+		"Site": g.site,
+		"Page": page,
 		// page.HTML is trusted output from the local markdown parser (WithUnsafe).
 		// See parser/markdown.go for the trust model explanation.
 		"Content":        template.HTML(page.HTML), // #nosec G203
