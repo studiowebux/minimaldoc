@@ -115,9 +115,11 @@ func LoadConfig(docsDir string) (*FileConfig, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	// Parse YAML
+	// Parse YAML with strict mode to catch typos in field names
 	var cfg FileConfig
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	dec := yaml.NewDecoder(strings.NewReader(string(data)))
+	dec.KnownFields(true)
+	if err := dec.Decode(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to parse config.yaml: %w", err)
 	}
 
