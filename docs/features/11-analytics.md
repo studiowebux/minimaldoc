@@ -39,7 +39,7 @@ analytics:
 
 ### MinimalDoc Backend
 
-Self-hosted, cookie-free analytics with the optional MinimalDoc backend server. See [Backend](/features/backend.html) for full documentation.
+Self-hosted, cookie-free analytics with the optional MinimalDoc backend server. See [Backend](12-backend.md) for full documentation.
 
 ```yaml
 analytics:
