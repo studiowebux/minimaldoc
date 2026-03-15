@@ -54,7 +54,7 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 
 // ParseFile parses an OpenAPI spec from a local file
 func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
-	specBytes, err := os.ReadFile(filePath)
+	specBytes, err := os.ReadFile(filePath) // #nosec G304 -- file path comes from site config, not user input
 	if err != nil {
 		return nil, fmt.Errorf("failed to read OpenAPI spec from %s: %w", filePath, err)
 	}
