@@ -4,11 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
+
+// bootstrapMu serializes bootstrap attempts to prevent the TOCTOU race
+// where two concurrent requests both pass the "no sites exist" check.
+var bootstrapMu sync.Mutex
 
 // BootstrapResult contains the created site and user info.
 type BootstrapResult struct {
@@ -22,8 +27,12 @@ type BootstrapResult struct {
 
 // Bootstrap creates the initial site and admin user.
 // Returns the generated API key and credentials.
+// Serialized with bootstrapMu to prevent duplicate site creation from concurrent requests.
 func Bootstrap(ctx context.Context, db store.Store, cfg *config.Config, siteName, domain, adminEmail, adminPassword string) (*BootstrapResult, error) {
-	// Check if any sites exist
+	bootstrapMu.Lock()
+	defer bootstrapMu.Unlock()
+
+	// Check if any sites exist (under lock, so no race)
 	sites, err := db.ListSites(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check existing sites: %w", err)
