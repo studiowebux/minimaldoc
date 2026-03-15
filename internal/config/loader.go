@@ -2,12 +2,20 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"gopkg.in/yaml.v3"
 )
+
+// validThemes lists the built-in theme names.
+var validThemes = map[string]bool{
+	"default": true,
+	"yellow":  true,
+}
 
 // SocialLinkConfig represents a social link in config.yaml
 type SocialLinkConfig struct {
@@ -113,7 +121,59 @@ func LoadConfig(docsDir string) (*FileConfig, error) {
 		return nil, fmt.Errorf("failed to parse config.yaml: %w", err)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config.yaml: %w", err)
+	}
+
 	return &cfg, nil
+}
+
+// Validate checks FileConfig values for correctness after YAML unmarshal.
+func (cfg *FileConfig) Validate() error {
+	var errs []string
+
+	// base_url must be a valid http/https URL if set
+	if cfg.BaseURL != "" {
+		u, err := url.Parse(cfg.BaseURL)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
+			errs = append(errs, fmt.Sprintf("base_url: must be a valid http or https URL, got %q", cfg.BaseURL))
+		}
+	}
+
+	// theme must be a known built-in theme if set
+	if cfg.Theme != "" && !validThemes[cfg.Theme] {
+		names := make([]string, 0, len(validThemes))
+		for k := range validThemes {
+			names = append(names, k)
+		}
+		errs = append(errs, fmt.Sprintf("theme: unknown theme %q (available: %s)", cfg.Theme, strings.Join(names, ", ")))
+	}
+
+	// OpenAPI bounds
+	if cfg.OpenAPI.LazyLoadChunkSize != nil && (*cfg.OpenAPI.LazyLoadChunkSize < 0 || *cfg.OpenAPI.LazyLoadChunkSize > 10000000) {
+		errs = append(errs, fmt.Sprintf("openapi.lazy_load_chunk_size: must be 0-10000000, got %d", *cfg.OpenAPI.LazyLoadChunkSize))
+	}
+	if len(cfg.OpenAPI.SpecURLs) > 20 {
+		errs = append(errs, fmt.Sprintf("openapi.spec_urls: max 20 entries, got %d", len(cfg.OpenAPI.SpecURLs)))
+	}
+	if len(cfg.OpenAPI.SpecFiles) > 50 {
+		errs = append(errs, fmt.Sprintf("openapi.spec_files: max 50 entries, got %d", len(cfg.OpenAPI.SpecFiles)))
+	}
+
+	// Status bounds
+	if cfg.Status.HistoryMonths != nil && (*cfg.Status.HistoryMonths < 0 || *cfg.Status.HistoryMonths > 120) {
+		errs = append(errs, fmt.Sprintf("status.history_months: must be 0-120, got %d", *cfg.Status.HistoryMonths))
+	}
+
+	// Stale warning bounds
+	if cfg.StaleWarning.ThresholdDays != nil && (*cfg.StaleWarning.ThresholdDays < 0 || *cfg.StaleWarning.ThresholdDays > 3650) {
+		errs = append(errs, fmt.Sprintf("stale_warning.threshold_days: must be 0-3650, got %d", *cfg.StaleWarning.ThresholdDays))
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("%s", strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 // MergeWithCLI merges config file with CLI flags.
