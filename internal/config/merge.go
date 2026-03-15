@@ -21,38 +21,39 @@ func mergeStringNoFlag(dst *string, src string) {
 	}
 }
 
-// mergeBool sets dst to src if src is true and the CLI flag was not set
-// Note: Cannot detect explicit false due to Go zero-value semantics
-func mergeBool(dst *bool, src bool, cliFlags map[string]bool, flagName string) {
+// mergeBool sets dst to *src if src is non-nil and the CLI flag was not set.
+// Using *bool for src correctly distinguishes "not set" (nil) from "explicitly false".
+func mergeBool(dst *bool, src *bool, cliFlags map[string]bool, flagName string) {
 	if flagName != "" && cliFlags[flagName] {
 		return
 	}
-	if src {
-		*dst = src
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeBoolNoFlag sets dst to src if src is true (no CLI flag check)
-func mergeBoolNoFlag(dst *bool, src bool) {
-	if src {
-		*dst = src
+// mergeBoolNoFlag sets dst to *src if src is non-nil (no CLI flag check)
+func mergeBoolNoFlag(dst *bool, src *bool) {
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeInt sets dst to src if src > 0 and the CLI flag was not set
-func mergeInt(dst *int, src int, cliFlags map[string]bool, flagName string) {
+// mergeInt sets dst to *src if src is non-nil and the CLI flag was not set.
+// Using *int for src correctly distinguishes "not set" (nil) from "explicitly 0".
+func mergeInt(dst *int, src *int, cliFlags map[string]bool, flagName string) {
 	if flagName != "" && cliFlags[flagName] {
 		return
 	}
-	if src > 0 {
-		*dst = src
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeIntNoFlag sets dst to src if src > 0 (no CLI flag check)
-func mergeIntNoFlag(dst *int, src int) {
-	if src > 0 {
-		*dst = src
+// mergeIntNoFlag sets dst to *src if src is non-nil (no CLI flag check)
+func mergeIntNoFlag(dst *int, src *int) {
+	if src != nil {
+		*dst = *src
 	}
 }
 

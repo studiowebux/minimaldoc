@@ -16,56 +16,57 @@ type SocialLinkConfig struct {
 	Icon string `yaml:"icon"`
 }
 
-// FileConfig represents the structure of config.yaml
+// FileConfig represents the structure of config.yaml.
+// Bool and int fields use pointers to distinguish "not set" from "explicitly set to false/0".
 type FileConfig struct {
 	Title        string `yaml:"title"`
 	Description  string `yaml:"description"`
 	BaseURL      string `yaml:"base_url"`
 	Author       string `yaml:"author"`
 	Theme        string `yaml:"theme"`
-	DarkMode     bool   `yaml:"dark_mode"`
-	EnableLLMS   bool   `yaml:"enable_llms"`
-	EnableSearch bool   `yaml:"enable_search"`
-	CleanURLs    bool   `yaml:"clean_urls"`
+	DarkMode     *bool  `yaml:"dark_mode"`
+	EnableLLMS   *bool  `yaml:"enable_llms"`
+	EnableSearch *bool  `yaml:"enable_search"`
+	CleanURLs    *bool  `yaml:"clean_urls"`
 	Entrypoint   string `yaml:"entrypoint"`
 
 	OpenAPI struct {
-		Enabled           bool     `yaml:"enabled"`
+		Enabled           *bool    `yaml:"enabled"`
 		SpecFiles         []string `yaml:"spec_files"`
 		SpecURLs          []string `yaml:"spec_urls"`
 		DefaultView       string   `yaml:"default_view"`
-		SyncOnBuild       bool     `yaml:"sync_on_build"`
+		SyncOnBuild       *bool    `yaml:"sync_on_build"`
 		CacheDir          string   `yaml:"cache_dir"`
-		EnableTesting     bool     `yaml:"enable_testing"`
-		EnableExport      bool     `yaml:"enable_export"`
-		EnableCodeSamples bool     `yaml:"enable_code_samples"`
-		LazyLoadChunkSize int      `yaml:"lazy_load_chunk_size"`
+		EnableTesting     *bool    `yaml:"enable_testing"`
+		EnableExport      *bool    `yaml:"enable_export"`
+		EnableCodeSamples *bool    `yaml:"enable_code_samples"`
+		LazyLoadChunkSize *int     `yaml:"lazy_load_chunk_size"`
 	} `yaml:"openapi"`
 
 	Status struct {
-		Enabled       bool   `yaml:"enabled"`
+		Enabled       *bool  `yaml:"enabled"`
 		Title         string `yaml:"title"`
 		Description   string `yaml:"description"`
 		Path          string `yaml:"path"`
-		ShowHistory   bool   `yaml:"show_history"`
-		HistoryMonths int    `yaml:"history_months"`
-		RSSEnabled    bool   `yaml:"rss_enabled"`
+		ShowHistory   *bool  `yaml:"show_history"`
+		HistoryMonths *int   `yaml:"history_months"`
+		RSSEnabled    *bool  `yaml:"rss_enabled"`
 	} `yaml:"status"`
 
 	Changelog struct {
-		Enabled     bool   `yaml:"enabled"`
+		Enabled     *bool  `yaml:"enabled"`
 		Title       string `yaml:"title"`
 		Description string `yaml:"description"`
 		Path        string `yaml:"path"`
-		RSSEnabled  bool   `yaml:"rss_enabled"`
+		RSSEnabled  *bool  `yaml:"rss_enabled"`
 		Repository  string `yaml:"repository"`
 	} `yaml:"changelog"`
 
 	StaleWarning struct {
-		Enabled        bool   `yaml:"enabled"`
-		ThresholdDays  int    `yaml:"threshold_days"`
+		Enabled        *bool  `yaml:"enabled"`
+		ThresholdDays  *int   `yaml:"threshold_days"`
 		Message        string `yaml:"message"`
-		ShowUpdateDate bool   `yaml:"show_update_date"`
+		ShowUpdateDate *bool  `yaml:"show_update_date"`
 	} `yaml:"stale_warning"`
 
 	Landing       core.LandingConfig      `yaml:"landing"`
@@ -125,7 +126,9 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	mergeString(&result.Description, cfg.Description, cliFlags, "description")
 	mergeString(&result.BaseURL, cfg.BaseURL, cliFlags, "base-url")
 	mergeString(&result.Theme, cfg.Theme, cliFlags, "theme")
+	mergeBool(&result.DarkMode, cfg.DarkMode, cliFlags, "dark-mode")
 	mergeBool(&result.EnableLLMS, cfg.EnableLLMS, cliFlags, "llms")
+	mergeBool(&result.EnableSearch, cfg.EnableSearch, cliFlags, "search")
 	mergeBool(&result.CleanURLs, cfg.CleanURLs, cliFlags, "clean-urls")
 	mergeStringNoFlag(&result.Entrypoint, cfg.Entrypoint)
 
@@ -225,8 +228,8 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		result.Analytics = cfg.Analytics
 	}
 
-	// MCP config
-	mergeBool(&result.MCP.Enabled, cfg.MCP.Enabled, cliFlags, "mcp")
+	// MCP config (cfg.MCP uses core.MCPConfig with bare bool, take address)
+	mergeBool(&result.MCP.Enabled, &cfg.MCP.Enabled, cliFlags, "mcp")
 	if result.MCP.Enabled {
 		mergeStringSlice(&result.MCP.SpecFiles, cfg.MCP.SpecFiles, cliFlags, "mcp-dir")
 		mergeStringNoFlag(&result.MCP.Path, cfg.MCP.Path)
