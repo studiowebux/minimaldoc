@@ -305,7 +305,11 @@ a{color:var(--link-color)}
 <header class="landing-header">
 <div class="landing-header-content">
 <a href="` + basePath + `/" class="landing-logo">` + g.site.Config.Title + `</a>
-<nav class="landing-nav">
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
 ` + navLinks.String() + `
 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
 <span class="theme-icon" aria-hidden="true"></span>
@@ -358,6 +362,26 @@ a{color:var(--link-color)}
 </footer>
 </div>
 <script defer src="` + basePath + `/js/theme-toggle.js?v=` + g.version + `"></script>
+<script>
+(function(){
+    var toggle = document.getElementById('landing-menu-toggle');
+    var nav = document.getElementById('landing-nav');
+    var backdrop = document.getElementById('landing-nav-backdrop');
+    if (!toggle || !nav || !backdrop) return;
+    function open() {
+        nav.classList.add('open'); backdrop.classList.add('open'); toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        nav.classList.remove('open'); backdrop.classList.remove('open'); toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
+    }
+    toggle.addEventListener('click', function() { nav.classList.contains('open') ? close() : open(); });
+    backdrop.addEventListener('click', close);
+    nav.querySelectorAll('a').forEach(function(link) { link.addEventListener('click', close); });
+    window.addEventListener('resize', function() { if (window.innerWidth > 768 && nav.classList.contains('open')) close(); });
+})();
+</script>
 </body>
 </html>`)
 

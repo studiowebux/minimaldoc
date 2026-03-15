@@ -137,6 +137,9 @@
     padding: 3rem 2rem;
     max-width: var(--max-w-xl);
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    background: var(--bg-primary);
 }
 
 .kb-categories-grid {
@@ -150,7 +153,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1.5rem;
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
     text-decoration: none;
@@ -385,6 +388,10 @@
     position: sticky;
     top: 2rem;
     align-self: start;
+    background: var(--bg-primary);
+    z-index: 1;
+    padding: 1rem;
+    border-radius: var(--radius-lg);
 }
 
 .kb-sidebar h3 {
