@@ -55,6 +55,11 @@
   - [Custom Themes](guides/03-custom-themes.md)
   - [Prometheus Integration](guides/04-prometheus-integration.md)
   - [Roadmap Pages](guides/05-roadmap-pages.md)
+  - [Portfolio](guides/06-portfolio.md)
+  - [Knowledge Base](guides/07-knowledge-base.md)
+  - [FAQ Pages](guides/08-faq.md)
+  - [Contact Page](guides/09-contact-page.md)
+  - [Legal Pages](guides/10-legal-pages.md)
 - API Reference
   - [CLI Commands](api-reference/01-cli.md)
   - [Config Schema](api-reference/02-config-schema.md)
