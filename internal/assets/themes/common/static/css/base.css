@@ -414,11 +414,6 @@ html.no-js .nav-link-parent {
         max-width: 100%;
         overflow-wrap: break-word;
         word-wrap: break-word;
-        overflow-x: hidden;
-    }
-
-    .markdown-body > * {
-        max-width: 100%;
     }
 
     .markdown-body h1 {
@@ -436,8 +431,11 @@ html.no-js .nav-link-parent {
     .markdown-body table {
         display: block;
         overflow-x: auto;
-        width: 100%;
-        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .markdown-body table th {
+        white-space: nowrap;
     }
 
     .markdown-body pre {
