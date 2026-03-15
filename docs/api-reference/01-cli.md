@@ -60,11 +60,14 @@ When a `.md` file is passed instead of a directory, MinimalDoc generates only th
 | `--status-title` | | string | `Service Status` | Status page title |
 | `--status-path` | | string | `status` | Status page output path |
 | `--changelog` | | bool | `false` | Enable changelog |
+| `--changelog-title` | | string | `Changelog` | Changelog page title |
 | `--changelog-path` | | string | `changelog` | Changelog output path |
-| `--stale-warning` | | bool | `true` | Enable stale warnings |
+| `--stale-warning` | | bool | `false` | Enable stale warnings |
 | `--stale-threshold` | | int | `365` | Days before stale |
 | `--link-check` | | string | `warn` | Link check mode: error, warn, ignore |
 | `--check-external` | | bool | `false` | Validate external URLs |
+| `--mcp` | | bool | `false` | Enable MCP server documentation |
+| `--mcp-dir` | | string | `mcp` | MCP manifests directory |
 
 ### Examples
 
