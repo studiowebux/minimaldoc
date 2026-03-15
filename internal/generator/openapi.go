@@ -293,6 +293,7 @@ a{color:var(--link-color)}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>API Documentation | ` + g.site.Config.Title + `</title>
 <meta name="description" content="OpenAPI documentation for ` + g.site.Config.Title + `">
+<link rel="stylesheet" href="` + basePath + `/css/tokens.css?v=` + g.version + `">
 <link rel="stylesheet" href="` + basePath + `/css/base.css?v=` + g.version + `">
 <link rel="stylesheet" href="` + basePath + `/css/main.css?v=` + g.version + `">
 <link rel="stylesheet" href="` + basePath + `/css/landing.css?v=` + g.version + `">
@@ -304,7 +305,11 @@ a{color:var(--link-color)}
 <header class="landing-header">
 <div class="landing-header-content">
 <a href="` + basePath + `/" class="landing-logo">` + g.site.Config.Title + `</a>
-<nav class="landing-nav">
+<button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+<span></span>
+</button>
+<div class="landing-nav-backdrop" id="landing-nav-backdrop"></div>
+<nav class="landing-nav" id="landing-nav">
 ` + navLinks.String() + `
 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
 <span class="theme-icon" aria-hidden="true"></span>
@@ -314,8 +319,7 @@ a{color:var(--link-color)}
 </header>
 <main id="main" class="landing-main">
 <section class="portfolio-header">
-<h1>API Documentation</h1>
-<p class="portfolio-description">Available OpenAPI specifications</p>
+<h1 style="font-size:2.5rem">API Documentation</h1>
 </section>
 <section class="portfolio-grid">
 `)
@@ -327,18 +331,25 @@ a{color:var(--link-color)}
 		specName = strings.TrimSuffix(specName, ".yml")
 		specName = strings.TrimSuffix(specName, ".json")
 
+		// Strip HTML and truncate description for the card
+		desc := stripHTML(spec.Description)
+		if len(desc) > 150 {
+			desc = desc[:147] + "..."
+		}
+		desc = template.HTMLEscapeString(desc)
+
 		relPath := basePath + "/api/" + specName
-		buf.WriteString(fmt.Sprintf(`<article class="project-card">
+		buf.WriteString(fmt.Sprintf(`<a href="%s" class="project-card" style="text-decoration:none;color:inherit;cursor:pointer;display:block">
 <div class="project-content">
-<h2 class="project-title"><a href="%s">%s</a></h2>
+<h2 class="project-title">%s</h2>
 <p class="project-description">%s</p>
 <div class="project-tags">
 <span class="project-tag">v%s</span>
 <span class="project-tag">%d endpoints</span>
 </div>
 </div>
-</article>
-`, relPath, spec.Title, spec.Description, spec.Version, len(spec.Endpoints)))
+</a>
+`, relPath, spec.Title, desc, spec.Version, len(spec.Endpoints)))
 	}
 
 	buf.WriteString(`</section>
@@ -351,6 +362,26 @@ a{color:var(--link-color)}
 </footer>
 </div>
 <script defer src="` + basePath + `/js/theme-toggle.js?v=` + g.version + `"></script>
+<script>
+(function(){
+    var toggle = document.getElementById('landing-menu-toggle');
+    var nav = document.getElementById('landing-nav');
+    var backdrop = document.getElementById('landing-nav-backdrop');
+    if (!toggle || !nav || !backdrop) return;
+    function open() {
+        nav.classList.add('open'); backdrop.classList.add('open'); toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true'); document.body.style.overflow = 'hidden';
+    }
+    function close() {
+        nav.classList.remove('open'); backdrop.classList.remove('open'); toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false'); document.body.style.overflow = '';
+    }
+    toggle.addEventListener('click', function() { nav.classList.contains('open') ? close() : open(); });
+    backdrop.addEventListener('click', close);
+    nav.querySelectorAll('a').forEach(function(link) { link.addEventListener('click', close); });
+    window.addEventListener('resize', function() { if (window.innerWidth > 768 && nav.classList.contains('open')) close(); });
+})();
+</script>
 </body>
 </html>`)
 

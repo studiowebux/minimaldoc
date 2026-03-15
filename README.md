@@ -11,20 +11,20 @@ A minimal static site generator for documentation. Fast, clean, and easy to use.
 
 ## Features
 
-| Category       | Features                                                                                              | Status |
-| -------------- | ----------------------------------------------------------------------------------------------------- | ------ |
-| **Content**    | Markdown (GFM), Frontmatter, Admonitions, Syntax Highlighting, Link Checking, Copy-to-Markdown       | Stable |
-| **Navigation** | Auto-generated from folders, Custom TOC.md, Page TOC with scrollspy                                  | Stable |
-| **Search**     | Full-text index, Cmd+K shortcut, Fuzzy matching, Section-level results                               | Stable |
-| **Design**     | Dark/Light mode, Responsive, Custom themes via YAML, Custom fonts                                    | Stable |
-| **Versioning** | Multi-version docs, Version selector, EOL warnings                                                    | Stable |
-| **i18n**       | Multi-locale, Translation files, RTL support                                                          | Stable |
-| **Pages**      | Landing, Knowledge Base, Portfolio, FAQ, Legal, Status, Changelog, Roadmap                           | Stable |
-| **API Docs**   | OpenAPI/Swagger, Live testing, Code samples, Schema viewer, MCP server docs from JSON manifests       | Stable |
-| **SEO**        | Sitemap, Open Graph, Twitter Cards, llms.txt                                                          | Stable |
-| **Analytics**  | GA4, Plausible, Umami, Matomo provider integrations                                                   | Stable |
+| Category       | Features                                                                                                                                                                                                                                 | Status |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **Content**    | Markdown (GFM), Frontmatter, Admonitions, Syntax Highlighting, Link Checking, Copy-to-Markdown                                                                                                                                           | Stable |
+| **Navigation** | Auto-generated from folders, Custom TOC.md, Page TOC with scrollspy                                                                                                                                                                      | Stable |
+| **Search**     | Full-text index, Cmd+K shortcut, Fuzzy matching, Section-level results                                                                                                                                                                   | Stable |
+| **Design**     | Dark/Light mode, Responsive, Custom themes via YAML, Custom fonts                                                                                                                                                                        | Stable |
+| **Versioning** | Multi-version docs, Version selector, EOL warnings                                                                                                                                                                                       | Stable |
+| **i18n**       | Multi-locale, Translation files, RTL support                                                                                                                                                                                             | Stable |
+| **Pages**      | Landing, Knowledge Base, Portfolio, FAQ, Legal, Status, Changelog, Roadmap                                                                                                                                                               | Stable |
+| **API Docs**   | OpenAPI 3.0/3.1, Live testing, Code samples, Schema viewer, MCP server docs from JSON manifests                                                                                                                                          | Stable |
+| **SEO**        | Sitemap, Open Graph, Twitter Cards, llms.txt                                                                                                                                                                                             | Stable |
+| **Analytics**  | GA4, Plausible, Umami, Matomo provider integrations                                                                                                                                                                                      | Stable |
 | **Backend**    | Optional server (`minimaldoc-server`): cookie-free analytics, feedback widget, newsletter, blog CMS (RBAC, scheduling, RSS, comments), private docs, image uploads (local + S3), OAuth/JWT auth, admin portal, custom events, PDF export | WIP    |
-| **Forum**      | Via backend server: categories, topics, replies, likes, bookmarks, reputation, moderation, bans, notifications, search | WIP    |
+| **Forum**      | Via backend server: categories, topics, replies, likes, bookmarks, reputation, moderation, bans, notifications, search                                                                                                                   | WIP    |
 
 ## Quick Start
 
@@ -39,7 +39,9 @@ minimaldoc init my-docs && cd my-docs && minimaldoc build
 
 ## Documentation
 
-The `docs/` directory is a **demo site** — it exists to showcase what MinimalDoc can generate and to test the generator itself. It is not the authoritative documentation for this project.
+The `docs/` directory is a **demo site** — it exists to showcase what MinimalDoc
+can generate and to test the generator itself. It is not the authoritative
+documentation for this project.
 
 | Topic           | Link                                                       |
 | --------------- | ---------------------------------------------------------- |

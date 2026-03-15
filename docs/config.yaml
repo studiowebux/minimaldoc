@@ -1,6 +1,7 @@
 title: MinimalDoc
 description: A minimal static site generator for documentation. Fast, clean, and easy to use.
-base_url: https://minimaldoc.com
+base_url: http://localhost:8888
+# base_url: https://minimaldoc.com
 author: Studio Webux
 theme: default
 dark_mode: false
@@ -8,10 +9,14 @@ enable_llms: true
 enable_search: true
 clean_urls: false
 
+mcp:
+  enabled: true
+
 openapi:
   enabled: true
   spec_files:
     - petstore.yaml
+    - petstore31.yaml
 
 status:
   enabled: true

@@ -546,4 +546,31 @@ details[open] > .mcp-tool-summary {
   .mcp-main {
     padding: var(--space-5) var(--space-4);
   }
+
+  .mcp-tool,
+  .mcp-resource,
+  .mcp-prompt {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mcp-params-table,
+  .mcp-resource-table,
+  .mcp-prompt-table {
+    table-layout: auto;
+    min-width: 500px;
+  }
+
+  .mcp-params-table th:nth-child(1),
+  .mcp-params-table th:nth-child(2),
+  .mcp-params-table th:nth-child(3),
+  .mcp-params-table th:nth-child(4) {
+    width: auto;
+  }
+
+  .mcp-params-table th,
+  .mcp-resource-table th,
+  .mcp-prompt-table th {
+    white-space: nowrap;
+  }
 }

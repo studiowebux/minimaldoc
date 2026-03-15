@@ -15,7 +15,8 @@ order: 2
 
 ## OpenAPI Integration
 
-MinimalDoc supports embedding OpenAPI/Swagger specifications directly into your documentation with:
+MinimalDoc supports embedding OpenAPI/Swagger specifications directly into your
+documentation with:
 
 - Interactive endpoint testing
 - Request/response schema visualization
@@ -24,7 +25,7 @@ MinimalDoc supports embedding OpenAPI/Swagger specifications directly into your 
 
 ## Features Demonstrated
 
-- OpenAPI 3.0 parsing
+- OpenAPI 3.0 and 3.1 parsing
 - Try-it-out functionality
 - Schema documentation
 - Code sample generation

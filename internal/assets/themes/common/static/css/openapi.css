@@ -630,6 +630,12 @@
   line-height: 1.6;
 }
 
+.openapi-description ul,
+.openapi-description ol {
+  padding-left: 1.5rem;
+  list-style-position: inside;
+}
+
 .openapi-meta {
   display: flex;
   gap: 1.5rem;
@@ -1340,27 +1346,46 @@
 }
 
 @media (max-width: 768px) {
-  .openapi-container {
+  .openapi-container,
+  .openapi-container.sidebar-collapsed {
     grid-template-columns: 1fr;
   }
 
-  .openapi-sidebar-left {
+  .openapi-sidebar-left,
+  .openapi-container.sidebar-collapsed .openapi-sidebar-left {
     position: fixed;
     left: -100%;
     top: 0;
     width: 80%;
     max-width: var(--openapi-sidebar-width);
+    min-width: 0;
     height: 100vh;
     z-index: var(--z-overlay);
     transition: left var(--transition-slow);
+    overflow: visible;
   }
 
   .openapi-sidebar-left.open {
     left: 0;
   }
 
+  /* Restore sidebar content visibility on mobile regardless of collapsed state */
+  .openapi-container.sidebar-collapsed .openapi-sidebar-header .site-title,
+  .openapi-container.sidebar-collapsed .openapi-spec-info,
+  .openapi-container.sidebar-collapsed .openapi-nav,
+  .openapi-container.sidebar-collapsed .openapi-navigation,
+  .openapi-container.sidebar-collapsed .openapi-sidebar-footer,
+  .openapi-container.sidebar-collapsed .theme-toggle {
+    display: revert;
+  }
+
+  .sidebar-collapse-toggle {
+    display: none;
+  }
+
   .openapi-main-content {
     padding: 1rem;
+    padding-top: 4rem;
   }
 
   .endpoint-detail .endpoint-path {

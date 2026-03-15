@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,34 +12,37 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi/datamodel"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
+	v3high "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	htmlrenderer "github.com/yuin/goldmark/renderer/html"
+	"gopkg.in/yaml.v3"
 )
 
 // OpenAPIParser handles parsing of OpenAPI specifications
 type OpenAPIParser struct {
 	cacheDir string
-	doc      *openapi3.T       // Current document being parsed (for resolving $refs)
 	md       goldmark.Markdown // Markdown renderer for descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser
 func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
-	// Create a simple markdown renderer for descriptions
 	md := goldmark.New(
 		goldmark.WithExtensions(
-			extension.GFM,         // GitHub Flavored Markdown
-			extension.Typographer, // Smart quotes, dashes
+			extension.GFM,
+			extension.Typographer,
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
 		),
 		goldmark.WithRendererOptions(
-			htmlrenderer.WithUnsafe(), // Allow raw HTML
+			htmlrenderer.WithUnsafe(),
 		),
 	)
 
@@ -52,26 +54,26 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 
 // ParseFile parses an OpenAPI spec from a local file
 func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
-	// Load the spec
-	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
-
-	doc, err := loader.LoadFromFile(filePath)
+	specBytes, err := os.ReadFile(filePath) // #nosec G304 -- file path comes from site config, not user input
 	if err != nil {
-		return nil, fmt.Errorf("failed to load OpenAPI spec from %s: %w", filePath, err)
+		return nil, fmt.Errorf("failed to read OpenAPI spec from %s: %w", filePath, err)
 	}
 
-	// Validate the spec
-	ctx := context.Background()
-	if err := doc.Validate(ctx); err != nil {
-		return nil, fmt.Errorf("invalid OpenAPI spec in %s: %w", filePath, err)
+	doc, err := libopenapi.NewDocumentWithConfiguration(specBytes, &datamodel.DocumentConfiguration{
+		AllowFileReferences:   true,
+		AllowRemoteReferences: true,
+		BasePath:              filepath.Dir(filePath),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse OpenAPI spec from %s: %w", filePath, err)
 	}
 
-	// Store document for reference resolution
-	p.doc = doc
+	v3Model, errs := doc.BuildV3Model()
+	if v3Model == nil {
+		return nil, fmt.Errorf("failed to build OpenAPI 3.x model from %s: %v", filePath, errs)
+	}
 
-	// Convert to our internal structure
-	spec := p.convertSpec(doc)
+	spec := p.convertSpec(&v3Model.Model)
 	spec.Name = filepath.Base(filePath)
 	spec.FilePath = filePath
 
@@ -80,18 +82,15 @@ func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
 
 // ParseURL fetches and parses an OpenAPI spec from a URL
 func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
-	// Create cache directory if it doesn't exist
 	if err := os.MkdirAll(p.cacheDir, 0755); err != nil { // #nosec G301 -- cache directory is not sensitive
 		return nil, fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
-	// Validate URL scheme before fetching (G107)
 	parsed, parseErr := neturl.Parse(url)
 	if parseErr != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
 		return nil, fmt.Errorf("invalid OpenAPI spec URL (must be http or https): %s", url)
 	}
 
-	// Fetch the spec
 	resp, err := http.Get(url) // #nosec G107 -- scheme validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: %w", url, err)
@@ -102,68 +101,59 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: status %d", url, resp.StatusCode)
 	}
 
-	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read OpenAPI spec from %s: %w", url, err)
 	}
 
-	// Parse the spec
-	loader := openapi3.NewLoader()
-	loader.IsExternalRefsAllowed = true
-
-	doc, err := loader.LoadFromData(body)
+	doc, err := libopenapi.NewDocument(body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse OpenAPI spec from %s: %w", url, err)
 	}
 
-	// Validate the spec
-	ctx := context.Background()
-	if err := doc.Validate(ctx); err != nil {
-		return nil, fmt.Errorf("invalid OpenAPI spec from %s: %w", url, err)
+	v3Model, errs := doc.BuildV3Model()
+	if v3Model == nil {
+		return nil, fmt.Errorf("failed to build OpenAPI 3.x model from %s: %v", url, errs)
 	}
 
-	// Store document for reference resolution
-	p.doc = doc
-
-	// Convert to our internal structure
-	spec := p.convertSpec(doc)
+	spec := p.convertSpec(&v3Model.Model)
 	spec.Name = p.NameFromURL(url)
 	spec.URL = url
 	spec.LastFetched = time.Now()
 	spec.ETag = resp.Header.Get("ETag")
 	spec.LastModified = resp.Header.Get("Last-Modified")
 
-	// Cache the spec
 	cachePath := filepath.Join(p.cacheDir, spec.Name+".json")
 	if err := os.WriteFile(cachePath, body, 0644); err != nil { // #nosec G306 -- OpenAPI spec cache is not sensitive
-		// Non-fatal: continue even if caching fails
 		fmt.Fprintf(os.Stderr, "Warning: failed to cache OpenAPI spec: %v\n", err)
 	}
 
 	return spec, nil
 }
 
-// convertSpec converts an openapi3.T to our internal APISpec
-func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
+// convertSpec converts a libopenapi v3 Document to our internal APISpec
+func (p *OpenAPIParser) convertSpec(model *v3high.Document) *core.APISpec {
 	spec := &core.APISpec{
-		Title:           doc.Info.Title,
-		Description:     p.renderMarkdown(doc.Info.Description),
-		Version:         doc.Info.Version,
-		OpenAPIVersion:  doc.OpenAPI,
-		Servers:         p.convertServers(doc.Servers),
-		Tags:            p.convertTags(doc.Tags),
-		SecuritySchemes: p.convertSecuritySchemes(doc.Components.SecuritySchemes),
-		Schemas:         p.convertSchemas(doc.Components.Schemas),
-		Endpoints:       []*core.APIEndpoint{},
+		Title:          model.Info.Title,
+		Description:    p.renderMarkdown(model.Info.Description),
+		Version:        model.Info.Version,
+		OpenAPIVersion: model.Version,
+		Servers:        p.convertServers(model.Servers),
+		Tags:           p.convertTags(model.Tags),
+		Endpoints:      []*core.APIEndpoint{},
 	}
 
-	// Parse all paths
-	for path, pathItem := range doc.Paths.Map() {
-		spec.Endpoints = append(spec.Endpoints, p.convertPathItem(path, pathItem, spec.Name)...)
+	if model.Components != nil {
+		spec.SecuritySchemes = p.convertSecuritySchemes(model.Components.SecuritySchemes)
+		spec.Schemas = p.convertSchemas(model.Components.Schemas)
 	}
 
-	// Organize endpoints
+	if model.Paths != nil && model.Paths.PathItems != nil {
+		for path, pathItem := range model.Paths.PathItems.FromOldest() {
+			spec.Endpoints = append(spec.Endpoints, p.convertPathItem(path, pathItem, spec.Name)...)
+		}
+	}
+
 	spec.OrganizedByPath = p.organizeByPath(spec.Endpoints)
 	spec.OrganizedByTag = p.organizeByTag(spec.Endpoints, spec.Tags)
 	spec.FlatEndpoints = spec.Endpoints
@@ -172,23 +162,23 @@ func (p *OpenAPIParser) convertSpec(doc *openapi3.T) *core.APISpec {
 }
 
 // convertSchemas converts OpenAPI component schemas
-func (p *OpenAPIParser) convertSchemas(schemas openapi3.Schemas) map[string]*core.APISchema {
+func (p *OpenAPIParser) convertSchemas(schemas *orderedmap.Map[string, *base.SchemaProxy]) map[string]*core.APISchema {
 	if schemas == nil {
 		return nil
 	}
 
 	result := make(map[string]*core.APISchema)
-	for name, schemaRef := range schemas {
-		if schemaRef == nil {
+	for name, schemaProxy := range schemas.FromOldest() {
+		if schemaProxy == nil {
 			continue
 		}
-		result[name] = p.convertSchema(schemaRef)
+		result[name] = p.convertSchemaProxy(schemaProxy)
 	}
 	return result
 }
 
 // convertServers converts OpenAPI servers
-func (p *OpenAPIParser) convertServers(servers openapi3.Servers) []core.APIServer {
+func (p *OpenAPIParser) convertServers(servers []*v3high.Server) []core.APIServer {
 	result := make([]core.APIServer, 0, len(servers))
 	for _, server := range servers {
 		s := core.APIServer{
@@ -197,11 +187,16 @@ func (p *OpenAPIParser) convertServers(servers openapi3.Servers) []core.APIServe
 			Variables:   make(map[string]core.APIServerVariable),
 		}
 
-		for name, variable := range server.Variables {
-			s.Variables[name] = core.APIServerVariable{
-				Default:     variable.Default,
-				Description: p.renderMarkdown(variable.Description),
-				Enum:        variable.Enum,
+		if server.Variables != nil {
+			for name, variable := range server.Variables.FromOldest() {
+				sv := core.APIServerVariable{
+					Description: p.renderMarkdown(variable.Description),
+					Enum:        variable.Enum,
+				}
+				if variable.Default != "" {
+					sv.Default = variable.Default
+				}
+				s.Variables[name] = sv
 			}
 		}
 
@@ -211,7 +206,7 @@ func (p *OpenAPIParser) convertServers(servers openapi3.Servers) []core.APIServe
 }
 
 // convertTags converts OpenAPI tags
-func (p *OpenAPIParser) convertTags(tags openapi3.Tags) []core.APITag {
+func (p *OpenAPIParser) convertTags(tags []*base.Tag) []core.APITag {
 	result := make([]core.APITag, 0, len(tags))
 	for _, tag := range tags {
 		result = append(result, core.APITag{
@@ -223,13 +218,16 @@ func (p *OpenAPIParser) convertTags(tags openapi3.Tags) []core.APITag {
 }
 
 // convertSecuritySchemes converts OpenAPI security schemes
-func (p *OpenAPIParser) convertSecuritySchemes(schemes openapi3.SecuritySchemes) map[string]*core.APISecurityScheme {
+func (p *OpenAPIParser) convertSecuritySchemes(schemes *orderedmap.Map[string, *v3high.SecurityScheme]) map[string]*core.APISecurityScheme {
+	if schemes == nil {
+		return make(map[string]*core.APISecurityScheme)
+	}
+
 	result := make(map[string]*core.APISecurityScheme)
-	for name, schemeRef := range schemes {
-		if schemeRef == nil || schemeRef.Value == nil {
+	for name, scheme := range schemes.FromOldest() {
+		if scheme == nil {
 			continue
 		}
-		scheme := schemeRef.Value
 
 		s := &core.APISecurityScheme{
 			Type:             scheme.Type,
@@ -241,7 +239,6 @@ func (p *OpenAPIParser) convertSecuritySchemes(schemes openapi3.SecuritySchemes)
 			OpenIDConnectURL: scheme.OpenIdConnectUrl,
 		}
 
-		// Convert OAuth flows
 		if scheme.Flows != nil {
 			s.Flows = &core.APIOAuthFlows{}
 
@@ -265,20 +262,28 @@ func (p *OpenAPIParser) convertSecuritySchemes(schemes openapi3.SecuritySchemes)
 }
 
 // convertOAuthFlow converts an OAuth flow
-func (p *OpenAPIParser) convertOAuthFlow(flow *openapi3.OAuthFlow) *core.APIOAuthFlow {
-	return &core.APIOAuthFlow{
-		AuthorizationURL: flow.AuthorizationURL,
-		TokenURL:         flow.TokenURL,
-		RefreshURL:       flow.RefreshURL,
-		Scopes:           flow.Scopes,
+func (p *OpenAPIParser) convertOAuthFlow(flow *v3high.OAuthFlow) *core.APIOAuthFlow {
+	f := &core.APIOAuthFlow{
+		AuthorizationURL: flow.AuthorizationUrl,
+		TokenURL:         flow.TokenUrl,
+		RefreshURL:       flow.RefreshUrl,
 	}
+
+	if flow.Scopes != nil {
+		f.Scopes = make(map[string]string)
+		for scope, desc := range flow.Scopes.FromOldest() {
+			f.Scopes[scope] = desc
+		}
+	}
+
+	return f
 }
 
 // convertPathItem converts a path item to endpoints
-func (p *OpenAPIParser) convertPathItem(path string, pathItem *openapi3.PathItem, specName string) []*core.APIEndpoint {
+func (p *OpenAPIParser) convertPathItem(path string, pathItem *v3high.PathItem, specName string) []*core.APIEndpoint {
 	endpoints := []*core.APIEndpoint{}
 
-	operations := map[core.HTTPMethod]*openapi3.Operation{
+	operations := map[core.HTTPMethod]*v3high.Operation{
 		core.HTTPGet:     pathItem.Get,
 		core.HTTPPost:    pathItem.Post,
 		core.HTTPPut:     pathItem.Put,
@@ -295,13 +300,13 @@ func (p *OpenAPIParser) convertPathItem(path string, pathItem *openapi3.PathItem
 		}
 
 		endpoint := &core.APIEndpoint{
-			OperationID: operation.OperationID,
+			OperationID: operation.OperationId,
 			Path:        path,
 			Method:      string(method),
 			Summary:     p.renderMarkdown(operation.Summary),
 			Description: p.renderMarkdown(operation.Description),
 			Tags:        operation.Tags,
-			Deprecated:  operation.Deprecated,
+			Deprecated:  derefBool(operation.Deprecated),
 			Parameters:  p.convertParameters(operation.Parameters),
 			RequestBody: p.convertRequestBody(operation.RequestBody),
 			Responses:   p.convertResponses(operation.Responses),
@@ -319,33 +324,31 @@ func (p *OpenAPIParser) convertPathItem(path string, pathItem *openapi3.PathItem
 }
 
 // convertParameters converts OpenAPI parameters
-func (p *OpenAPIParser) convertParameters(params openapi3.Parameters) []*core.APIParameter {
+func (p *OpenAPIParser) convertParameters(params []*v3high.Parameter) []*core.APIParameter {
 	result := make([]*core.APIParameter, 0, len(params))
-	for _, paramRef := range params {
-		if paramRef == nil || paramRef.Value == nil {
+	for _, param := range params {
+		if param == nil {
 			continue
 		}
-		param := paramRef.Value
 
 		apiParam := &core.APIParameter{
 			Name:        param.Name,
 			In:          param.In,
 			Description: p.renderMarkdown(param.Description),
-			Required:    param.Required,
+			Required:    derefBool(param.Required),
 			Deprecated:  param.Deprecated,
-			Schema:      p.convertSchema(param.Schema),
-			Example:     param.Example,
+			Schema:      p.convertSchemaProxy(param.Schema),
+			Example:     decodeYAMLNode(param.Example),
 		}
 
-		// Convert examples
-		if len(param.Examples) > 0 {
+		if param.Examples != nil {
 			apiParam.Examples = make(map[string]*core.APIExample)
-			for name, exampleRef := range param.Examples {
-				if exampleRef != nil && exampleRef.Value != nil {
+			for name, example := range param.Examples.FromOldest() {
+				if example != nil {
 					apiParam.Examples[name] = &core.APIExample{
-						Summary:     p.renderMarkdown(exampleRef.Value.Summary),
-						Description: p.renderMarkdown(exampleRef.Value.Description),
-						Value:       exampleRef.Value.Value,
+						Summary:     p.renderMarkdown(example.Summary),
+						Description: p.renderMarkdown(example.Description),
+						Value:       decodeYAMLNode(example.Value),
 					}
 				}
 			}
@@ -357,88 +360,99 @@ func (p *OpenAPIParser) convertParameters(params openapi3.Parameters) []*core.AP
 }
 
 // convertRequestBody converts an OpenAPI request body
-func (p *OpenAPIParser) convertRequestBody(bodyRef *openapi3.RequestBodyRef) *core.APIRequestBody {
-	if bodyRef == nil || bodyRef.Value == nil {
+func (p *OpenAPIParser) convertRequestBody(body *v3high.RequestBody) *core.APIRequestBody {
+	if body == nil {
 		return nil
 	}
-	body := bodyRef.Value
 
 	rb := &core.APIRequestBody{
 		Description: p.renderMarkdown(body.Description),
-		Required:    body.Required,
+		Required:    derefBool(body.Required),
 		Content:     make(map[string]*core.APIMediaType),
 	}
 
-	for mediaType, mediaTypeValue := range body.Content {
-		rb.Content[mediaType] = p.convertMediaType(mediaTypeValue)
+	if body.Content != nil {
+		for mediaType, mediaTypeValue := range body.Content.FromOldest() {
+			rb.Content[mediaType] = p.convertMediaType(mediaTypeValue)
+		}
 	}
 
 	return rb
 }
 
 // convertResponses converts OpenAPI responses
-func (p *OpenAPIParser) convertResponses(responses *openapi3.Responses) map[string]*core.APIResponse {
+func (p *OpenAPIParser) convertResponses(responses *v3high.Responses) map[string]*core.APIResponse {
 	result := make(map[string]*core.APIResponse)
 	if responses == nil {
 		return result
 	}
 
-	for status, responseRef := range responses.Map() {
-		if responseRef == nil || responseRef.Value == nil {
-			continue
-		}
-		response := responseRef.Value
-
-		r := &core.APIResponse{
-			Description: p.renderMarkdown(*response.Description),
-			Headers:     make(map[string]*core.APIParameter),
-			Content:     make(map[string]*core.APIMediaType),
-		}
-
-		// Convert headers
-		for name, headerRef := range response.Headers {
-			if headerRef != nil && headerRef.Value != nil {
-				r.Headers[name] = &core.APIParameter{
-					Name:        name,
-					In:          string(core.ParamInHeader),
-					Description: p.renderMarkdown(headerRef.Value.Description),
-					Required:    headerRef.Value.Required,
-					Schema:      p.convertSchema(headerRef.Value.Schema),
-				}
+	if responses.Codes != nil {
+		for status, response := range responses.Codes.FromOldest() {
+			if response == nil {
+				continue
 			}
+			result[status] = p.convertResponse(response)
 		}
+	}
 
-		// Convert content
-		for mediaType, mediaTypeValue := range response.Content {
-			r.Content[mediaType] = p.convertMediaType(mediaTypeValue)
-		}
-
-		result[status] = r
+	if responses.Default != nil {
+		result["default"] = p.convertResponse(responses.Default)
 	}
 
 	return result
 }
 
+// convertResponse converts a single OpenAPI response
+func (p *OpenAPIParser) convertResponse(response *v3high.Response) *core.APIResponse {
+	r := &core.APIResponse{
+		Description: p.renderMarkdown(response.Description),
+		Headers:     make(map[string]*core.APIParameter),
+		Content:     make(map[string]*core.APIMediaType),
+	}
+
+	if response.Headers != nil {
+		for name, header := range response.Headers.FromOldest() {
+			if header != nil {
+				r.Headers[name] = &core.APIParameter{
+					Name:        name,
+					In:          string(core.ParamInHeader),
+					Description: p.renderMarkdown(header.Description),
+					Required:    header.Required,
+					Schema:      p.convertSchemaProxy(header.Schema),
+				}
+			}
+		}
+	}
+
+	if response.Content != nil {
+		for mediaType, mediaTypeValue := range response.Content.FromOldest() {
+			r.Content[mediaType] = p.convertMediaType(mediaTypeValue)
+		}
+	}
+
+	return r
+}
+
 // convertMediaType converts a media type
-func (p *OpenAPIParser) convertMediaType(mt *openapi3.MediaType) *core.APIMediaType {
+func (p *OpenAPIParser) convertMediaType(mt *v3high.MediaType) *core.APIMediaType {
 	if mt == nil {
 		return nil
 	}
 
 	m := &core.APIMediaType{
-		Schema:  p.convertSchema(mt.Schema),
-		Example: mt.Example,
+		Schema:  p.convertSchemaProxy(mt.Schema),
+		Example: decodeYAMLNode(mt.Example),
 	}
 
-	// Convert examples
-	if len(mt.Examples) > 0 {
+	if mt.Examples != nil {
 		m.Examples = make(map[string]*core.APIExample)
-		for name, exampleRef := range mt.Examples {
-			if exampleRef != nil && exampleRef.Value != nil {
+		for name, example := range mt.Examples.FromOldest() {
+			if example != nil {
 				m.Examples[name] = &core.APIExample{
-					Summary:     exampleRef.Value.Summary,
-					Description: exampleRef.Value.Description,
-					Value:       exampleRef.Value.Value,
+					Summary:     example.Summary,
+					Description: example.Description,
+					Value:       decodeYAMLNode(example.Value),
 				}
 			}
 		}
@@ -447,30 +461,29 @@ func (p *OpenAPIParser) convertMediaType(mt *openapi3.MediaType) *core.APIMediaT
 	return m
 }
 
-// convertSchema converts an OpenAPI schema
-func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISchema {
-	if schemaRef == nil {
+// convertSchemaProxy converts a SchemaProxy to our internal APISchema
+func (p *OpenAPIParser) convertSchemaProxy(proxy *base.SchemaProxy) *core.APISchema {
+	if proxy == nil {
 		return nil
 	}
 
 	// If there's a $ref, keep the reference instead of inlining
 	// This prevents massive duplication in the output JSON
-	if schemaRef.Ref != "" {
+	if proxy.IsReference() {
 		return &core.APISchema{
-			Ref: schemaRef.Ref,
+			Ref: proxy.GetReference(),
 		}
 	}
 
-	// If Value is nil and no ref, return nil
-	if schemaRef.Value == nil {
+	schema := proxy.Schema()
+	if schema == nil {
 		return nil
 	}
-	schema := schemaRef.Value
 
 	// Extract type as string
 	typeStr := ""
-	if schema.Type != nil && len(*schema.Type) > 0 {
-		typeStr = (*schema.Type)[0]
+	if len(schema.Type) > 0 {
+		typeStr = schema.Type[0]
 	}
 
 	s := &core.APISchema{
@@ -478,30 +491,30 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 		Format:      schema.Format,
 		Description: p.renderMarkdown(schema.Description),
 		Required:    schema.Required,
-		Enum:        schema.Enum,
-		Default:     schema.Default,
-		Example:     schema.Example,
-		Nullable:    schema.Nullable,
-		ReadOnly:    schema.ReadOnly,
-		WriteOnly:   schema.WriteOnly,
-		Deprecated:  schema.Deprecated,
+		Enum:        decodeYAMLNodes(schema.Enum),
+		Default:     decodeYAMLNode(schema.Default),
+		Example:     decodeYAMLNode(schema.Example),
+		Nullable:    derefBool(schema.Nullable),
+		ReadOnly:    derefBool(schema.ReadOnly),
+		WriteOnly:   derefBool(schema.WriteOnly),
+		Deprecated:  derefBool(schema.Deprecated),
 		Pattern:     schema.Pattern,
-		UniqueItems: schema.UniqueItems,
+		UniqueItems: derefBool(schema.UniqueItems),
 	}
 
 	// Numeric constraints
-	if schema.Min != nil {
-		min := *schema.Min
+	if schema.Minimum != nil {
+		min := *schema.Minimum
 		s.Minimum = &min
 	}
-	if schema.Max != nil {
-		max := *schema.Max
+	if schema.Maximum != nil {
+		max := *schema.Maximum
 		s.Maximum = &max
 	}
 
 	// String constraints
-	if schema.MinLength > 0 {
-		ml := int(schema.MinLength)
+	if schema.MinLength != nil {
+		ml := int(*schema.MinLength)
 		s.MinLength = &ml
 	}
 	if schema.MaxLength != nil {
@@ -510,8 +523,8 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 	}
 
 	// Array constraints
-	if schema.MinItems > 0 {
-		mi := int(schema.MinItems)
+	if schema.MinItems != nil {
+		mi := int(*schema.MinItems)
 		s.MinItems = &mi
 	}
 	if schema.MaxItems != nil {
@@ -520,55 +533,55 @@ func (p *OpenAPIParser) convertSchema(schemaRef *openapi3.SchemaRef) *core.APISc
 	}
 
 	// Object constraints
-	if schema.MinProps > 0 {
-		mp := int(schema.MinProps)
+	if schema.MinProperties != nil {
+		mp := int(*schema.MinProperties)
 		s.MinProperties = &mp
 	}
-	if schema.MaxProps != nil {
-		mp := int(*schema.MaxProps)
+	if schema.MaxProperties != nil {
+		mp := int(*schema.MaxProperties)
 		s.MaxProperties = &mp
 	}
 
 	// Properties
-	if len(schema.Properties) > 0 {
+	if schema.Properties != nil {
 		s.Properties = make(map[string]*core.APISchema)
-		for name, propRef := range schema.Properties {
-			s.Properties[name] = p.convertSchema(propRef)
+		for name, propProxy := range schema.Properties.FromOldest() {
+			s.Properties[name] = p.convertSchemaProxy(propProxy)
 		}
 	}
 
 	// Items (for arrays)
-	if schema.Items != nil {
-		s.Items = p.convertSchema(schema.Items)
+	if schema.Items != nil && schema.Items.IsA() {
+		s.Items = p.convertSchemaProxy(schema.Items.A)
 	}
 
 	// Composition
 	if len(schema.AllOf) > 0 {
 		s.AllOf = make([]core.APISchema, 0, len(schema.AllOf))
-		for _, schemaRef := range schema.AllOf {
-			if converted := p.convertSchema(schemaRef); converted != nil {
+		for _, sp := range schema.AllOf {
+			if converted := p.convertSchemaProxy(sp); converted != nil {
 				s.AllOf = append(s.AllOf, *converted)
 			}
 		}
 	}
 	if len(schema.OneOf) > 0 {
 		s.OneOf = make([]core.APISchema, 0, len(schema.OneOf))
-		for _, schemaRef := range schema.OneOf {
-			if converted := p.convertSchema(schemaRef); converted != nil {
+		for _, sp := range schema.OneOf {
+			if converted := p.convertSchemaProxy(sp); converted != nil {
 				s.OneOf = append(s.OneOf, *converted)
 			}
 		}
 	}
 	if len(schema.AnyOf) > 0 {
 		s.AnyOf = make([]core.APISchema, 0, len(schema.AnyOf))
-		for _, schemaRef := range schema.AnyOf {
-			if converted := p.convertSchema(schemaRef); converted != nil {
+		for _, sp := range schema.AnyOf {
+			if converted := p.convertSchemaProxy(sp); converted != nil {
 				s.AnyOf = append(s.AnyOf, *converted)
 			}
 		}
 	}
 	if schema.Not != nil {
-		s.Not = p.convertSchema(schema.Not)
+		s.Not = p.convertSchemaProxy(schema.Not)
 	}
 
 	return s
@@ -582,11 +595,9 @@ func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 
 	var buf bytes.Buffer
 	if err := p.md.Convert([]byte(markdown), &buf); err != nil {
-		// If markdown rendering fails, return the original text
 		return markdown
 	}
 
-	// Return the rendered HTML
 	html := strings.TrimSpace(buf.String())
 
 	// Only trim <p> tags if it's a single paragraph (no newlines, starts/ends with <p>)
@@ -599,15 +610,18 @@ func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 }
 
 // convertSecurity converts security requirements
-func (p *OpenAPIParser) convertSecurity(security *openapi3.SecurityRequirements) []map[string][]string {
+func (p *OpenAPIParser) convertSecurity(security []*base.SecurityRequirement) []map[string][]string {
 	if security == nil {
 		return nil
 	}
 
-	result := make([]map[string][]string, 0, len(*security))
-	for _, req := range *security {
+	result := make([]map[string][]string, 0, len(security))
+	for _, req := range security {
+		if req == nil || req.Requirements == nil {
+			continue
+		}
 		m := make(map[string][]string)
-		for name, scopes := range req {
+		for name, scopes := range req.Requirements.FromOldest() {
 			m[name] = scopes
 		}
 		result = append(result, m)
@@ -617,22 +631,18 @@ func (p *OpenAPIParser) convertSecurity(security *openapi3.SecurityRequirements)
 
 // organizeByPath organizes endpoints into a hierarchical path structure
 func (p *OpenAPIParser) organizeByPath(endpoints []*core.APIEndpoint) []*core.APIPathGroup {
-	// Build a tree structure using map-based approach
 	root := &pathNode{
 		children: make(map[string]*pathNode),
 	}
 
-	// Build the tree
 	for _, endpoint := range endpoints {
 		parts := strings.Split(strings.Trim(endpoint.Path, "/"), "/")
 		if len(parts) == 0 || (len(parts) == 1 && parts[0] == "") {
-			// Root path "/"
 			parts = []string{"/"}
 		}
 		p.addToPathNode(root, parts, endpoint, 0)
 	}
 
-	// Convert to APIPathGroup structure
 	return p.pathNodesToGroups(root, "")
 }
 
@@ -658,10 +668,8 @@ func (p *OpenAPIParser) addToPathNode(node *pathNode, parts []string, endpoint *
 	}
 
 	if depth == len(parts)-1 {
-		// Last part - add endpoint here
 		node.children[part].endpoints = append(node.children[part].endpoints, endpoint)
 	} else {
-		// Continue recursively
 		p.addToPathNode(node.children[part], parts, endpoint, depth+1)
 	}
 }
@@ -670,7 +678,6 @@ func (p *OpenAPIParser) addToPathNode(node *pathNode, parts []string, endpoint *
 func (p *OpenAPIParser) pathNodesToGroups(node *pathNode, pathPrefix string) []*core.APIPathGroup {
 	var groups []*core.APIPathGroup
 
-	// Sort keys for consistent output
 	keys := make([]string, 0, len(node.children))
 	for key := range node.children {
 		keys = append(keys, key)
@@ -680,7 +687,6 @@ func (p *OpenAPIParser) pathNodesToGroups(node *pathNode, pathPrefix string) []*
 	for _, key := range keys {
 		child := node.children[key]
 
-		// Build the full path
 		fullPath := pathPrefix + "/" + key
 
 		group := &core.APIPathGroup{
@@ -699,7 +705,6 @@ func (p *OpenAPIParser) pathNodesToGroups(node *pathNode, pathPrefix string) []*
 func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core.APITag) []*core.APITagGroup {
 	tagMap := make(map[string]*core.APITagGroup)
 
-	// Create tag groups from defined tags
 	for _, tag := range tags {
 		tagMap[tag.Name] = &core.APITagGroup{
 			Tag:       tag,
@@ -707,11 +712,9 @@ func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core
 		}
 	}
 
-	// Add endpoints to their tag groups
 	for _, endpoint := range endpoints {
 		for _, tagName := range endpoint.Tags {
 			if tagMap[tagName] == nil {
-				// Create tag group for undefined tags
 				tagMap[tagName] = &core.APITagGroup{
 					Tag: core.APITag{
 						Name:        tagName,
@@ -723,7 +726,6 @@ func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core
 			tagMap[tagName].Endpoints = append(tagMap[tagName].Endpoints, endpoint)
 		}
 
-		// If endpoint has no tags, add to "Untagged" group
 		if len(endpoint.Tags) == 0 {
 			if tagMap["Untagged"] == nil {
 				tagMap["Untagged"] = &core.APITagGroup{
@@ -738,7 +740,6 @@ func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core
 		}
 	}
 
-	// Convert map to sorted slice
 	result := make([]*core.APITagGroup, 0, len(tagMap))
 	for _, group := range tagMap {
 		if len(group.Endpoints) > 0 {
@@ -746,7 +747,6 @@ func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core
 		}
 	}
 
-	// Sort by tag name
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].Tag.Name < result[j].Tag.Name
 	})
@@ -756,19 +756,48 @@ func (p *OpenAPIParser) organizeByTag(endpoints []*core.APIEndpoint, tags []core
 
 // NameFromURL extracts a filename from a URL
 func (p *OpenAPIParser) NameFromURL(url string) string {
-	// Extract filename from URL
 	parts := strings.Split(url, "/")
 	name := parts[len(parts)-1]
 
-	// Remove extension
 	if idx := strings.LastIndex(name, "."); idx != -1 {
 		name = name[:idx]
 	}
 
-	// If empty, use a hash of the URL
 	if name == "" {
 		name = fmt.Sprintf("spec-%x", time.Now().Unix())
 	}
 
 	return name
+}
+
+// derefBool safely dereferences a *bool, returning false if nil
+func derefBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+
+// decodeYAMLNode converts a *yaml.Node to a Go value
+func decodeYAMLNode(node *yaml.Node) any {
+	if node == nil {
+		return nil
+	}
+	var val any
+	if err := node.Decode(&val); err != nil {
+		return nil
+	}
+	return val
+}
+
+// decodeYAMLNodes converts a slice of *yaml.Node to a slice of Go values
+func decodeYAMLNodes(nodes []*yaml.Node) []any {
+	if nodes == nil {
+		return nil
+	}
+	result := make([]any, 0, len(nodes))
+	for _, n := range nodes {
+		result = append(result, decodeYAMLNode(n))
+	}
+	return result
 }
