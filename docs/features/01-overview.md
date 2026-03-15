@@ -9,8 +9,9 @@ since: "v1.0"
 
 # Features Overview
 
-MinimalDoc provides everything needed for modern documentation sites.
-Pure static output designed for CI/CD integration—automate updates to documentation, status pages, and changelogs on every commit.
+MinimalDoc provides everything needed for modern documentation sites. Pure
+static output designed for CI/CD integration—automate updates to documentation,
+status pages, and changelogs on every commit.
 
 ## Feature Matrix
 
@@ -50,7 +51,7 @@ Pure static output designed for CI/CD integration—automate updates to document
 |                | Meta Tags           | Open Graph, Twitter Cards                                       | v1.0  |
 |                | Canonical URLs      | Configurable base URL                                           | v1.0  |
 |                | LLM Output          | llms.txt and llms-full.txt generation                           | v1.0  |
-| **API**        | OpenAPI             | Interactive docs with testing UI                                | v1.0  |
+| **API**        | OpenAPI             | Interactive docs with testing UI (OAS 3.0 and 3.1)              | v1.0  |
 |                | Code Samples        | curl, JavaScript, Go, Python, Swift                             | v1.0  |
 |                | Schema Viewer       | Request/response visualization                                  | v1.0  |
 |                | MCP Server Docs     | Static reference pages from JSON manifests (no server needed)   | v1.5  |
@@ -85,7 +86,10 @@ Deploy anywhere.
 
 ### Build on Change
 
-No web server required. Content updates only when you push changes. Your CI/CD pipeline rebuilds the site, uploads static files, and you're done. No runtime costs, no database, no server maintenance. Data is generated and consumed only when needed.
+No web server required. Content updates only when you push changes. Your CI/CD
+pipeline rebuilds the site, uploads static files, and you're done. No runtime
+costs, no database, no server maintenance. Data is generated and consumed only
+when needed.
 
 ```
 git push → CI builds → Static files uploaded → Done
