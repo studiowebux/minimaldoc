@@ -1745,6 +1745,17 @@ html.no-js .nav-link-parent {
     cursor: wait;
 }
 
+@media (max-width: 768px) {
+    .page-title-row {
+        flex-wrap: wrap;
+    }
+
+    .page-title-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+}
+
 /* ========================================
    MinimalDoc Feedback Widget
    ======================================== */
