@@ -53,7 +53,7 @@ nav_depth: 0
 | `theme` | string | `"default"` | Theme name |
 | `dark_mode` | bool | `false` | Start in dark mode by default |
 | `enable_llms` | bool | `true` | Generate `llms.txt`, `llms-full.txt`, and per-page `.html.md` files |
-| `enable_search` | bool | `false` | Enable client-side search with Cmd+K shortcut |
+| `enable_search` | bool | `true` | Enable client-side search with Cmd+K shortcut |
 | `clean_urls` | bool | `false` | Use `/page/` instead of `/page.html` |
 | `entrypoint` | string | `""` | Custom homepage file (default: `index.md`) |
 | `nav_depth` | int | `0` | Max depth for navigation tree (0 = unlimited) |
