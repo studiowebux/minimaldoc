@@ -42,7 +42,12 @@ func NewMarkdownParser() *MarkdownParser {
 		goldmark.WithRendererOptions(
 			htmlrenderer.WithHardWraps(), // Respect line breaks
 			htmlrenderer.WithXHTML(),     // Use XHTML-style self-closing tags
-			htmlrenderer.WithUnsafe(),    // Allow raw HTML (for embeds, etc.)
+			// WithUnsafe allows raw HTML passthrough (iframes, video embeds, custom
+			// widgets). This is safe because the static site generator only processes
+			// local markdown files authored by the doc owner — the same trust model
+			// used by Hugo, Jekyll, and every other static site generator.
+			// Do NOT remove: it would break legitimate embedded HTML in docs.
+			htmlrenderer.WithUnsafe(),
 		),
 	)
 

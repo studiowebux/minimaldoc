@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
@@ -25,10 +26,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// OpenAPIParser handles parsing of OpenAPI specifications
+// OpenAPIParser handles parsing of OpenAPI specifications.
+// Descriptions in OpenAPI specs may come from remote URLs, so the rendered
+// HTML is sanitized with bluemonday to prevent XSS from untrusted specs.
 type OpenAPIParser struct {
-	cacheDir string
-	md       goldmark.Markdown // Markdown renderer for descriptions
+	cacheDir  string
+	md        goldmark.Markdown      // Markdown renderer for descriptions
+	sanitizer *bluemonday.Policy     // HTML sanitizer for rendered descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser
@@ -47,8 +51,9 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 	)
 
 	return &OpenAPIParser{
-		cacheDir: cacheDir,
-		md:       md,
+		cacheDir:  cacheDir,
+		md:        md,
+		sanitizer: bluemonday.UGCPolicy(),
 	}
 }
 
@@ -587,7 +592,9 @@ func (p *OpenAPIParser) convertSchemaProxy(proxy *base.SchemaProxy) *core.APISch
 	return s
 }
 
-// renderMarkdown converts markdown description to HTML
+// renderMarkdown converts markdown description to HTML.
+// Output is sanitized with bluemonday because OpenAPI specs may come from
+// remote URLs — their descriptions are not fully trusted content.
 func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 	if markdown == "" {
 		return ""
@@ -598,7 +605,8 @@ func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 		return markdown
 	}
 
-	html := strings.TrimSpace(buf.String())
+	// Sanitize rendered HTML to strip dangerous tags (script, event handlers, etc.)
+	html := p.sanitizer.Sanitize(strings.TrimSpace(buf.String()))
 
 	// Only trim <p> tags if it's a single paragraph (no newlines, starts/ends with <p>)
 	if strings.HasPrefix(html, "<p>") && strings.HasSuffix(html, "</p>") && strings.Count(html, "<p>") == 1 {

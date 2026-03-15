@@ -48,8 +48,10 @@ func dictFunc(values ...any) (map[string]any, error) {
 }
 
 // safeHTMLFunc marks a string as safe HTML that should not be escaped.
+// Only use on trusted content (pre-rendered markdown from local files, hardcoded
+// HTML fragments). Never pass user-supplied strings through this function.
 func safeHTMLFunc(s string) template.HTML {
-	return template.HTML(s)
+	return template.HTML(s) // #nosec G203
 }
 
 // jsonFunc marshals a value to JSON for use in templates.
