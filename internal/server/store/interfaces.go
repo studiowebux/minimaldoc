@@ -242,6 +242,9 @@ type SessionStore interface {
 	DeleteSession(ctx context.Context, tokenHash string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
 	CleanExpiredSessions(ctx context.Context) (int64, error)
+	RevokeToken(ctx context.Context, jti string, expiresAt time.Time) error
+	IsTokenRevoked(ctx context.Context, jti string) (bool, error)
+	CleanRevokedTokens(ctx context.Context) (int64, error)
 }
 
 // SiteStore handles multi-tenant site management.

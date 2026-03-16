@@ -179,12 +179,27 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 			return
 		}
 
+		// Check if token has been revoked (logout invalidation)
+		if claims.ID != "" {
+			revoked, err := db.IsTokenRevoked(c.Request.Context(), claims.ID)
+			if err != nil {
+				slog.Error("failed to check token revocation", "error", err)
+			}
+			if revoked {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "token revoked"})
+				c.Abort()
+				return
+			}
+		}
+
 		// Set user info in context
 		c.Set("user_id", claims.UserID)
 		c.Set("user_email", claims.Email)
 		c.Set("user_role", claims.Role)
 		c.Set("site_id", claims.SiteID)
 		c.Set("auth_method", "jwt")
+		c.Set("token_jti", claims.ID)
+		c.Set("token_exp", claims.ExpiresAt.Time)
 
 		c.Next()
 	}
@@ -193,7 +208,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 // OptionalAuthMiddleware tries to authenticate the user but doesn't require it.
 // If a valid token is present, it sets user info in context.
 // If not, it continues without setting user info (for anonymous access).
-func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+func OptionalAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var token string
 
@@ -222,6 +237,14 @@ func OptionalAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			// Invalid token, continue as anonymous
 			c.Next()
 			return
+		}
+
+		// Check if token has been revoked
+		if claims.ID != "" {
+			if revoked, _ := db.IsTokenRevoked(c.Request.Context(), claims.ID); revoked {
+				c.Next()
+				return
+			}
 		}
 
 		// Set user info in context
@@ -270,7 +293,7 @@ func AdminMiddleware() gin.HandlerFunc {
 
 // AdminUIAuthMiddleware validates JWT for admin UI routes.
 // Redirects to login page instead of returning JSON error.
-func AdminUIAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+func AdminUIAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var token string
 
@@ -292,6 +315,15 @@ func AdminUIAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
 			c.Abort()
 			return
+		}
+
+		// Check if token has been revoked
+		if claims.ID != "" {
+			if revoked, _ := db.IsTokenRevoked(c.Request.Context(), claims.ID); revoked {
+				c.Redirect(http.StatusFound, cfg.Server.AdminPath+"/login")
+				c.Abort()
+				return
+			}
 		}
 
 		// Set user info in context

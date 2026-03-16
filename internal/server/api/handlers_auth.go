@@ -154,6 +154,13 @@ func (r *Router) logout(c *gin.Context) {
 	// Audit log: logout (best effort - user may not be authenticated)
 	r.logAuditAction(c, "logout", "session", "", "", "")
 
+	// Revoke current access token (JWT revocation list)
+	if jti, ok := c.Get("token_jti"); ok {
+		if exp, ok := c.Get("token_exp"); ok {
+			_ = r.db.RevokeToken(c.Request.Context(), jti.(string), exp.(time.Time))
+		}
+	}
+
 	// Revoke all refresh tokens for this user
 	userID, err := getUserID(c)
 	if err == nil {

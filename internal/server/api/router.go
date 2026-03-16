@@ -151,9 +151,9 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 			blog.GET("/posts/:slug/comments", r.listApprovedCommentsPublic)
 			// Stricter rate limit for comment submissions (with optional auth for logged-in users)
 			if r.submitLimiter != nil {
-				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.submitLimiter.Middleware(ratelimit.IPKeyFunc), r.submitCommentPublic)
+				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg, r.db), r.submitLimiter.Middleware(ratelimit.IPKeyFunc), r.submitCommentPublic)
 			} else {
-				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.submitCommentPublic)
+				blog.POST("/posts/:slug/comments", OptionalAuthMiddleware(cfg, r.db), r.submitCommentPublic)
 			}
 			blog.GET("/posts/:slug/meta", r.getPostMeta)
 			blog.GET("/posts/:slug/related", r.getRelatedPosts)
@@ -166,7 +166,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 				fragments.GET("/search", r.fragmentBlogSearchDropdown)
 				fragments.GET("/posts/:slug", r.fragmentBlogArticle)
 				fragments.GET("/posts/:slug/related", r.fragmentBlogRelated)
-				fragments.GET("/posts/:slug/comments", OptionalAuthMiddleware(cfg), r.fragmentBlogComments)
+				fragments.GET("/posts/:slug/comments", OptionalAuthMiddleware(cfg, r.db), r.fragmentBlogComments)
 			}
 		}
 
@@ -216,7 +216,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 
 			// Forum HTML fragments for HTMX (with optional auth to show user-specific UI)
 			fragments := forum.Group("/fragments")
-			fragments.Use(OptionalAuthMiddleware(cfg))
+			fragments.Use(OptionalAuthMiddleware(cfg, r.db))
 			{
 				fragments.GET("/categories", r.fragmentForumCategories)
 				fragments.GET("/category/:slug/header", r.fragmentForumCategoryHeader)
@@ -482,7 +482,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 	// Admin UI routes
 	admin := r.Group(cfg.Server.AdminPath)
 	{
-		admin.GET("", AdminUIAuthMiddleware(cfg), r.adminDashboard)
+		admin.GET("", AdminUIAuthMiddleware(cfg, r.db), r.adminDashboard)
 		admin.GET("/login", r.adminLogin)
 		// Apply login rate limiting to UI login
 		if r.loginLimiter != nil {
@@ -491,37 +491,37 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 			admin.POST("/login", r.adminLoginPost)
 		}
 		admin.GET("/logout", r.adminLogout)
-		admin.GET("/analytics", AdminUIAuthMiddleware(cfg), r.adminAnalytics)
-		admin.GET("/feedback", AdminUIAuthMiddleware(cfg), r.adminFeedback)
-		admin.GET("/subscribers", AdminUIAuthMiddleware(cfg), r.adminSubscribers)
-		admin.GET("/settings", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminSettings)
+		admin.GET("/analytics", AdminUIAuthMiddleware(cfg, r.db), r.adminAnalytics)
+		admin.GET("/feedback", AdminUIAuthMiddleware(cfg, r.db), r.adminFeedback)
+		admin.GET("/subscribers", AdminUIAuthMiddleware(cfg, r.db), r.adminSubscribers)
+		admin.GET("/settings", AdminUIAuthMiddleware(cfg, r.db), AdminMiddleware(), r.adminSettings)
 
 		// Blog UI routes
-		admin.GET("/blog", AdminUIAuthMiddleware(cfg), r.adminBlog)
-		admin.GET("/blog/new", AdminUIAuthMiddleware(cfg), AuthorOrAboveMiddleware(), r.adminBlogEditor)
-		admin.GET("/blog/edit/:id", AdminUIAuthMiddleware(cfg), AuthorOrAboveMiddleware(), r.adminBlogEditor)
-		admin.GET("/comments", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminComments)
+		admin.GET("/blog", AdminUIAuthMiddleware(cfg, r.db), r.adminBlog)
+		admin.GET("/blog/new", AdminUIAuthMiddleware(cfg, r.db), AuthorOrAboveMiddleware(), r.adminBlogEditor)
+		admin.GET("/blog/edit/:id", AdminUIAuthMiddleware(cfg, r.db), AuthorOrAboveMiddleware(), r.adminBlogEditor)
+		admin.GET("/comments", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminComments)
 
 		// Doc access UI routes
-		admin.GET("/doc-access", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminDocAccess)
+		admin.GET("/doc-access", AdminUIAuthMiddleware(cfg, r.db), AdminMiddleware(), r.adminDocAccess)
 
 		// Forum UI routes
-		admin.GET("/forum", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForum)
-		admin.GET("/forum/categories", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumCategories)
-		admin.GET("/forum/topics", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumTopics)
-		admin.GET("/forum/flags", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumFlags)
-		admin.GET("/forum/bans", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminForumBans)
-		admin.GET("/forum/tags", AdminUIAuthMiddleware(cfg), EditorOrAboveMiddleware(), r.adminForumTags)
+		admin.GET("/forum", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminForum)
+		admin.GET("/forum/categories", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminForumCategories)
+		admin.GET("/forum/topics", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminForumTopics)
+		admin.GET("/forum/flags", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminForumFlags)
+		admin.GET("/forum/bans", AdminUIAuthMiddleware(cfg, r.db), AdminMiddleware(), r.adminForumBans)
+		admin.GET("/forum/tags", AdminUIAuthMiddleware(cfg, r.db), EditorOrAboveMiddleware(), r.adminForumTags)
 
 		// User management UI routes (admin only)
-		admin.GET("/users", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminUsers)
+		admin.GET("/users", AdminUIAuthMiddleware(cfg, r.db), AdminMiddleware(), r.adminUsers)
 
 		// Audit log UI routes (admin only)
-		admin.GET("/audit-log", AdminUIAuthMiddleware(cfg), AdminMiddleware(), r.adminAuditLog)
+		admin.GET("/audit-log", AdminUIAuthMiddleware(cfg, r.db), AdminMiddleware(), r.adminAuditLog)
 
 		// HTMX fragment endpoints
 		fragments := admin.Group("/fragments")
-		fragments.Use(AdminUIAuthMiddleware(cfg))
+		fragments.Use(AdminUIAuthMiddleware(cfg, r.db))
 		{
 			fragments.GET("/dashboard-stats", r.fragmentDashboardStats)
 			fragments.GET("/recent-pages", r.fragmentRecentPages)

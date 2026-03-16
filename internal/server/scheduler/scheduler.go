@@ -89,6 +89,9 @@ func (s *Scheduler) runJobs() {
 
 	// Publish scheduled posts
 	s.publishScheduledPosts(ctx)
+
+	// Clean expired revoked tokens and sessions
+	s.cleanExpiredTokens(ctx)
 }
 
 func (s *Scheduler) publishScheduledPosts(ctx context.Context) {
@@ -99,5 +102,19 @@ func (s *Scheduler) publishScheduledPosts(ctx context.Context) {
 	}
 	if count > 0 {
 		slog.Info("published scheduled posts", "count", count)
+	}
+}
+
+func (s *Scheduler) cleanExpiredTokens(ctx context.Context) {
+	if count, err := s.db.CleanRevokedTokens(ctx); err != nil {
+		slog.Error("failed to clean revoked tokens", "error", err)
+	} else if count > 0 {
+		slog.Info("cleaned expired revoked tokens", "count", count)
+	}
+
+	if count, err := s.db.CleanExpiredSessions(ctx); err != nil {
+		slog.Error("failed to clean expired sessions", "error", err)
+	} else if count > 0 {
+		slog.Info("cleaned expired sessions", "count", count)
 	}
 }

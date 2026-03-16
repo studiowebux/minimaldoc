@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Claims represents JWT token claims.
@@ -20,6 +21,7 @@ type Claims struct {
 func GenerateToken(userID, email, role, siteID, secret string, expiry time.Duration) (string, error) {
 	claims := &Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "minimaldoc-server",
