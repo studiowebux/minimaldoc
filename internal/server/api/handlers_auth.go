@@ -194,10 +194,21 @@ func (r *Router) refreshToken(c *gin.Context) {
 		return
 	}
 
-	// Get user
+	// Get user and re-validate status
 	user, err := r.db.GetUserByID(c.Request.Context(), session.UserID)
 	if err != nil || user == nil {
+		_ = r.db.DeleteSession(c.Request.Context(), tokenHash)
 		respondUnauthorized(c, ErrUserNotFound, "user not found")
+		return
+	}
+	if !user.EmailVerified {
+		_ = r.db.DeleteSession(c.Request.Context(), tokenHash)
+		respondUnauthorized(c, ErrUnauthorized, "email not verified")
+		return
+	}
+	if banned, _ := r.db.IsUserBanned(c.Request.Context(), user.SiteID, user.ID); banned {
+		_ = r.db.DeleteUserSessions(c.Request.Context(), user.ID)
+		respondUnauthorized(c, ErrUnauthorized, "account suspended")
 		return
 	}
 
