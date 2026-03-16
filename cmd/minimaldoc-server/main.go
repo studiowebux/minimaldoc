@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/server/api"
+	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 	"github.com/studiowebux/minimaldoc/internal/server/email"
 	"github.com/studiowebux/minimaldoc/internal/server/scheduler"
@@ -38,6 +39,14 @@ func main() {
 		// slog not yet initialized, use fmt+os.Exit
 		fmt.Fprintf(os.Stderr, "Failed to load configuration: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Validate OAuth provider URLs (HTTPS required)
+	if cfg.Auth.EnableOAuth {
+		if err := auth.ValidateOAuthProviderURLs(cfg.OAuth.Providers); err != nil {
+			fmt.Fprintf(os.Stderr, "OAuth configuration error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// Initialize structured logging

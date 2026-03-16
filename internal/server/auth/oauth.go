@@ -8,13 +8,43 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 )
 
+// oauthHTTPClient is the shared HTTP client for all OAuth operations with a 30s timeout.
+var oauthHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 // OAuthProvider implements OAuth 2.0 / OIDC authentication.
 type OAuthProvider struct {
 	cfg config.OAuthProvider
+}
+
+// ValidateOAuthProviderURLs checks that all custom OAuth URLs use HTTPS.
+// Returns an error if any URL uses an insecure scheme.
+func ValidateOAuthProviderURLs(providers []config.OAuthProvider) error {
+	for _, p := range providers {
+		for _, pair := range []struct{ name, val string }{
+			{"AuthURL", p.AuthURL},
+			{"TokenURL", p.TokenURL},
+			{"UserInfoURL", p.UserInfoURL},
+			{"Issuer", p.Issuer},
+			{"RedirectURL", p.RedirectURL},
+		} {
+			if pair.val == "" {
+				continue
+			}
+			u, err := url.Parse(pair.val)
+			if err != nil {
+				return fmt.Errorf("OAuth provider %q: invalid %s: %w", p.Name, pair.name, err)
+			}
+			if u.Scheme != "https" {
+				return fmt.Errorf("OAuth provider %q: %s must use HTTPS (got %q)", p.Name, pair.name, pair.val)
+			}
+		}
+	}
+	return nil
 }
 
 // NewOAuthProvider creates a new OAuth provider.
@@ -145,7 +175,7 @@ func (p *OAuthProvider) exchangeCode(ctx context.Context, code string) (string, 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oauthHTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -182,7 +212,7 @@ func (p *OAuthProvider) getUserInfo(ctx context.Context, accessToken string) (*U
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := oauthHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
