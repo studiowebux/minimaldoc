@@ -280,20 +280,19 @@ func (r *Router) oauthLogin(c *gin.Context) {
 		return
 	}
 
-	// Generate state token
-	state, err := auth.GenerateSessionToken()
+	// Generate state nonce and HMAC-signed cookie
+	nonce, err := auth.GenerateSessionToken()
 	if err != nil {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate state")
 		return
 	}
+	signedState := auth.SignOAuthState(nonce, siteID, "", r.config.Auth.JWTSecret)
 
-	// Store state and site_id in cookies (short-lived) with SameSite=Lax for CSRF protection
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("oauth_state", state, 600, "/", "", r.config.Auth.SecureCookies, true)
-	c.SetCookie("oauth_site_id", siteID, 600, "/", "", r.config.Auth.SecureCookies, true)
+	c.SetCookie("oauth_state", signedState, 600, "/", "", r.config.Auth.SecureCookies, true)
 
-	// Redirect to provider
-	authURL := providerCfg.GetAuthURL(state)
+	// Redirect to provider with nonce as state parameter
+	authURL := providerCfg.GetAuthURL(nonce)
 	c.Redirect(http.StatusTemporaryRedirect, authURL)
 }
 
@@ -302,24 +301,21 @@ func (r *Router) oauthCallback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
 
-	// Verify state
-	savedState, err := c.Cookie("oauth_state")
-	if err != nil || savedState != state {
+	// Verify HMAC-signed state cookie and extract site_id
+	signedState, err := c.Cookie("oauth_state")
+	if err != nil {
+		respondBadRequest(c, ErrInvalidState, "invalid state")
+		return
+	}
+	siteID, _, err := auth.VerifyOAuthState(signedState, state, r.config.Auth.JWTSecret)
+	if err != nil {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
 
-	// Get site_id from cookie
-	siteID, siteErr := c.Cookie("oauth_site_id")
-	if siteErr != nil || siteID == "" {
-		respondBadRequest(c, ErrMissingSiteContext, "missing site context")
-		return
-	}
-
-	// Clear state and site_id cookies
+	// Clear state cookie
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", "", -1, "/", "", r.config.Auth.SecureCookies, true)
-	c.SetCookie("oauth_site_id", "", -1, "/", "", r.config.Auth.SecureCookies, true)
 
 	// Find provider
 	var providerCfg *auth.OAuthProvider
@@ -560,26 +556,24 @@ func (r *Router) publicOAuthLogin(c *gin.Context) {
 		return
 	}
 
-	// Generate state token with site_id embedded
-	state, err := auth.GenerateSessionToken()
+	// Generate state nonce and HMAC-signed cookie with site_id and intent
+	nonce, err := auth.GenerateSessionToken()
 	if err != nil {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate state")
 		return
 	}
 
-	// Store state and site_id in cookies
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("oauth_state", state, 600, "/", "", r.config.Auth.SecureCookies, true)
-	c.SetCookie("oauth_site_id", siteID, 600, "/", "", r.config.Auth.SecureCookies, true)
-
-	// Store intent cookie for newsletter subscribe flow
-	intent := c.Query("intent")
-	if intent == "subscribe" && r.config.Auth.AllowNewsletterOAuth {
-		c.SetCookie("oauth_intent", "subscribe", 600, "/", "", r.config.Auth.SecureCookies, true)
+	intent := ""
+	if c.Query("intent") == "subscribe" && r.config.Auth.AllowNewsletterOAuth {
+		intent = "subscribe"
 	}
+	signedState := auth.SignOAuthState(nonce, siteID, intent, r.config.Auth.JWTSecret)
 
-	// Redirect to provider
-	authURL := providerCfg.GetAuthURL(state)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("oauth_state", signedState, 600, "/", "", r.config.Auth.SecureCookies, true)
+
+	// Redirect to provider with nonce as state parameter
+	authURL := providerCfg.GetAuthURL(nonce)
 	c.Redirect(http.StatusTemporaryRedirect, authURL)
 }
 
@@ -589,28 +583,21 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
 
-	// Verify state
-	savedState, err := c.Cookie("oauth_state")
-	if err != nil || savedState != state {
+	// Verify HMAC-signed state cookie and extract site_id + intent
+	signedState, err := c.Cookie("oauth_state")
+	if err != nil {
+		respondBadRequest(c, ErrInvalidState, "invalid state")
+		return
+	}
+	siteID, intent, err := auth.VerifyOAuthState(signedState, state, r.config.Auth.JWTSecret)
+	if err != nil {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
 
-	// Get site_id from cookie
-	siteID, err := c.Cookie("oauth_site_id")
-	if err != nil || siteID == "" {
-		respondBadRequest(c, ErrMissingSiteContext, "missing site context")
-		return
-	}
-
-	// Read and clear intent cookie
-	intent, _ := c.Cookie("oauth_intent")
-
-	// Clear cookies
+	// Clear state cookie
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", "", -1, "/", "", r.config.Auth.SecureCookies, true)
-	c.SetCookie("oauth_site_id", "", -1, "/", "", r.config.Auth.SecureCookies, true)
-	c.SetCookie("oauth_intent", "", -1, "/", "", r.config.Auth.SecureCookies, true)
 
 	// Find provider
 	var providerCfg *auth.OAuthProvider
