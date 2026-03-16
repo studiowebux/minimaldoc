@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -365,7 +366,9 @@ func (r *Router) forgotPassword(c *gin.Context) {
 <p>If you did not request this, ignore this email.</p>`,
 			TextBody: "Hi " + name + ",\n\nReset your password by visiting:\n" + resetURL + "\n\nThis link expires in 15 minutes.\n\nIf you did not request this, ignore this email.",
 		}
-		_ = r.email.Send(c.Request.Context(), msg)
+		emailCtx, emailCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer emailCancel()
+		_ = r.email.Send(emailCtx, msg)
 	}
 
 	c.JSON(http.StatusOK, successResp)
@@ -608,7 +611,9 @@ func (r *Router) register(c *gin.Context) {
 <p>This link will expire in 24 hours.</p>`,
 			TextBody: "Hi " + name + ",\n\nPlease verify your email address by visiting:\n" + verifyURL + "\n\nThis link will expire in 24 hours.",
 		}
-		_ = r.email.Send(c.Request.Context(), msg)
+		emailCtx, emailCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer emailCancel()
+		_ = r.email.Send(emailCtx, msg)
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -1100,7 +1105,9 @@ func (r *Router) publicRegisterSubmit(c *gin.Context) {
 <p>This link will expire in 24 hours.</p>`,
 			TextBody: "Hi " + name + ",\n\nPlease verify your email address by visiting:\n" + verifyURL + "\n\nThis link will expire in 24 hours.",
 		}
-		_ = r.email.Send(c.Request.Context(), msg)
+		emailCtx, emailCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer emailCancel()
+		_ = r.email.Send(emailCtx, msg)
 	}
 
 	// Redirect to login with success message

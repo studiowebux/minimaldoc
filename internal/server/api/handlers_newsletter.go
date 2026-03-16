@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -87,7 +88,9 @@ func (r *Router) sendVerificationEmail(siteName, siteID, emailAddr, token string
 	templates := email.NewTemplates(siteName, r.config.Email.BaseURL)
 	msg := templates.VerificationEmail(emailAddr, siteID, token)
 
-	if err := r.email.Send(context.Background(), msg); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := r.email.Send(ctx, msg); err != nil {
 		slog.Error("failed to send verification email", "email", emailAddr, "error", err)
 	}
 }
@@ -136,7 +139,9 @@ func (r *Router) sendWelcomeEmail(siteName, siteID, emailAddr string) {
 	templates := email.NewTemplates(siteName, r.config.Email.BaseURL)
 	msg := templates.WelcomeEmail(emailAddr, siteID)
 
-	if err := r.email.Send(context.Background(), msg); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := r.email.Send(ctx, msg); err != nil {
 		slog.Error("failed to send welcome email", "email", emailAddr, "error", err)
 	}
 }
