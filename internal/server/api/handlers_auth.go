@@ -266,6 +266,149 @@ func (r *Router) getCurrentUser(c *gin.Context) {
 	})
 }
 
+// changePassword handles authenticated password change.
+func (r *Router) changePassword(c *gin.Context) {
+	var req struct {
+		CurrentPassword string `json:"current_password" binding:"required"`
+		NewPassword     string `json:"new_password" binding:"required,min=8"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBadRequest(c, ErrBadRequest, err.Error())
+		return
+	}
+
+	userID, err := getUserID(c)
+	if err != nil {
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
+		return
+	}
+
+	user, err := r.db.GetUserByID(c.Request.Context(), userID)
+	if err != nil || user == nil {
+		respondUnauthorized(c, ErrUserNotFound, "user not found")
+		return
+	}
+
+	// Verify current password
+	if !user.PasswordHash.Valid || !auth.VerifyPassword(req.CurrentPassword, user.PasswordHash.String) {
+		respondUnauthorized(c, ErrInvalidCredentials, "current password is incorrect")
+		return
+	}
+
+	// Hash new password
+	newHash, err := auth.HashPassword(req.NewPassword, r.config.Auth.BCryptCost)
+	if err != nil {
+		respondInternalError(c, ErrPasswordHashFailed, "failed to hash password")
+		return
+	}
+
+	if err := r.db.UpdateUserPassword(c.Request.Context(), user.ID, newHash); err != nil {
+		respondInternalError(c, ErrDatabaseError, "failed to update password")
+		return
+	}
+
+	// Invalidate all sessions (force re-login)
+	_ = r.db.DeleteUserSessions(c.Request.Context(), user.ID)
+
+	r.logAuditAction(c, "password_change", "user", user.ID, user.Email, "")
+	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
+}
+
+// forgotPassword initiates the password reset flow.
+// Always returns 200 to avoid leaking whether an email exists.
+func (r *Router) forgotPassword(c *gin.Context) {
+	var req struct {
+		Email  string `json:"email" binding:"required,email"`
+		SiteID string `json:"site_id" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBadRequest(c, ErrBadRequest, err.Error())
+		return
+	}
+
+	// Always return success to prevent email enumeration
+	successResp := gin.H{"message": "if that email exists, a reset link has been sent"}
+
+	user, err := r.db.GetUserByEmail(c.Request.Context(), req.SiteID, req.Email)
+	if err != nil || user == nil {
+		c.JSON(http.StatusOK, successResp)
+		return
+	}
+
+	// Generate reset token, store hash
+	rawToken, err := auth.GenerateSessionToken()
+	if err != nil {
+		c.JSON(http.StatusOK, successResp)
+		return
+	}
+	tokenHash := auth.HashSessionToken(rawToken)
+	if err := r.db.SetPasswordResetToken(c.Request.Context(), user.ID, tokenHash); err != nil {
+		c.JSON(http.StatusOK, successResp)
+		return
+	}
+
+	// Send reset email
+	if r.email != nil {
+		resetURL := r.config.Email.BaseURL + "/reset-password?token=" + rawToken
+		name := user.Name.String
+		if name == "" {
+			name = strings.Split(user.Email, "@")[0]
+		}
+		msg := &email.Message{
+			To:      user.Email,
+			Subject: "Reset your password",
+			HTMLBody: `<h2>Password Reset</h2>
+<p>Hi ` + name + `,</p>
+<p>Click the link below to reset your password. This link expires in 15 minutes.</p>
+<p><a href="` + resetURL + `">Reset Password</a></p>
+<p>Or copy this URL: ` + resetURL + `</p>
+<p>If you did not request this, ignore this email.</p>`,
+			TextBody: "Hi " + name + ",\n\nReset your password by visiting:\n" + resetURL + "\n\nThis link expires in 15 minutes.\n\nIf you did not request this, ignore this email.",
+		}
+		_ = r.email.Send(c.Request.Context(), msg)
+	}
+
+	c.JSON(http.StatusOK, successResp)
+}
+
+// resetPassword completes the password reset flow.
+func (r *Router) resetPassword(c *gin.Context) {
+	var req struct {
+		Token       string `json:"token" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required,min=8"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondBadRequest(c, ErrBadRequest, err.Error())
+		return
+	}
+
+	// Look up user by hashed token
+	tokenHash := auth.HashSessionToken(req.Token)
+	user, err := r.db.GetUserByResetToken(c.Request.Context(), tokenHash)
+	if err != nil || user == nil {
+		respondBadRequest(c, ErrInvalidVerifyToken, "invalid or expired reset token")
+		return
+	}
+
+	// Hash new password
+	newHash, err := auth.HashPassword(req.NewPassword, r.config.Auth.BCryptCost)
+	if err != nil {
+		respondInternalError(c, ErrPasswordHashFailed, "failed to hash password")
+		return
+	}
+
+	// Update password, clear token, invalidate sessions
+	if err := r.db.UpdateUserPassword(c.Request.Context(), user.ID, newHash); err != nil {
+		respondInternalError(c, ErrDatabaseError, "failed to update password")
+		return
+	}
+	_ = r.db.ClearPasswordResetToken(c.Request.Context(), user.ID)
+	_ = r.db.DeleteUserSessions(c.Request.Context(), user.ID)
+
+	r.logAuditAction(c, "password_reset", "user", user.ID, user.Email, "")
+	c.JSON(http.StatusOK, gin.H{"message": "password reset successfully"})
+}
+
 func (r *Router) listOAuthProviders(c *gin.Context) {
 	providers := make([]string, 0)
 	for _, p := range r.config.OAuth.Providers {

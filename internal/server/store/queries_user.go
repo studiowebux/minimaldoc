@@ -201,3 +201,37 @@ func (db *DB) LinkOAuthToUser(ctx context.Context, userID, oauthProvider, oauthI
 	_, err := db.ExecContext(ctx, query, oauthProvider, oauthID, userID)
 	return err
 }
+
+// SetPasswordResetToken stores a hashed reset token with 15-minute expiry.
+func (db *DB) SetPasswordResetToken(ctx context.Context, userID, tokenHash string) error {
+	query := `UPDATE users SET reset_token = $1, reset_token_expires_at = datetime('now', '+15 minutes'), updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	if db.driver == "postgres" {
+		query = `UPDATE users SET reset_token = $1, reset_token_expires_at = NOW() + INTERVAL '15 minutes', updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	}
+	_, err := db.ExecContext(ctx, query, tokenHash, userID)
+	return err
+}
+
+// GetUserByResetToken finds a user by their hashed reset token if not expired.
+func (db *DB) GetUserByResetToken(ctx context.Context, tokenHash string) (*User, error) {
+	query := `
+		SELECT id, site_id, email, password_hash, role, oauth_provider, oauth_id, name, avatar_url, email_verified, verify_token, created_at, updated_at, last_login_at
+		FROM users WHERE reset_token = $1 AND reset_token_expires_at > CURRENT_TIMESTAMP
+	`
+	var u User
+	err := db.QueryRowContext(ctx, query, tokenHash).Scan(
+		&u.ID, &u.SiteID, &u.Email, &u.PasswordHash, &u.Role, &u.OAuthProvider, &u.OAuthID,
+		&u.Name, &u.AvatarURL, &u.EmailVerified, &u.VerifyToken, &u.CreatedAt, &u.UpdatedAt, &u.LastLoginAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &u, err
+}
+
+// ClearPasswordResetToken clears the reset token after use.
+func (db *DB) ClearPasswordResetToken(ctx context.Context, userID string) error {
+	query := `UPDATE users SET reset_token = NULL, reset_token_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
+	_, err := db.ExecContext(ctx, query, userID)
+	return err
+}

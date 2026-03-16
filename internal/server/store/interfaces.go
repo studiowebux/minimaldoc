@@ -284,4 +284,7 @@ type UserStore interface {
 	VerifyUserEmail(ctx context.Context, userID string) error
 	CreateUserWithOAuth(ctx context.Context, id, siteID, email, oauthProvider, oauthID, name, avatarURL, role string) (*User, error)
 	LinkOAuthToUser(ctx context.Context, userID, oauthProvider, oauthID string) error
+	SetPasswordResetToken(ctx context.Context, userID, tokenHash string) error
+	GetUserByResetToken(ctx context.Context, tokenHash string) (*User, error)
+	ClearPasswordResetToken(ctx context.Context, userID string) error
 }

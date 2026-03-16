@@ -100,6 +100,9 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 			auth.POST("/logout", r.logout)
 			auth.POST("/refresh", r.refreshToken)
 			auth.GET("/me", AuthMiddleware(cfg, r.db), r.getCurrentUser)
+			auth.POST("/change-password", AuthMiddleware(cfg, r.db), r.changePassword)
+			auth.POST("/forgot-password", r.forgotPassword)
+			auth.POST("/reset-password", r.resetPassword)
 
 			// Registration (if local auth enabled)
 			if cfg.Auth.EnableLocal {
@@ -340,6 +343,9 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 			auth.POST("/logout", r.logout)
 			auth.POST("/refresh", r.refreshToken)
 			auth.GET("/me", AuthMiddleware(cfg, r.db), r.getCurrentUser)
+			auth.POST("/change-password", AuthMiddleware(cfg, r.db), r.changePassword)
+			auth.POST("/forgot-password", r.forgotPassword)
+			auth.POST("/reset-password", r.resetPassword)
 
 			if cfg.Auth.EnableOAuth {
 				auth.GET("/providers", r.listOAuthProviders)
