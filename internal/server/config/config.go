@@ -5,6 +5,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -321,12 +322,53 @@ func (c *Config) Validate() error {
 	if len(c.Auth.JWTSecret) < 32 {
 		return fmt.Errorf("AUTH_JWT_SECRET must be at least 32 characters")
 	}
+	if isWeakSecret(c.Auth.JWTSecret) {
+		if c.Server.Environment == "production" {
+			return fmt.Errorf("AUTH_JWT_SECRET has suspiciously low entropy — use a random secret")
+		}
+		slog.Warn("AUTH_JWT_SECRET has suspiciously low entropy — use a random secret in production")
+	}
 	if c.Database.URL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
 	}
 
+	// Validate email base URL scheme
+	if c.Email.BaseURL != "" {
+		u, err := url.Parse(c.Email.BaseURL)
+		if err != nil {
+			return fmt.Errorf("EMAIL_BASE_URL is not a valid URL: %w", err)
+		}
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return fmt.Errorf("EMAIL_BASE_URL must use http or https scheme (got %q)", u.Scheme)
+		}
+	}
+
 	c.warnProductionConfig()
 	return nil
+}
+
+// isWeakSecret checks for placeholder or low-entropy JWT secrets.
+func isWeakSecret(s string) bool {
+	lower := strings.ToLower(s)
+	for _, pattern := range []string{"change", "secret", "example", "placeholder", "default", "password"} {
+		if strings.Contains(lower, pattern) {
+			return true
+		}
+	}
+	// Check all-same-character
+	if len(s) > 0 {
+		allSame := true
+		for i := 1; i < len(s); i++ {
+			if s[i] != s[0] {
+				allSame = false
+				break
+			}
+		}
+		if allSame {
+			return true
+		}
+	}
+	return false
 }
 
 // warnProductionConfig logs warnings for settings that are unsafe in production.
