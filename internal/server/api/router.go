@@ -78,6 +78,11 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 	r.GET("/healthz", r.liveness)
 	r.GET("/readyz", r.readiness)
 
+	// API version endpoint (always at /api/version regardless of prefix)
+	r.GET("/api/version", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"version": "1", "api_path": cfg.Server.APIPath})
+	})
+
 	// Public API routes
 	api := r.Group(cfg.Server.APIPath)
 
@@ -324,8 +329,11 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 	r.Use(LoggerMiddleware())
 	r.Use(SecurityHeadersMiddleware())
 
-	// Health check
+	// Health check and version
 	r.GET("/health", r.healthCheck)
+	r.GET("/api/version", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"version": "1", "api_path": cfg.Server.APIPath})
+	})
 
 	// Admin API routes
 	api := r.Group(cfg.Server.APIPath)

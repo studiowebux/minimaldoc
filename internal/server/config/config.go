@@ -211,7 +211,7 @@ func Load() (*Config, error) {
 			ReadTimeout:    getEnvDuration("SERVER_READ_TIMEOUT", 30*time.Second),
 			WriteTimeout:   getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
 			AdminPath:      getEnv("SERVER_ADMIN_PATH", "/admin"),
-			APIPath:        getEnv("SERVER_API_PATH", "/api"),
+			APIPath:        getEnv("SERVER_API_PATH", "/api/v1"),
 			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", nil),
 			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
 			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
