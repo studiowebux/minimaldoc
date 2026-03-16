@@ -126,10 +126,14 @@ const (
 // respondError sends a JSON error response with a stable error code.
 // Format: {"error": "human message", "code": "ERROR_CODE"}
 func respondError(c *gin.Context, status int, code string, message string) {
-	c.JSON(status, gin.H{
+	resp := gin.H{
 		"error": message,
 		"code":  code,
-	})
+	}
+	if reqID, ok := c.Get("request_id"); ok {
+		resp["request_id"] = reqID
+	}
+	c.JSON(status, resp)
 }
 
 // respondBadRequest is a shorthand for 400 errors.

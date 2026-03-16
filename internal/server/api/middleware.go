@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -80,7 +81,22 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 	}
 }
 
-// LoggerMiddleware logs HTTP requests.
+// RequestIDMiddleware generates or propagates a unique request ID.
+// Reads X-Request-ID from the incoming request (set by reverse proxy);
+// generates a new UUID if absent. Stores in gin context and response header.
+func RequestIDMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		reqID := c.GetHeader("X-Request-ID")
+		if reqID == "" {
+			reqID = uuid.New().String()
+		}
+		c.Set("request_id", reqID)
+		c.Header("X-Request-ID", reqID)
+		c.Next()
+	}
+}
+
+// LoggerMiddleware logs HTTP requests with request ID correlation.
 func LoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -91,8 +107,9 @@ func LoggerMiddleware() gin.HandlerFunc {
 		latency := time.Since(start)
 		status := c.Writer.Status()
 		method := c.Request.Method
+		reqID, _ := c.Get("request_id")
 
-		slog.Info("request", "method", method, "path", path, "status", status, "latency", latency)
+		slog.Info("request", "method", method, "path", path, "status", status, "latency", latency, "request_id", reqID)
 	}
 }
 

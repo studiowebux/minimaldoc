@@ -65,6 +65,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 
 	// Global middleware
 	r.Use(gin.Recovery())
+	r.Use(RequestIDMiddleware())
 	if cfg.Telemetry.Enabled {
 		r.Use(TracingMiddleware())
 	}
@@ -316,6 +317,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 	// Global middleware
 	r.Use(gin.Recovery())
+	r.Use(RequestIDMiddleware())
 	if cfg.Telemetry.Enabled {
 		r.Use(TracingMiddleware())
 	}
