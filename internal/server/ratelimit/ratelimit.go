@@ -10,6 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// maxTrackedKeys bounds the number of IPs/keys tracked to prevent memory exhaustion.
+const maxTrackedKeys = 100_000
+
 // Limiter tracks request counts per key using a sliding window.
 type Limiter struct {
 	mu       sync.RWMutex
@@ -96,6 +99,35 @@ func (l *Limiter) Stop() {
 	close(l.stopCh)
 }
 
+// evictOldest removes the oldest entries when the map exceeds maxTrackedKeys.
+// Caller must hold l.mu write lock.
+func (l *Limiter) evictOldest() {
+	if len(l.windows) <= maxTrackedKeys {
+		return
+	}
+	now := time.Now()
+	// First pass: remove all expired entries
+	for key, w := range l.windows {
+		if now.Sub(w.startTime) > l.window {
+			delete(l.windows, key)
+		}
+	}
+	// If still over capacity, remove oldest entries until under limit
+	for len(l.windows) > maxTrackedKeys {
+		var oldestKey string
+		var oldestTime time.Time
+		first := true
+		for key, w := range l.windows {
+			if first || w.startTime.Before(oldestTime) {
+				oldestKey = key
+				oldestTime = w.startTime
+				first = false
+			}
+		}
+		delete(l.windows, oldestKey)
+	}
+}
+
 // Allow checks if a request should be allowed for the given key.
 // Returns (allowed, remaining, resetTime).
 func (l *Limiter) Allow(key string) (bool, int, time.Time) {
@@ -106,6 +138,9 @@ func (l *Limiter) Allow(key string) (bool, int, time.Time) {
 	w, exists := l.windows[key]
 
 	if !exists || now.Sub(w.startTime) > l.window {
+		// Evict before adding a new entry
+		l.evictOldest()
+
 		// New window
 		l.windows[key] = &window{
 			count:     1,
