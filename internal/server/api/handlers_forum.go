@@ -359,21 +359,7 @@ func (r *Router) listForumTopics(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("q")
 
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	topics, total, err := r.db.ListForumTopics(c.Request.Context(), siteID, categoryID, status, search, limit, offset)
 	if err != nil {
@@ -458,21 +444,7 @@ func (r *Router) getForumTopicPosts(c *gin.Context) {
 		return
 	}
 
-	limit := 50
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	posts, total, err := r.db.ListForumPosts(c.Request.Context(), topic.ID, limit, offset)
 	if err != nil {
@@ -512,21 +484,7 @@ func (r *Router) searchForum(c *gin.Context) {
 		return
 	}
 
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	topics, total, err := r.db.SearchForum(c.Request.Context(), siteID, query, limit, offset)
 	if err != nil {
@@ -585,21 +543,7 @@ func (r *Router) getForumTopicsByTag(c *gin.Context) {
 		return
 	}
 
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	topics, total, err := r.db.ListForumTopicsByTag(c.Request.Context(), siteID, tag.ID, limit, offset)
 	if err != nil {
@@ -1261,18 +1205,7 @@ func (r *Router) getForumNotifications(c *gin.Context) {
 	}
 
 	unreadOnly := c.Query("unread") == "true"
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	notifications, err := r.db.ListForumNotifications(c.Request.Context(), userID, unreadOnly, limit, offset)
 	if err != nil {
@@ -1321,18 +1254,7 @@ func (r *Router) getUserBookmarks(c *gin.Context) {
 		return
 	}
 
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	bookmarks, err := r.db.ListUserBookmarks(c.Request.Context(), userID, limit, offset)
 	if err != nil {
@@ -1583,21 +1505,7 @@ func (r *Router) adminListForumTopics(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("q")
 
-	limit := 50
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	topics, total, err := r.db.ListForumTopics(c.Request.Context(), siteID, categoryID, status, search, limit, offset)
 	if err != nil {
@@ -1625,18 +1533,7 @@ func (r *Router) adminListForumFlags(c *gin.Context) {
 	siteID, _ := getSiteID(c)
 	status := c.Query("status")
 
-	limit := 50
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	flags, total, err := r.db.ListForumFlags(c.Request.Context(), siteID, status, limit, offset)
 	if err != nil {
@@ -1711,18 +1608,7 @@ func (r *Router) adminUnbanUser(c *gin.Context) {
 func (r *Router) adminListForumBans(c *gin.Context) {
 	siteID, _ := getSiteID(c)
 
-	limit := 50
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	bans, total, err := r.db.ListForumBans(c.Request.Context(), siteID, limit, offset)
 	if err != nil {

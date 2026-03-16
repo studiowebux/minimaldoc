@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -148,22 +147,7 @@ func (r *Router) listPublishedPosts(c *gin.Context) {
 		return
 	}
 
-	// Pagination
-	limit := 20
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 {
-			limit = v
-			if limit > 100 {
-				limit = 100
-			}
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	// Filtering
 	category := c.Query("category")

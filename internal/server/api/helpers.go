@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,30 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
+
+// parsePagination extracts and clamps limit/offset from query params.
+// limit: 1–100 (default 20), offset: 0–100000 (default 0).
+func parsePagination(c *gin.Context) (limit, offset int) {
+	limit = 20
+	offset = 0
+	if l := c.Query("limit"); l != "" {
+		if v, err := strconv.Atoi(l); err == nil && v > 0 {
+			limit = v
+			if limit > 100 {
+				limit = 100
+			}
+		}
+	}
+	if o := c.Query("offset"); o != "" {
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			offset = v
+			if offset > 100_000 {
+				offset = 100_000
+			}
+		}
+	}
+	return
+}
 
 // cspNonce returns the per-request CSP nonce from gin context.
 func cspNonce(c *gin.Context) string {

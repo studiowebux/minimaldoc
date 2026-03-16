@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -33,19 +32,7 @@ func (r *Router) listAuditLogsAPI(c *gin.Context) {
 	action := c.Query("action")
 	entityType := c.Query("entity_type")
 
-	// Parse pagination
-	limit := 50
-	offset := 0
-	if l := c.Query("limit"); l != "" {
-		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= 100 {
-			limit = v
-		}
-	}
-	if o := c.Query("offset"); o != "" {
-		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
-			offset = v
-		}
-	}
+	limit, offset := parsePagination(c)
 
 	logs, total, err := r.db.ListAuditLogs(c.Request.Context(), siteID, action, entityType, limit, offset)
 	if err != nil {
