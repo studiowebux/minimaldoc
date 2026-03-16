@@ -223,11 +223,12 @@ type ForumStore interface {
 
 // NewsletterStore handles newsletter subscriptions.
 type NewsletterStore interface {
-	CreateSubscriber(ctx context.Context, id, siteID, email, verifyToken string) error
+	CreateSubscriber(ctx context.Context, id, siteID, email, verifyTokenHash string) error
 	CreateVerifiedSubscriber(ctx context.Context, id, siteID, email, provider, displayName string) error
 	GetSubscriberByEmail(ctx context.Context, siteID, email string) (*Subscriber, error)
-	GetSubscriberByToken(ctx context.Context, siteID, token string) (*Subscriber, error)
-	VerifySubscriber(ctx context.Context, siteID, token string) error
+	GetSubscriberByToken(ctx context.Context, siteID, tokenHash string) (*Subscriber, error)
+	VerifySubscriber(ctx context.Context, siteID, tokenHash string) error
+	UpdateSubscriberToken(ctx context.Context, siteID, email, newTokenHash string) error
 	UnsubscribeByEmail(ctx context.Context, siteID, email string) error
 	ListSubscribers(ctx context.Context, siteID string, verifiedOnly bool) ([]Subscriber, error)
 	CountSubscribers(ctx context.Context, siteID string, verifiedOnly bool) (int64, error)

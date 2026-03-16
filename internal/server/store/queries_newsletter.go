@@ -21,9 +21,12 @@ func scanSubscriber(scanner interface{ Scan(...any) error }) (Subscriber, error)
 
 // Newsletter queries
 
-func (db *DB) CreateSubscriber(ctx context.Context, id, siteID, email, verifyToken string) error {
-	query := `INSERT INTO subscribers (id, site_id, email, verify_token, verify_sent_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`
-	_, err := db.ExecContext(ctx, query, id, siteID, email, verifyToken)
+func (db *DB) CreateSubscriber(ctx context.Context, id, siteID, email, verifyTokenHash string) error {
+	query := `INSERT INTO subscribers (id, site_id, email, verify_token, verify_sent_at, verify_token_expires_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, datetime('now', '+24 hours'))`
+	if db.driver == "postgres" {
+		query = `INSERT INTO subscribers (id, site_id, email, verify_token, verify_sent_at, verify_token_expires_at) VALUES ($1, $2, $3, $4, NOW(), NOW() + INTERVAL '24 hours')`
+	}
+	_, err := db.ExecContext(ctx, query, id, siteID, email, verifyTokenHash)
 	return err
 }
 
@@ -53,18 +56,18 @@ func (db *DB) GetSubscriberByEmail(ctx context.Context, siteID, email string) (*
 	return &s, err
 }
 
-func (db *DB) GetSubscriberByToken(ctx context.Context, siteID, token string) (*Subscriber, error) {
-	query := `SELECT ` + subscriberColumns + ` FROM subscribers WHERE site_id = $1 AND verify_token = $2`
-	s, err := scanSubscriber(db.QueryRowContext(ctx, query, siteID, token))
+func (db *DB) GetSubscriberByToken(ctx context.Context, siteID, tokenHash string) (*Subscriber, error) {
+	query := `SELECT ` + subscriberColumns + ` FROM subscribers WHERE site_id = $1 AND verify_token = $2 AND verify_token_expires_at > CURRENT_TIMESTAMP`
+	s, err := scanSubscriber(db.QueryRowContext(ctx, query, siteID, tokenHash))
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return &s, err
 }
 
-func (db *DB) VerifySubscriber(ctx context.Context, siteID, token string) error {
-	query := `UPDATE subscribers SET verified = true, verify_token = NULL WHERE site_id = $1 AND verify_token = $2`
-	result, err := db.ExecContext(ctx, query, siteID, token)
+func (db *DB) VerifySubscriber(ctx context.Context, siteID, tokenHash string) error {
+	query := `UPDATE subscribers SET verified = true, verify_token = NULL, verify_token_expires_at = NULL WHERE site_id = $1 AND verify_token = $2 AND verify_token_expires_at > CURRENT_TIMESTAMP`
+	result, err := db.ExecContext(ctx, query, siteID, tokenHash)
 	if err != nil {
 		return err
 	}
@@ -73,6 +76,15 @@ func (db *DB) VerifySubscriber(ctx context.Context, siteID, token string) error 
 		return sql.ErrNoRows
 	}
 	return nil
+}
+
+func (db *DB) UpdateSubscriberToken(ctx context.Context, siteID, email, newTokenHash string) error {
+	query := `UPDATE subscribers SET verify_token = $1, verify_sent_at = CURRENT_TIMESTAMP, verify_token_expires_at = datetime('now', '+24 hours') WHERE site_id = $2 AND email = $3 AND verified = false`
+	if db.driver == "postgres" {
+		query = `UPDATE subscribers SET verify_token = $1, verify_sent_at = NOW(), verify_token_expires_at = NOW() + INTERVAL '24 hours' WHERE site_id = $2 AND email = $3 AND verified = false`
+	}
+	_, err := db.ExecContext(ctx, query, newTokenHash, siteID, email)
+	return err
 }
 
 func (db *DB) UnsubscribeByEmail(ctx context.Context, siteID, email string) error {

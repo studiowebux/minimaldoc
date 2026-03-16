@@ -42,13 +42,23 @@ func (r *Router) subscribe(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": "already_subscribed"})
 			return
 		}
-		// Resend verification email
-		r.sendVerificationEmail(site.Name, req.SiteID, req.Email, existing.VerifyToken.String)
+		// Generate fresh token and resend (can't retrieve hashed token)
+		newToken, err := auth.GenerateVerificationToken()
+		if err != nil {
+			respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
+			return
+		}
+		tokenHash := auth.HashSessionToken(newToken)
+		if err := r.db.UpdateSubscriberToken(c.Request.Context(), req.SiteID, req.Email, tokenHash); err != nil {
+			respondInternalError(c, ErrSubscribeFailed, "failed to update token")
+			return
+		}
+		r.sendVerificationEmail(site.Name, req.SiteID, req.Email, newToken)
 		c.JSON(http.StatusOK, gin.H{"status": "verification_resent"})
 		return
 	}
 
-	// Create subscriber with verification token
+	// Create subscriber with hashed verification token
 	id, err := auth.GenerateSessionToken()
 	if err != nil {
 		respondInternalError(c, ErrIDGenFailed, "failed to generate ID")
@@ -59,14 +69,15 @@ func (r *Router) subscribe(c *gin.Context) {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate token")
 		return
 	}
+	tokenHash := auth.HashSessionToken(verifyToken)
 
-	err = r.db.CreateSubscriber(c.Request.Context(), id, req.SiteID, req.Email, verifyToken)
+	err = r.db.CreateSubscriber(c.Request.Context(), id, req.SiteID, req.Email, tokenHash)
 	if err != nil {
 		respondInternalError(c, ErrSubscribeFailed, "failed to subscribe")
 		return
 	}
 
-	// Send verification email
+	// Send verification email with raw token (DB stores hash)
 	r.sendVerificationEmail(site.Name, req.SiteID, req.Email, verifyToken)
 
 	c.JSON(http.StatusOK, gin.H{"status": "verification_sent"})
@@ -90,8 +101,11 @@ func (r *Router) verifySubscription(c *gin.Context) {
 		return
 	}
 
+	// Hash the token to match the stored hash
+	tokenHash := auth.HashSessionToken(token)
+
 	// Get subscriber before verification to get email
-	subscriber, err := r.db.GetSubscriberByToken(c.Request.Context(), siteID, token)
+	subscriber, err := r.db.GetSubscriberByToken(c.Request.Context(), siteID, tokenHash)
 	if err != nil {
 		respondInternalError(c, ErrDatabaseError, "database error")
 		return
@@ -101,7 +115,7 @@ func (r *Router) verifySubscription(c *gin.Context) {
 		return
 	}
 
-	err = r.db.VerifySubscriber(c.Request.Context(), siteID, token)
+	err = r.db.VerifySubscriber(c.Request.Context(), siteID, tokenHash)
 	if err != nil {
 		respondBadRequest(c, ErrInvalidVerifyToken, "invalid or expired token")
 		return
