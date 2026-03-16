@@ -117,9 +117,9 @@ func buildStatCards(cards []StatCard) string {
 		}
 		html.WriteString(fmt.Sprintf(`
 		<div class="%s">
-			<div class="stat-value">%v</div>
+			<div class="stat-value">%s</div>
 			<div class="stat-label">%s</div>
-		</div>`, class, card.Value, template.HTMLEscapeString(card.Label)))
+		</div>`, class, template.HTMLEscapeString(fmt.Sprintf("%v", card.Value)), template.HTMLEscapeString(card.Label)))
 	}
 	return html.String()
 }
