@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"html/template"
 	"net/http"
 	"strings"
 	"time"
@@ -359,7 +360,7 @@ func (r *Router) forgotPassword(c *gin.Context) {
 			To:      user.Email,
 			Subject: "Reset your password",
 			HTMLBody: `<h2>Password Reset</h2>
-<p>Hi ` + name + `,</p>
+<p>Hi ` + template.HTMLEscapeString(name) + `,</p>
 <p>Click the link below to reset your password. This link expires in 15 minutes.</p>
 <p><a href="` + resetURL + `">Reset Password</a></p>
 <p>Or copy this URL: ` + resetURL + `</p>
@@ -604,7 +605,7 @@ func (r *Router) register(c *gin.Context) {
 			To:      req.Email,
 			Subject: "Verify your email address",
 			HTMLBody: `<h2>Welcome!</h2>
-<p>Hi ` + name + `,</p>
+<p>Hi ` + template.HTMLEscapeString(name) + `,</p>
 <p>Please verify your email address by clicking the link below:</p>
 <p><a href="` + verifyURL + `">Verify Email</a></p>
 <p>Or copy this URL: ` + verifyURL + `</p>
@@ -1098,7 +1099,7 @@ func (r *Router) publicRegisterSubmit(c *gin.Context) {
 			To:      emailAddr,
 			Subject: "Verify your email address",
 			HTMLBody: `<h2>Welcome!</h2>
-<p>Hi ` + name + `,</p>
+<p>Hi ` + template.HTMLEscapeString(name) + `,</p>
 <p>Please verify your email address by clicking the link below:</p>
 <p><a href="` + verifyURL + `">Verify Email</a></p>
 <p>Or copy this URL: ` + verifyURL + `</p>

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/xml"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
@@ -78,7 +79,10 @@ func blogPostToResponse(p *store.BlogPost, includeContent bool) BlogPostResponse
 		r.Content = p.Content
 		// Render markdown to HTML
 		renderer := markdown.NewRenderer()
-		html, _ := renderer.Render(p.Content)
+		html, err := renderer.Render(p.Content)
+		if err != nil {
+			slog.Error("failed to render markdown", "post_id", p.ID, "error", err)
+		}
 		r.ContentHTML = html
 	}
 	if p.FeaturedImage.Valid {

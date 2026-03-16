@@ -4,6 +4,7 @@ package ratelimit
 
 import (
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -193,16 +194,16 @@ func (l *Limiter) Middleware(keyFunc KeyFunc) gin.HandlerFunc {
 		allowed, remaining, resetTime := l.Allow(key)
 
 		// Set rate limit headers
-		c.Header("X-RateLimit-Limit", itoa(l.limit))
-		c.Header("X-RateLimit-Remaining", itoa(remaining))
-		c.Header("X-RateLimit-Reset", itoa(int(resetTime.Unix())))
+		c.Header("X-RateLimit-Limit", strconv.Itoa(l.limit))
+		c.Header("X-RateLimit-Remaining", strconv.Itoa(remaining))
+		c.Header("X-RateLimit-Reset", strconv.Itoa(int(resetTime.Unix())))
 
 		if !allowed {
 			retryAfter := int(time.Until(resetTime).Seconds())
 			if retryAfter < 1 {
 				retryAfter = 1
 			}
-			c.Header("Retry-After", itoa(retryAfter))
+			c.Header("Retry-After", strconv.Itoa(retryAfter))
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error":       "rate limit exceeded",
 				"retry_after": retryAfter,
@@ -214,26 +215,3 @@ func (l *Limiter) Middleware(keyFunc KeyFunc) gin.HandlerFunc {
 	}
 }
 
-// itoa converts int to string without importing strconv.
-func itoa(i int) string {
-	if i == 0 {
-		return "0"
-	}
-	neg := false
-	if i < 0 {
-		neg = true
-		i = -i
-	}
-	var b [20]byte
-	pos := len(b)
-	for i > 0 {
-		pos--
-		b[pos] = byte('0' + i%10)
-		i /= 10
-	}
-	if neg {
-		pos--
-		b[pos] = '-'
-	}
-	return string(b[pos:])
-}
