@@ -147,7 +147,7 @@ type BlogCommentRequest struct {
 func (r *Router) listPublishedPosts(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
@@ -160,7 +160,7 @@ func (r *Router) listPublishedPosts(c *gin.Context) {
 
 	posts, total, err := r.db.ListPublishedBlogPostsFiltered(c.Request.Context(), siteID, category, tag, search, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -182,24 +182,24 @@ func (r *Router) listPublishedPosts(c *gin.Context) {
 func (r *Router) getPublishedPost(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	post, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.Status != "published" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
 	// Check visibility - public API only serves public posts
 	if post.Visibility != "" && post.Visibility != "public" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "authentication required", "visibility": post.Visibility})
+		respondError(c, http.StatusForbidden, ErrAuthRequired, "authentication required")
 		return
 	}
 
@@ -211,24 +211,24 @@ func (r *Router) getPublishedPost(c *gin.Context) {
 func (r *Router) listApprovedCommentsPublic(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	post, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.Status != "published" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
 	comments, err := r.db.ListApprovedComments(c.Request.Context(), post.ID, 100, 0)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -240,24 +240,24 @@ func (r *Router) listApprovedCommentsPublic(c *gin.Context) {
 func (r *Router) submitCommentPublic(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	post, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.Status != "published" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
 	var req BlogCommentRequest
 	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -284,11 +284,11 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 	// For anonymous users, require name and email from form
 	if !isAuthenticated {
 		if req.AuthorName == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+			respondBadRequest(c, ErrMissingParams, "name is required")
 			return
 		}
 		if req.AuthorEmail == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+			respondBadRequest(c, ErrMissingParams, "email is required")
 			return
 		}
 		authorName = req.AuthorName
@@ -301,7 +301,7 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 
 	// Validate sanitized content isn't empty
 	if authorName == "" || content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid content after sanitization"})
+		respondBadRequest(c, ErrInvalidContent, "invalid content after sanitization")
 		return
 	}
 
@@ -317,7 +317,7 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 			c.String(http.StatusInternalServerError, `<div class="blog-comment-error">Failed to submit comment. Please try again.</div>`)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit comment"})
+		respondInternalError(c, ErrCommentFailed, "failed to submit comment")
 		return
 	}
 
@@ -388,14 +388,14 @@ func (r *Router) submitCommentPublic(c *gin.Context) {
 func (r *Router) listAllPosts(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	status := c.Query("status")
 
 	posts, err := r.db.ListBlogPosts(c.Request.Context(), siteID, status, 100, 0)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -406,29 +406,29 @@ func (r *Router) listAllPosts(c *gin.Context) {
 func (r *Router) createPost(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	authorID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	var req BlogPostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Check slug uniqueness
 	existing, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, req.Slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if existing != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "slug already exists"})
+		respondError(c, http.StatusConflict, ErrSlugExists, "slug already exists")
 		return
 	}
 
@@ -441,7 +441,7 @@ func (r *Router) createPost(c *gin.Context) {
 	post, err := r.db.CreateBlogPost(c.Request.Context(), id, siteID, authorID,
 		req.Slug, req.Title, req.Description, req.Content, req.FeaturedImage, tags, req.Category, req.Visibility)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create post"})
+		respondInternalError(c, ErrPostCreationFailed, "failed to create post")
 		return
 	}
 
@@ -456,17 +456,17 @@ func (r *Router) getPost(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -481,17 +481,17 @@ func (r *Router) updatePost(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -500,14 +500,14 @@ func (r *Router) updatePost(c *gin.Context) {
 	if err == nil && role == "author" {
 		userID, err := getUserID(c)
 		if err != nil || post.AuthorID.String != userID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "can only edit own posts"})
+			respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only edit own posts")
 			return
 		}
 	}
 
 	var req BlogPostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -515,11 +515,11 @@ func (r *Router) updatePost(c *gin.Context) {
 	if req.Slug != post.Slug {
 		existing, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, req.Slug)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+			respondInternalError(c, ErrDatabaseError, "database error")
 			return
 		}
 		if existing != nil {
-			c.JSON(http.StatusConflict, gin.H{"error": "slug already exists"})
+			respondError(c, http.StatusConflict, ErrSlugExists, "slug already exists")
 			return
 		}
 	}
@@ -532,7 +532,7 @@ func (r *Router) updatePost(c *gin.Context) {
 	err = r.db.UpdateBlogPost(c.Request.Context(), id, req.Slug, req.Title, req.Description,
 		req.Content, req.FeaturedImage, tags, req.Category, req.Visibility)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update post"})
+		respondInternalError(c, ErrPostUpdateFailed, "failed to update post")
 		return
 	}
 
@@ -547,18 +547,18 @@ func (r *Router) deletePost(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	// Get post info for ownership check and audit log
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -570,7 +570,7 @@ func (r *Router) deletePost(c *gin.Context) {
 	postTitle := post.Title
 	err = r.db.DeleteBlogPost(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete post"})
+		respondInternalError(c, ErrPostDeleteFailed, "failed to delete post")
 		return
 	}
 
@@ -586,11 +586,11 @@ func (r *Router) publishPost(c *gin.Context) {
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -601,7 +601,7 @@ func (r *Router) publishPost(c *gin.Context) {
 
 	err = r.db.PublishBlogPost(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish post"})
+		respondInternalError(c, ErrPostPublishFailed, "failed to publish post")
 		return
 	}
 
@@ -617,11 +617,11 @@ func (r *Router) unpublishPost(c *gin.Context) {
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -632,7 +632,7 @@ func (r *Router) unpublishPost(c *gin.Context) {
 
 	err = r.db.UnpublishBlogPost(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unpublish post"})
+		respondInternalError(c, ErrPostPublishFailed, "failed to unpublish post")
 		return
 	}
 
@@ -653,11 +653,11 @@ func (r *Router) schedulePost(c *gin.Context) {
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -668,25 +668,25 @@ func (r *Router) schedulePost(c *gin.Context) {
 
 	var req ScheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Validate datetime
 	scheduledTime, err := time.Parse(time.RFC3339, req.ScheduledAt)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid datetime format, use ISO 8601 (RFC3339)"})
+		respondBadRequest(c, ErrInvalidDatetime, "invalid datetime format, use ISO 8601 (RFC3339)")
 		return
 	}
 
 	if scheduledTime.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "scheduled time must be in the future"})
+		respondBadRequest(c, ErrSchedulePastDate, "scheduled time must be in the future")
 		return
 	}
 
 	err = r.db.ScheduleBlogPost(c.Request.Context(), id, req.ScheduledAt)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to schedule post"})
+		respondInternalError(c, ErrPostPublishFailed, "failed to schedule post")
 		return
 	}
 
@@ -699,11 +699,11 @@ func (r *Router) unschedulePost(c *gin.Context) {
 
 	post, err := r.db.GetBlogPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -714,7 +714,7 @@ func (r *Router) unschedulePost(c *gin.Context) {
 
 	err = r.db.ClearSchedule(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unschedule post"})
+		respondInternalError(c, ErrPostPublishFailed, "failed to unschedule post")
 		return
 	}
 
@@ -730,7 +730,7 @@ func (r *Router) listCommentsAdmin(c *gin.Context) {
 
 	comments, err := r.db.ListBlogComments(c.Request.Context(), siteID, status, 100, 0)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -744,7 +744,7 @@ func (r *Router) approveComment(c *gin.Context) {
 
 	err := r.db.ModerateComment(c.Request.Context(), id, "approved", moderatorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to approve comment"})
+		respondInternalError(c, ErrCommentFailed, "failed to approve comment")
 		return
 	}
 
@@ -761,7 +761,7 @@ func (r *Router) rejectComment(c *gin.Context) {
 
 	err := r.db.ModerateComment(c.Request.Context(), id, "rejected", moderatorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reject comment"})
+		respondInternalError(c, ErrCommentFailed, "failed to reject comment")
 		return
 	}
 
@@ -778,7 +778,7 @@ func (r *Router) markSpam(c *gin.Context) {
 
 	err := r.db.ModerateComment(c.Request.Context(), id, "spam", moderatorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark as spam"})
+		respondInternalError(c, ErrCommentFailed, "failed to mark as spam")
 		return
 	}
 
@@ -791,7 +791,7 @@ func (r *Router) deleteComment(c *gin.Context) {
 
 	err := r.db.DeleteBlogComment(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete comment"})
+		respondInternalError(c, ErrCommentFailed, "failed to delete comment")
 		return
 	}
 
@@ -949,18 +949,18 @@ func (r *Router) getRSSFeed(c *gin.Context) {
 func (r *Router) getPostMeta(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	post, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil || post.Status != "published" {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
@@ -1012,25 +1012,25 @@ func (r *Router) getPostMeta(c *gin.Context) {
 func (r *Router) getRelatedPosts(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	post, err := r.db.GetBlogPostBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
 
 	// Get related posts by category (excluding current post)
 	related, err := r.db.GetRelatedPosts(c.Request.Context(), siteID, post.ID, post.Category.String, post.Tags, 5)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 

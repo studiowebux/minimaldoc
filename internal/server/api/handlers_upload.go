@@ -25,7 +25,7 @@ var allowedMIMETypes = map[string]string{
 // uploadImage handles image uploads for blog posts.
 func (r *Router) uploadImage(c *gin.Context) {
 	if r.storage == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Storage not configured"})
+		respondError(c, http.StatusServiceUnavailable, ErrStorageNotConfig, "Storage not configured")
 		return
 	}
 
@@ -34,29 +34,25 @@ func (r *Router) uploadImage(c *gin.Context) {
 	// Parse multipart form
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No file provided"})
+		respondBadRequest(c, ErrNoFileProvided, "No file provided")
 		return
 	}
 	defer file.Close()
 
 	// Validate file size
 	if header.Size > r.config.Storage.MaxFileSize {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("File too large. Max size: %d bytes", r.config.Storage.MaxFileSize),
-		})
+		respondBadRequest(c, ErrBadRequest, fmt.Sprintf("File too large. Max size: %d bytes", r.config.Storage.MaxFileSize))
 		return
 	}
 
 	// Read file content for magic number detection (up to 512 bytes + full content)
 	content, err := io.ReadAll(io.LimitReader(file, r.config.Storage.MaxFileSize+1))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file"})
+		respondBadRequest(c, ErrBadRequest, "Failed to read file")
 		return
 	}
 	if int64(len(content)) > r.config.Storage.MaxFileSize {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": fmt.Sprintf("File too large. Max size: %d bytes", r.config.Storage.MaxFileSize),
-		})
+		respondBadRequest(c, ErrBadRequest, fmt.Sprintf("File too large. Max size: %d bytes", r.config.Storage.MaxFileSize))
 		return
 	}
 
@@ -64,10 +60,7 @@ func (r *Router) uploadImage(c *gin.Context) {
 	detected := mimetype.Detect(content)
 	ext, ok := allowedMIMETypes[detected.String()]
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":         fmt.Sprintf("File type %q not allowed", detected.String()),
-			"allowed_types": []string{"image/jpeg", "image/png", "image/gif", "image/webp"},
-		})
+		respondBadRequest(c, ErrBadRequest, fmt.Sprintf("File type %q not allowed", detected.String()))
 		return
 	}
 
@@ -77,7 +70,7 @@ func (r *Router) uploadImage(c *gin.Context) {
 	// Upload to storage with safe filename and detected MIME type
 	url, storagePath, err := r.storage.Upload(c.Request.Context(), safeFilename, detected.String(), bytes.NewReader(content))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
+		respondInternalError(c, ErrUploadFailed, "Failed to upload file")
 		return
 	}
 
@@ -87,7 +80,7 @@ func (r *Router) uploadImage(c *gin.Context) {
 	upload, err := r.db.CreateUpload(c.Request.Context(), id, user.SiteID, user.ID, originalName, detected.String(), int64(len(content)), storagePath, url)
 	if err != nil {
 		_ = r.storage.Delete(c.Request.Context(), storagePath)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save upload metadata"})
+		respondInternalError(c, ErrUploadFailed, "Failed to save upload metadata")
 		return
 	}
 
@@ -100,7 +93,7 @@ func (r *Router) uploadImage(c *gin.Context) {
 // deleteImage handles image deletion.
 func (r *Router) deleteImage(c *gin.Context) {
 	if r.storage == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Storage not configured"})
+		respondError(c, http.StatusServiceUnavailable, ErrStorageNotConfig, "Storage not configured")
 		return
 	}
 
@@ -110,31 +103,31 @@ func (r *Router) deleteImage(c *gin.Context) {
 	// Get upload record
 	upload, err := r.db.GetUpload(c.Request.Context(), uploadID)
 	if err != nil || upload == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload not found"})
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
 		return
 	}
 
 	// Verify site_id matches (prevent cross-site delete)
 	if upload.SiteID != user.SiteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Upload not found"})
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
 		return
 	}
 
 	// Check ownership (admins can delete any, others only their own)
 	if user.Role != "admin" && upload.UserID != user.ID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete another user's upload"})
+		respondError(c, http.StatusForbidden, ErrNotUploadOwner, "Cannot delete another user's upload")
 		return
 	}
 
 	// Delete from storage
 	if err := r.storage.Delete(c.Request.Context(), upload.StoragePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file"})
+		respondInternalError(c, ErrInternalError, "Failed to delete file")
 		return
 	}
 
 	// Delete from database
 	if err := r.db.DeleteUpload(c.Request.Context(), uploadID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete upload record"})
+		respondInternalError(c, ErrDatabaseError, "Failed to delete upload record")
 		return
 	}
 
@@ -155,7 +148,7 @@ func (r *Router) listUploads(c *gin.Context) {
 	}
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list uploads"})
+		respondInternalError(c, ErrDatabaseError, "Failed to list uploads")
 		return
 	}
 

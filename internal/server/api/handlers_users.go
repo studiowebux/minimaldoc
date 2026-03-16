@@ -14,13 +14,13 @@ import (
 func (r *Router) listUsers(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	users, err := r.db.ListUsers(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list users"})
+		respondInternalError(c, ErrDatabaseError, "failed to list users")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (r *Router) listUsers(c *gin.Context) {
 func (r *Router) createUser(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
@@ -70,25 +70,25 @@ func (r *Router) createUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Check if user already exists
 	existing, err := r.db.GetUserByEmail(c.Request.Context(), siteID, req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if existing != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "user with this email already exists"})
+		respondError(c, http.StatusConflict, ErrUserAlreadyExists, "user with this email already exists")
 		return
 	}
 
 	// Hash password
 	passwordHash, err := auth.HashPassword(req.Password, r.config.Auth.BCryptCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+		respondInternalError(c, ErrPasswordHashFailed, "failed to hash password")
 		return
 	}
 
@@ -98,7 +98,7 @@ func (r *Router) createUser(c *gin.Context) {
 	// Create user
 	user, err := r.db.CreateUser(c.Request.Context(), userID, siteID, req.Email, passwordHash, req.Role, req.Name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		respondInternalError(c, ErrUserCreationFailed, "failed to create user")
 		return
 	}
 
@@ -117,23 +117,23 @@ func (r *Router) getUser(c *gin.Context) {
 
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	user, err := r.db.GetUserByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if user == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		respondNotFound(c, ErrUserNotFound, "user not found")
 		return
 	}
 
 	// Check site scope
 	if user.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		respondNotFound(c, ErrUserNotFound, "user not found")
 		return
 	}
 
@@ -162,18 +162,18 @@ func (r *Router) updateUser(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	// Get existing user
 	user, err := r.db.GetUserByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if user == nil || user.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		respondNotFound(c, ErrUserNotFound, "user not found")
 		return
 	}
 
@@ -185,18 +185,18 @@ func (r *Router) updateUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Prevent self-privilege escalation: users cannot change their own role
 	claims, err := getUserClaims(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	if claims.UserID == id && req.Role != "" && req.Role != user.Role {
-		c.JSON(http.StatusForbidden, gin.H{"error": "cannot change your own role"})
+		respondError(c, http.StatusForbidden, ErrCannotModifySelf, "cannot change your own role")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (r *Router) updateUser(c *gin.Context) {
 
 	// Update user
 	if err := r.db.UpdateUser(c.Request.Context(), id, email, role, name); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user"})
+		respondInternalError(c, ErrDatabaseError, "failed to update user")
 		return
 	}
 
@@ -224,11 +224,11 @@ func (r *Router) updateUser(c *gin.Context) {
 	if req.Password != "" {
 		passwordHash, err := auth.HashPassword(req.Password, r.config.Auth.BCryptCost)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
+			respondInternalError(c, ErrPasswordHashFailed, "failed to hash password")
 			return
 		}
 		if err := r.db.UpdateUserPassword(c.Request.Context(), id, passwordHash); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+			respondInternalError(c, ErrDatabaseError, "failed to update password")
 			return
 		}
 	}
@@ -243,35 +243,35 @@ func (r *Router) deleteUser(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	// Get user to verify ownership
 	user, err := r.db.GetUserByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if user == nil || user.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		respondNotFound(c, ErrUserNotFound, "user not found")
 		return
 	}
 
 	// Prevent deleting self
 	claims, err := getUserClaims(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	if claims.UserID == id {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot delete yourself"})
+		respondBadRequest(c, ErrCannotModifySelf, "cannot delete yourself")
 		return
 	}
 
 	// Delete user sessions first
 	if err := r.db.DeleteUserSessions(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user sessions"})
+		respondInternalError(c, ErrDatabaseError, "failed to delete user sessions")
 		return
 	}
 
@@ -280,7 +280,7 @@ func (r *Router) deleteUser(c *gin.Context) {
 
 	// Delete user
 	if err := r.db.DeleteUser(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete user"})
+		respondInternalError(c, ErrDatabaseError, "failed to delete user")
 		return
 	}
 

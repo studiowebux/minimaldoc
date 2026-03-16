@@ -18,13 +18,13 @@ type FeedbackRequest struct {
 func (r *Router) submitFeedback(c *gin.Context) {
 	var req FeedbackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	err := r.db.RecordRating(c.Request.Context(), req.SiteID, req.Path, req.Rating, req.Feedback, req.SessionHash)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record"})
+		respondInternalError(c, ErrDatabaseError, "failed to record")
 		return
 	}
 
@@ -34,13 +34,13 @@ func (r *Router) submitFeedback(c *gin.Context) {
 func (r *Router) feedbackStats(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	avgRating, totalRatings, err := r.db.GetRatingStats(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -53,13 +53,13 @@ func (r *Router) feedbackStats(c *gin.Context) {
 func (r *Router) feedbackList(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	ratings, err := r.db.ListRatings(c.Request.Context(), siteID, 50, 0)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 

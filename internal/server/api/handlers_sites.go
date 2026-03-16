@@ -14,7 +14,7 @@ import (
 func (r *Router) listSites(c *gin.Context) {
 	sites, err := r.db.ListSites(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list sites"})
+		respondInternalError(c, ErrDatabaseError, "failed to list sites")
 		return
 	}
 
@@ -47,21 +47,21 @@ func (r *Router) createSite(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	siteID := uuid.New().String()
 	apiKey, err := auth.GenerateAPIKey()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate API key"})
+		respondInternalError(c, ErrAPIKeyGenFailed, "failed to generate API key")
 		return
 	}
 	apiKeyHash := auth.HashAPIKey(apiKey)
 
 	site, err := r.db.CreateSite(c.Request.Context(), siteID, req.Name, req.Domain, apiKeyHash)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create site"})
+		respondInternalError(c, ErrSiteCreationFailed, "failed to create site")
 		return
 	}
 
@@ -79,11 +79,11 @@ func (r *Router) getSite(c *gin.Context) {
 
 	site, err := r.db.GetSiteByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if site == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "site not found"})
+		respondNotFound(c, ErrSiteNotFound, "site not found")
 		return
 	}
 
@@ -105,11 +105,11 @@ func (r *Router) updateSite(c *gin.Context) {
 
 	site, err := r.db.GetSiteByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if site == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "site not found"})
+		respondNotFound(c, ErrSiteNotFound, "site not found")
 		return
 	}
 
@@ -119,7 +119,7 @@ func (r *Router) updateSite(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -134,7 +134,7 @@ func (r *Router) updateSite(c *gin.Context) {
 	}
 
 	if err := r.db.UpdateSite(c.Request.Context(), id, name, domain); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update site"})
+		respondInternalError(c, ErrSiteUpdateFailed, "failed to update site")
 		return
 	}
 
@@ -146,16 +146,16 @@ func (r *Router) deleteSite(c *gin.Context) {
 
 	site, err := r.db.GetSiteByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if site == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "site not found"})
+		respondNotFound(c, ErrSiteNotFound, "site not found")
 		return
 	}
 
 	if err := r.db.DeleteSite(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete site"})
+		respondInternalError(c, ErrSiteDeleteFailed, "failed to delete site")
 		return
 	}
 
@@ -167,23 +167,23 @@ func (r *Router) regenerateAPIKey(c *gin.Context) {
 
 	site, err := r.db.GetSiteByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if site == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "site not found"})
+		respondNotFound(c, ErrSiteNotFound, "site not found")
 		return
 	}
 
 	apiKey, err := auth.GenerateAPIKey()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate API key"})
+		respondInternalError(c, ErrAPIKeyGenFailed, "failed to generate API key")
 		return
 	}
 	apiKeyHash := auth.HashAPIKey(apiKey)
 
 	if err := r.db.UpdateSiteAPIKey(c.Request.Context(), id, apiKeyHash); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update API key"})
+		respondInternalError(c, ErrDatabaseError, "failed to update API key")
 		return
 	}
 

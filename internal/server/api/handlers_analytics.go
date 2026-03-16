@@ -23,7 +23,7 @@ type TrackRequest struct {
 func (r *Router) trackPageView(c *gin.Context) {
 	var req TrackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -31,7 +31,7 @@ func (r *Router) trackPageView(c *gin.Context) {
 		req.SiteID, req.Path, req.Referrer, req.Country,
 		req.DeviceType, req.Browser, req.OS, req.SessionHash)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record"})
+		respondInternalError(c, ErrDatabaseError, "failed to record")
 		return
 	}
 
@@ -51,21 +51,21 @@ type EventRequest struct {
 func (r *Router) trackEvent(c *gin.Context) {
 	var req EventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		respondBadRequest(c, ErrInvalidRequest, "invalid request")
 		return
 	}
 
 	// Validate site exists to prevent orphaned events
 	site, err := r.db.GetSiteByID(c.Request.Context(), req.SiteID)
 	if err != nil || site == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid site_id"})
+		respondBadRequest(c, ErrSiteInvalid, "invalid site_id")
 		return
 	}
 
 	err = r.db.RecordEvent(c.Request.Context(),
 		req.SiteID, req.Name, req.Category, req.Path, req.Value, req.SessionHash)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to record event"})
+		respondInternalError(c, ErrDatabaseError, "failed to record event")
 		return
 	}
 
@@ -84,7 +84,7 @@ type DurationRequest struct {
 func (r *Router) trackDuration(c *gin.Context) {
 	var req DurationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
@@ -96,7 +96,7 @@ func (r *Router) trackDuration(c *gin.Context) {
 
 	err := r.db.UpdatePageViewDurationAndBounce(c.Request.Context(), req.SiteID, req.Path, req.SessionHash, duration, req.IsBounce)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update duration"})
+		respondInternalError(c, ErrDatabaseError, "failed to update duration")
 		return
 	}
 
@@ -106,14 +106,14 @@ func (r *Router) trackDuration(c *gin.Context) {
 func (r *Router) analyticsSummary(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	since := time.Now().Add(-24 * time.Hour) // Last 24 hours
 
 	totalViews, uniqueSessions, err := r.db.GetPageViewStats(c.Request.Context(), siteID, since)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -133,14 +133,14 @@ func (r *Router) analyticsSummary(c *gin.Context) {
 func (r *Router) analyticsPages(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	since := time.Now().Add(-7 * 24 * time.Hour) // Last 7 days
 
 	pages, err := r.db.GetTopPages(c.Request.Context(), siteID, since, 50)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 

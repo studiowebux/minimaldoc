@@ -310,7 +310,7 @@ func forumUserStatsToResponse(s *store.ForumUserStats) ForumUserStatsResponse {
 func (r *Router) listForumCategories(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
@@ -327,7 +327,7 @@ func (r *Router) listForumCategories(c *gin.Context) {
 		categories, err = r.db.ListForumCategories(c.Request.Context(), siteID, "public")
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -341,18 +341,18 @@ func (r *Router) listForumCategories(c *gin.Context) {
 func (r *Router) getForumCategory(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	category, err := r.db.GetForumCategoryBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if category == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "category not found"})
+		respondNotFound(c, ErrCategoryNotFound, "category not found")
 		return
 	}
 
@@ -362,7 +362,7 @@ func (r *Router) getForumCategory(c *gin.Context) {
 func (r *Router) listForumTopics(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
@@ -374,7 +374,7 @@ func (r *Router) listForumTopics(c *gin.Context) {
 
 	topics, total, err := r.db.ListForumTopics(c.Request.Context(), siteID, categoryID, status, search, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -405,18 +405,18 @@ func (r *Router) listForumTopics(c *gin.Context) {
 func (r *Router) getForumTopic(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	topic, err := r.db.GetForumTopicBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
@@ -440,18 +440,18 @@ func (r *Router) getForumTopic(c *gin.Context) {
 func (r *Router) getForumTopicPosts(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	topic, err := r.db.GetForumTopicBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
@@ -459,7 +459,7 @@ func (r *Router) getForumTopicPosts(c *gin.Context) {
 
 	posts, total, err := r.db.ListForumPosts(c.Request.Context(), topic.ID, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -485,13 +485,13 @@ func (r *Router) getForumTopicPosts(c *gin.Context) {
 func (r *Router) searchForum(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	query := c.Query("q")
 	if query == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "search query required"})
+		respondBadRequest(c, ErrMissingParams, "search query required")
 		return
 	}
 
@@ -499,7 +499,7 @@ func (r *Router) searchForum(c *gin.Context) {
 
 	topics, total, err := r.db.SearchForum(c.Request.Context(), siteID, query, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -519,13 +519,13 @@ func (r *Router) searchForum(c *gin.Context) {
 func (r *Router) listForumTags(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	tags, err := r.db.ListForumTags(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -539,18 +539,18 @@ func (r *Router) listForumTags(c *gin.Context) {
 func (r *Router) getForumTopicsByTag(c *gin.Context) {
 	siteID := r.getSiteIDWithFallback(c)
 	if siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	tag, err := r.db.GetForumTagBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if tag == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "tag not found"})
+		respondNotFound(c, ErrTagNotFound, "tag not found")
 		return
 	}
 
@@ -558,7 +558,7 @@ func (r *Router) getForumTopicsByTag(c *gin.Context) {
 
 	topics, total, err := r.db.ListForumTopicsByTag(c.Request.Context(), siteID, tag.ID, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -581,44 +581,44 @@ func (r *Router) getForumTopicsByTag(c *gin.Context) {
 func (r *Router) createForumTopic(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	// Check if user is banned
 	banned, err := r.db.IsUserBanned(c.Request.Context(), siteID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if banned {
-		c.JSON(http.StatusForbidden, gin.H{"error": "you are banned from the forum"})
+		respondError(c, http.StatusForbidden, ErrBanned, "you are banned from the forum")
 		return
 	}
 
 	// Check rate limit
 	count, _ := r.db.CountUserTopicsToday(c.Request.Context(), siteID, userID)
 	if count >= int64(r.config.Forum.MaxTopicsPerDay) {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily topic limit reached"})
+		respondError(c, http.StatusTooManyRequests, ErrDailyLimitReached, "daily topic limit reached")
 		return
 	}
 
 	var req ForumTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Sanitize content
 	content := sanitizeComment(req.Content)
 	if content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid content"})
+		respondBadRequest(c, ErrInvalidContent, "invalid content")
 		return
 	}
 
@@ -639,7 +639,7 @@ func (r *Router) createForumTopic(c *gin.Context) {
 
 	topic, err := r.db.CreateForumTopic(c.Request.Context(), id, siteID, req.CategoryID, userID, slug, req.Title, content, status)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create topic"})
+		respondInternalError(c, ErrTopicCreationFailed, "failed to create topic")
 		return
 	}
 
@@ -683,66 +683,66 @@ func (r *Router) createForumTopic(c *gin.Context) {
 func (r *Router) createForumPost(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 	slug := c.Param("slug")
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	// Check if user is banned
 	banned, err := r.db.IsUserBanned(c.Request.Context(), siteID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if banned {
-		c.JSON(http.StatusForbidden, gin.H{"error": "you are banned from the forum"})
+		respondError(c, http.StatusForbidden, ErrBanned, "you are banned from the forum")
 		return
 	}
 
 	topic, err := r.db.GetForumTopicBySlug(c.Request.Context(), siteID, slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
 	if topic.Status == "locked" || topic.Status == "closed" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "topic is closed for new replies"})
+		respondError(c, http.StatusForbidden, ErrTopicClosed, "topic is closed for new replies")
 		return
 	}
 
 	// Check rate limit
 	count, _ := r.db.CountUserPostsToday(c.Request.Context(), siteID, userID)
 	if count >= int64(r.config.Forum.MaxPostsPerDay) {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily post limit reached"})
+		respondError(c, http.StatusTooManyRequests, ErrDailyLimitReached, "daily post limit reached")
 		return
 	}
 
 	var req ForumPostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	content := sanitizeComment(req.Content)
 	if content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid content"})
+		respondBadRequest(c, ErrInvalidContent, "invalid content")
 		return
 	}
 
 	id := uuid.New().String()
 	post, err := r.db.CreateForumPost(c.Request.Context(), id, siteID, topic.ID, req.ParentID, userID, content)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create post"})
+		respondInternalError(c, ErrInternalError, "failed to create post")
 		return
 	}
 
@@ -820,35 +820,35 @@ func (r *Router) updateForumTopic(c *gin.Context) {
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	topic, err := r.db.GetForumTopicByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
 	// Check ownership
 	if !topic.AuthorID.Valid || topic.AuthorID.String != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "can only edit own topics"})
+		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only edit own topics")
 		return
 	}
 
 	var req ForumTopicRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	content := sanitizeComment(req.Content)
 	if err := r.db.UpdateForumTopic(c.Request.Context(), id, req.Title, content); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update topic"})
+		respondInternalError(c, ErrInternalError, "failed to update topic")
 		return
 	}
 
@@ -860,35 +860,35 @@ func (r *Router) updateForumPost(c *gin.Context) {
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	post, err := r.db.GetForumPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrNotFound, "post not found")
 		return
 	}
 
 	// Check ownership
 	if !post.AuthorID.Valid || post.AuthorID.String != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "can only edit own posts"})
+		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only edit own posts")
 		return
 	}
 
 	var req ForumPostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	content := sanitizeComment(req.Content)
 	if err := r.db.UpdateForumPost(c.Request.Context(), id, content, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update post"})
+		respondInternalError(c, ErrInternalError, "failed to update post")
 		return
 	}
 
@@ -900,28 +900,28 @@ func (r *Router) deleteForumTopic(c *gin.Context) {
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	topic, err := r.db.GetForumTopicByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
 	// Check ownership
 	if !topic.AuthorID.Valid || topic.AuthorID.String != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "can only delete own topics"})
+		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only delete own topics")
 		return
 	}
 
 	if err := r.db.DeleteForumTopic(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete topic"})
+		respondInternalError(c, ErrInternalError, "failed to delete topic")
 		return
 	}
 
@@ -933,28 +933,28 @@ func (r *Router) deleteForumPost(c *gin.Context) {
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	post, err := r.db.GetForumPostByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrNotFound, "post not found")
 		return
 	}
 
 	// Check ownership
 	if !post.AuthorID.Valid || post.AuthorID.String != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "can only delete own posts"})
+		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only delete own posts")
 		return
 	}
 
 	if err := r.db.DeleteForumPost(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete post"})
+		respondInternalError(c, ErrInternalError, "failed to delete post")
 		return
 	}
 
@@ -965,19 +965,19 @@ func (r *Router) likeForumTopic(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	topic, err := r.db.GetForumTopicByID(c.Request.Context(), id)
 	if err != nil || topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
@@ -986,7 +986,7 @@ func (r *Router) likeForumTopic(c *gin.Context) {
 	if liked {
 		// Unlike
 		if err := r.db.UnlikeForumTopic(c.Request.Context(), userID, id); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unlike"})
+			respondInternalError(c, ErrInternalError, "failed to unlike")
 			return
 		}
 		// Return HTML for HTMX or JSON for API
@@ -1008,7 +1008,7 @@ func (r *Router) likeForumTopic(c *gin.Context) {
 	// Like
 	likeID := uuid.New().String()
 	if err := r.db.LikeForumTopic(c.Request.Context(), likeID, siteID, userID, id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to like"})
+		respondInternalError(c, ErrInternalError, "failed to like")
 		return
 	}
 
@@ -1042,19 +1042,19 @@ func (r *Router) likeForumPost(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	post, err := r.db.GetForumPostByID(c.Request.Context(), id)
 	if err != nil || post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrNotFound, "post not found")
 		return
 	}
 
@@ -1066,7 +1066,7 @@ func (r *Router) likeForumPost(c *gin.Context) {
 	if liked {
 		// Unlike
 		if err := r.db.UnlikeForumPost(c.Request.Context(), userID, id); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unlike"})
+			respondInternalError(c, ErrInternalError, "failed to unlike")
 			return
 		}
 		nowLiked = false
@@ -1074,7 +1074,7 @@ func (r *Router) likeForumPost(c *gin.Context) {
 		// Like
 		likeID := uuid.New().String()
 		if err := r.db.LikeForumPost(c.Request.Context(), likeID, siteID, userID, id); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to like"})
+			respondInternalError(c, ErrInternalError, "failed to like")
 			return
 		}
 		nowLiked = true
@@ -1131,13 +1131,13 @@ func (r *Router) bookmarkForumTopic(c *gin.Context) {
 	id := c.Param("id")
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
@@ -1146,7 +1146,7 @@ func (r *Router) bookmarkForumTopic(c *gin.Context) {
 	if bookmarked {
 		// Remove bookmark
 		if err := r.db.DeleteForumBookmark(c.Request.Context(), userID, id); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove bookmark"})
+			respondInternalError(c, ErrInternalError, "failed to remove bookmark")
 			return
 		}
 		if c.GetHeader("HX-Request") == "true" {
@@ -1162,7 +1162,7 @@ func (r *Router) bookmarkForumTopic(c *gin.Context) {
 	// Add bookmark
 	bookmarkID := uuid.New().String()
 	if err := r.db.CreateForumBookmark(c.Request.Context(), bookmarkID, siteID, userID, id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to bookmark"})
+		respondInternalError(c, ErrInternalError, "failed to bookmark")
 		return
 	}
 
@@ -1178,30 +1178,30 @@ func (r *Router) bookmarkForumTopic(c *gin.Context) {
 func (r *Router) flagForumContent(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil || siteID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "site_id required"})
+		respondBadRequest(c, ErrSiteIDRequired, "site_id required")
 		return
 	}
 
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	var req ForumFlagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	if req.TopicID == "" && req.PostID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "topic_id or post_id required"})
+		respondBadRequest(c, ErrMissingParams, "topic_id or post_id required")
 		return
 	}
 
 	id := uuid.New().String()
 	if err := r.db.CreateForumFlag(c.Request.Context(), id, siteID, userID, req.TopicID, req.PostID, req.Reason, req.Description); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit flag"})
+		respondInternalError(c, ErrInternalError, "failed to submit flag")
 		return
 	}
 
@@ -1211,7 +1211,7 @@ func (r *Router) flagForumContent(c *gin.Context) {
 func (r *Router) getForumNotifications(c *gin.Context) {
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
@@ -1220,7 +1220,7 @@ func (r *Router) getForumNotifications(c *gin.Context) {
 
 	notifications, err := r.db.ListForumNotifications(c.Request.Context(), userID, unreadOnly, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1236,7 +1236,7 @@ func (r *Router) markNotificationRead(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.MarkNotificationRead(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark as read"})
+		respondInternalError(c, ErrInternalError, "failed to mark as read")
 		return
 	}
 
@@ -1246,12 +1246,12 @@ func (r *Router) markNotificationRead(c *gin.Context) {
 func (r *Router) markAllNotificationsRead(c *gin.Context) {
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
 	if err := r.db.MarkAllNotificationsRead(c.Request.Context(), userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark all as read"})
+		respondInternalError(c, ErrInternalError, "failed to mark all as read")
 		return
 	}
 
@@ -1261,7 +1261,7 @@ func (r *Router) markAllNotificationsRead(c *gin.Context) {
 func (r *Router) getUserBookmarks(c *gin.Context) {
 	userID, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
 		return
 	}
 
@@ -1269,7 +1269,7 @@ func (r *Router) getUserBookmarks(c *gin.Context) {
 
 	bookmarks, err := r.db.ListUserBookmarks(c.Request.Context(), userID, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1283,7 +1283,7 @@ func (r *Router) adminListForumCategories(c *gin.Context) {
 
 	categories, err := r.db.ListForumCategories(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1300,11 +1300,11 @@ func (r *Router) adminGetForumCategory(c *gin.Context) {
 
 	category, err := r.db.GetForumCategoryByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if category == nil || category.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "category not found"})
+		respondNotFound(c, ErrCategoryNotFound, "category not found")
 		return
 	}
 
@@ -1314,31 +1314,31 @@ func (r *Router) adminGetForumCategory(c *gin.Context) {
 func (r *Router) adminCreateForumCategory(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	var req ForumCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Check slug uniqueness
 	existing, err := r.db.GetForumCategoryBySlug(c.Request.Context(), siteID, req.Slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if existing != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "slug already exists"})
+		respondError(c, http.StatusConflict, ErrConflict, "slug already exists")
 		return
 	}
 
 	id := uuid.New().String()
 	category, err := r.db.CreateForumCategory(c.Request.Context(), id, siteID, req.ParentID, req.Slug, req.Name, req.Description, req.Color, req.Icon, req.Position)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create category"})
+		respondInternalError(c, ErrInternalError, "failed to create category")
 		return
 	}
 
@@ -1353,12 +1353,12 @@ func (r *Router) adminUpdateForumCategory(c *gin.Context) {
 
 	var req ForumCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	if err := r.db.UpdateForumCategory(c.Request.Context(), id, req.Slug, req.Name, req.Description, req.Color, req.Icon, req.Position, req.IsLocked); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update category"})
+		respondInternalError(c, ErrInternalError, "failed to update category")
 		return
 	}
 
@@ -1379,7 +1379,7 @@ func (r *Router) adminDeleteForumCategory(c *gin.Context) {
 	}
 
 	if err := r.db.DeleteForumCategory(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete category"})
+		respondInternalError(c, ErrInternalError, "failed to delete category")
 		return
 	}
 
@@ -1394,13 +1394,13 @@ func (r *Router) adminPinForumTopic(c *gin.Context) {
 
 	topic, err := r.db.GetForumTopicByID(c.Request.Context(), id)
 	if err != nil || topic == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "topic not found"})
+		respondNotFound(c, ErrTopicNotFound, "topic not found")
 		return
 	}
 
 	// Toggle pin
 	if err := r.db.PinForumTopic(c.Request.Context(), id, !topic.IsPinned); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to pin topic"})
+		respondInternalError(c, ErrInternalError, "failed to pin topic")
 		return
 	}
 
@@ -1415,7 +1415,7 @@ func (r *Router) adminLockForumTopic(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.UpdateForumTopicStatus(c.Request.Context(), id, "locked"); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to lock topic"})
+		respondInternalError(c, ErrInternalError, "failed to lock topic")
 		return
 	}
 
@@ -1426,7 +1426,7 @@ func (r *Router) adminCloseForumTopic(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.UpdateForumTopicStatus(c.Request.Context(), id, "closed"); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to close topic"})
+		respondInternalError(c, ErrInternalError, "failed to close topic")
 		return
 	}
 
@@ -1437,7 +1437,7 @@ func (r *Router) adminOpenForumTopic(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.UpdateForumTopicStatus(c.Request.Context(), id, "open"); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open topic"})
+		respondInternalError(c, ErrInternalError, "failed to open topic")
 		return
 	}
 
@@ -1450,12 +1450,12 @@ func (r *Router) adminMarkSolution(c *gin.Context) {
 
 	post, err := r.db.GetForumPostByID(c.Request.Context(), postID)
 	if err != nil || post == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		respondNotFound(c, ErrNotFound, "post not found")
 		return
 	}
 
 	if err := r.db.MarkPostAsSolution(c.Request.Context(), postID, post.TopicID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to mark solution"})
+		respondInternalError(c, ErrInternalError, "failed to mark solution")
 		return
 	}
 
@@ -1485,7 +1485,7 @@ func (r *Router) adminDeleteForumTopic(c *gin.Context) {
 	}
 
 	if err := r.db.DeleteForumTopic(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete topic"})
+		respondInternalError(c, ErrInternalError, "failed to delete topic")
 		return
 	}
 
@@ -1499,7 +1499,7 @@ func (r *Router) adminDeleteForumPost(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.DeleteForumPost(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete post"})
+		respondInternalError(c, ErrInternalError, "failed to delete post")
 		return
 	}
 
@@ -1520,7 +1520,7 @@ func (r *Router) adminListForumTopics(c *gin.Context) {
 
 	topics, total, err := r.db.ListForumTopics(c.Request.Context(), siteID, categoryID, status, search, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1548,7 +1548,7 @@ func (r *Router) adminListForumFlags(c *gin.Context) {
 
 	flags, total, err := r.db.ListForumFlags(c.Request.Context(), siteID, status, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1567,12 +1567,12 @@ func (r *Router) adminResolveForumFlag(c *gin.Context) {
 		ResolutionNote string `json:"resolution_note"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	if err := r.db.ResolveForumFlag(c.Request.Context(), id, req.Status, userID, req.ResolutionNote); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve flag"})
+		respondInternalError(c, ErrInternalError, "failed to resolve flag")
 		return
 	}
 
@@ -1585,13 +1585,13 @@ func (r *Router) adminBanUser(c *gin.Context) {
 
 	var req ForumBanRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	id := uuid.New().String()
 	if err := r.db.CreateForumBan(c.Request.Context(), id, siteID, req.UserID, bannerID, req.Reason, req.ExpiresAt, req.IsPermanent); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to ban user"})
+		respondInternalError(c, ErrInternalError, "failed to ban user")
 		return
 	}
 
@@ -1606,7 +1606,7 @@ func (r *Router) adminUnbanUser(c *gin.Context) {
 	userID := c.Param("id")
 
 	if err := r.db.DeleteForumBan(c.Request.Context(), siteID, userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to unban user"})
+		respondInternalError(c, ErrInternalError, "failed to unban user")
 		return
 	}
 
@@ -1623,7 +1623,7 @@ func (r *Router) adminListForumBans(c *gin.Context) {
 
 	bans, total, err := r.db.ListForumBans(c.Request.Context(), siteID, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1638,7 +1638,7 @@ func (r *Router) adminListForumTags(c *gin.Context) {
 
 	tags, err := r.db.ListForumTags(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1655,11 +1655,11 @@ func (r *Router) adminGetForumTag(c *gin.Context) {
 
 	tag, err := r.db.GetForumTagByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 	if tag == nil || tag.SiteID != siteID {
-		c.JSON(http.StatusNotFound, gin.H{"error": "tag not found"})
+		respondNotFound(c, ErrTagNotFound, "tag not found")
 		return
 	}
 
@@ -1671,21 +1671,21 @@ func (r *Router) adminCreateForumTag(c *gin.Context) {
 
 	var req ForumTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Check uniqueness
 	existing, _ := r.db.GetForumTagBySlug(c.Request.Context(), siteID, req.Slug)
 	if existing != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "tag already exists"})
+		respondError(c, http.StatusConflict, ErrTagExists, "tag already exists")
 		return
 	}
 
 	id := uuid.New().String()
 	tag, err := r.db.CreateForumTag(c.Request.Context(), id, siteID, req.Slug, req.Name, req.Description, req.Color)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create tag"})
+		respondInternalError(c, ErrInternalError, "failed to create tag")
 		return
 	}
 
@@ -1697,12 +1697,12 @@ func (r *Router) adminUpdateForumTag(c *gin.Context) {
 
 	var req ForumTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	if err := r.db.UpdateForumTag(c.Request.Context(), id, req.Slug, req.Name, req.Description, req.Color); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update tag"})
+		respondInternalError(c, ErrInternalError, "failed to update tag")
 		return
 	}
 
@@ -1713,7 +1713,7 @@ func (r *Router) adminDeleteForumTag(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := r.db.DeleteForumTag(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete tag"})
+		respondInternalError(c, ErrInternalError, "failed to delete tag")
 		return
 	}
 
@@ -1725,7 +1725,7 @@ func (r *Router) getForumStats(c *gin.Context) {
 
 	categories, topics, posts, users, err := r.db.GetForumStats(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 
@@ -1755,7 +1755,7 @@ func (r *Router) getForumLeaderboard(c *gin.Context) {
 
 	stats, err := r.db.GetForumLeaderboard(c.Request.Context(), siteID, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
+		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
 

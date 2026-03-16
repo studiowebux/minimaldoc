@@ -24,7 +24,7 @@ func (r *Router) adminAuditLog(c *gin.Context) {
 func (r *Router) listAuditLogsAPI(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "UNAUTHORIZED"})
+		respondUnauthorized(c, ErrUnauthorized, "UNAUTHORIZED")
 		return
 	}
 
@@ -36,7 +36,7 @@ func (r *Router) listAuditLogsAPI(c *gin.Context) {
 
 	logs, total, err := r.db.ListAuditLogs(c.Request.Context(), siteID, action, entityType, limit, offset)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DATABASE_ERROR"})
+		respondInternalError(c, ErrDatabaseError, "DATABASE_ERROR")
 		return
 	}
 

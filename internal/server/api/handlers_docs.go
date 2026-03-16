@@ -56,7 +56,7 @@ type UpdateDocAccessRequest struct {
 func (r *Router) checkDocAccess(c *gin.Context) {
 	var req CheckAccessRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "path parameter required"})
+		respondBadRequest(c, ErrPathRequired, "path parameter required")
 		return
 	}
 
@@ -65,13 +65,13 @@ func (r *Router) checkDocAccess(c *gin.Context) {
 		// Try to get from API key header
 		apiKey := c.GetHeader("X-API-Key")
 		if apiKey == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "site context required"})
+			respondBadRequest(c, ErrMissingSiteContext, "site context required")
 			return
 		}
 		apiKeyHash := auth.HashAPIKey(apiKey)
 		site, err := r.db.GetSiteByAPIKey(c.Request.Context(), apiKeyHash)
 		if err != nil || site == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid API key"})
+			respondBadRequest(c, ErrInvalidAPIKey, "invalid API key")
 			return
 		}
 		siteID = site.ID
@@ -79,7 +79,7 @@ func (r *Router) checkDocAccess(c *gin.Context) {
 
 	rule, err := r.db.CheckDocAccess(c.Request.Context(), siteID, req.Path)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check access"})
+		respondInternalError(c, ErrDatabaseError, "failed to check access")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (r *Router) checkDocAccess(c *gin.Context) {
 func (r *Router) getDocContent(c *gin.Context) {
 	docPath := c.Param("path")
 	if docPath == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "path required"})
+		respondBadRequest(c, ErrPathRequired, "path required")
 		return
 	}
 
@@ -123,14 +123,14 @@ func (r *Router) getDocContent(c *gin.Context) {
 
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	// Check access rule
 	rule, err := r.db.CheckDocAccess(c.Request.Context(), siteID, docPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check access"})
+		respondInternalError(c, ErrDatabaseError, "failed to check access")
 		return
 	}
 
@@ -138,11 +138,11 @@ func (r *Router) getDocContent(c *gin.Context) {
 		// Path is protected, verify role
 		userRole, exists := c.Get("user_role")
 		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+			respondUnauthorized(c, ErrAuthRequired, "authentication required")
 			return
 		}
 		if !hasRequiredRole(userRole.(string), rule.RequiredRole) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions", "required_role": rule.RequiredRole})
+			respondError(c, http.StatusForbidden, ErrForbidden, "insufficient permissions")
 			return
 		}
 	}
@@ -157,7 +157,7 @@ func (r *Router) getDocContent(c *gin.Context) {
 	// Get absolute path of docs directory for comparison
 	absDocsDir, err := filepath.Abs(docsDir)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve docs directory"})
+		respondInternalError(c, ErrInternalError, "failed to resolve docs directory")
 		return
 	}
 
@@ -168,14 +168,14 @@ func (r *Router) getDocContent(c *gin.Context) {
 	// Get absolute path of the requested file
 	absFullPath, err := filepath.Abs(fullPath)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path"})
+		respondBadRequest(c, ErrInvalidPath, "invalid path")
 		return
 	}
 
 	// Security: verify the resolved path is still inside the docs directory
 	// This prevents path traversal attacks like /../../../etc/passwd
 	if !strings.HasPrefix(absFullPath, absDocsDir+string(filepath.Separator)) && absFullPath != absDocsDir {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
@@ -187,11 +187,11 @@ func (r *Router) getDocContent(c *gin.Context) {
 			fullPath = fullPath + ".html"
 			info, err = os.Stat(fullPath)
 			if err != nil {
-				c.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+				respondNotFound(c, ErrDocNotFound, "document not found")
 				return
 			}
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to access document"})
+			respondInternalError(c, ErrInternalError, "failed to access document")
 			return
 		}
 	}
@@ -199,7 +199,7 @@ func (r *Router) getDocContent(c *gin.Context) {
 	if info.IsDir() {
 		fullPath = filepath.Join(fullPath, "index.html")
 		if _, err := os.Stat(fullPath); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+			respondNotFound(c, ErrDocNotFound, "document not found")
 			return
 		}
 	}
@@ -208,18 +208,18 @@ func (r *Router) getDocContent(c *gin.Context) {
 	// This prevents symlink attacks that escape the allowed directory
 	realPath, err := filepath.EvalSymlinks(fullPath)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "document not found"})
+		respondNotFound(c, ErrDocNotFound, "document not found")
 		return
 	}
 	if !strings.HasPrefix(realPath, absDocsDir+string(filepath.Separator)) && realPath != absDocsDir {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
 	// Serve the file
 	file, err := os.Open(realPath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read document"})
+		respondInternalError(c, ErrInternalError, "failed to read document")
 		return
 	}
 	defer file.Close()
@@ -250,13 +250,13 @@ func (r *Router) getDocContent(c *gin.Context) {
 func (r *Router) listDocAccessRules(c *gin.Context) {
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 
 	rules, err := r.db.ListDocAccess(c.Request.Context(), siteID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list rules"})
+		respondInternalError(c, ErrDatabaseError, "failed to list rules")
 		return
 	}
 
@@ -280,13 +280,13 @@ func (r *Router) listDocAccessRules(c *gin.Context) {
 func (r *Router) createDocAccessRule(c *gin.Context) {
 	var req CreateDocAccessRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	id := uuid.New().String()
@@ -294,10 +294,10 @@ func (r *Router) createDocAccessRule(c *gin.Context) {
 	rule, err := r.db.CreateDocAccess(c.Request.Context(), id, siteID, req.PathPattern, req.RequiredRole, req.Description)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
-			c.JSON(http.StatusConflict, gin.H{"error": "rule for this path pattern already exists"})
+			respondError(c, http.StatusConflict, ErrRuleExists, "rule for this path pattern already exists")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to create rule")
 		return
 	}
 
@@ -316,46 +316,46 @@ func (r *Router) createDocAccessRule(c *gin.Context) {
 func (r *Router) updateDocAccessRule(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "rule ID required"})
+		respondBadRequest(c, ErrRuleIDRequired, "rule ID required")
 		return
 	}
 
 	var req UpdateDocAccessRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
 	}
 
 	// Verify rule exists and belongs to site
 	existing, err := r.db.GetDocAccessByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to check rule")
 		return
 	}
 	if existing == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "rule not found"})
+		respondNotFound(c, ErrRuleNotFound, "rule not found")
 		return
 	}
 
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	if existing.SiteID != siteID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
 	if err := r.db.UpdateDocAccess(c.Request.Context(), id, req.PathPattern, req.RequiredRole, req.Description); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to update rule")
 		return
 	}
 
 	// Fetch updated rule
 	updated, err := r.db.GetDocAccessByID(c.Request.Context(), id)
 	if err != nil || updated == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch updated rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to fetch updated rule")
 		return
 	}
 	c.JSON(http.StatusOK, DocAccessRule{
@@ -373,33 +373,33 @@ func (r *Router) updateDocAccessRule(c *gin.Context) {
 func (r *Router) deleteDocAccessRule(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "rule ID required"})
+		respondBadRequest(c, ErrRuleIDRequired, "rule ID required")
 		return
 	}
 
 	// Verify rule exists and belongs to site
 	existing, err := r.db.GetDocAccessByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to check rule")
 		return
 	}
 	if existing == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "rule not found"})
+		respondNotFound(c, ErrRuleNotFound, "rule not found")
 		return
 	}
 
 	siteID, err := getSiteID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}
 	if existing.SiteID != siteID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
 	if err := r.db.DeleteDocAccess(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete rule"})
+		respondInternalError(c, ErrDatabaseError, "failed to delete rule")
 		return
 	}
 

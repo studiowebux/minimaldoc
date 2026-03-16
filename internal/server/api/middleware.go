@@ -175,7 +175,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 			keyHash := auth.HashAPIKey(apiKey)
 			site, err := db.GetSiteByAPIKey(c.Request.Context(), keyHash)
 			if err != nil || site == nil {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid API key"})
+				respondUnauthorized(c, ErrInvalidAPIKey, "invalid API key")
 				c.Abort()
 				return
 			}
@@ -202,7 +202,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 		}
 
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+			respondUnauthorized(c, ErrAuthRequired, "authentication required")
 			c.Abort()
 			return
 		}
@@ -210,7 +210,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 		// Validate JWT
 		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			respondUnauthorized(c, ErrUnauthorized, "invalid token")
 			c.Abort()
 			return
 		}
@@ -222,7 +222,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 				slog.Error("failed to check token revocation", "error", err)
 			}
 			if revoked {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "token revoked"})
+				respondUnauthorized(c, ErrUnauthorized, "token revoked")
 				c.Abort()
 				return
 			}
@@ -270,7 +270,7 @@ func OptionalAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc 
 		// Token present — validate it. Invalid/revoked tokens get 401, not anonymous fallback.
 		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			respondUnauthorized(c, ErrUnauthorized, "invalid token")
 			c.Abort()
 			return
 		}
@@ -278,7 +278,7 @@ func OptionalAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc 
 		// Check if token has been revoked
 		if claims.ID != "" {
 			if revoked, _ := db.IsTokenRevoked(c.Request.Context(), claims.ID); revoked {
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "token revoked"})
+				respondUnauthorized(c, ErrUnauthorized, "token revoked")
 				c.Abort()
 				return
 			}
@@ -311,7 +311,7 @@ func renderForbidden(c *gin.Context, message string) {
 			"Message": message,
 		})
 	} else {
-		c.JSON(http.StatusForbidden, gin.H{"error": message})
+		respondError(c, http.StatusForbidden, ErrForbidden, message)
 	}
 	c.Abort()
 }
@@ -380,7 +380,7 @@ func SiteMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		siteID, exists := c.Get("site_id")
 		if !exists {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "site context required"})
+			respondBadRequest(c, ErrMissingSiteContext, "site context required")
 			c.Abort()
 			return
 		}
