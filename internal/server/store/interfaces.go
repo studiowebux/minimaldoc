@@ -117,7 +117,7 @@ type ForumStore interface {
 	CreateForumCategory(ctx context.Context, id, siteID, parentID, slug, name, description, color, icon string, position int) (*ForumCategory, error)
 	GetForumCategoryByID(ctx context.Context, id string) (*ForumCategory, error)
 	GetForumCategoryBySlug(ctx context.Context, siteID, slug string) (*ForumCategory, error)
-	ListForumCategories(ctx context.Context, siteID string) ([]ForumCategory, error)
+	ListForumCategories(ctx context.Context, siteID string, visibilities ...string) ([]ForumCategory, error)
 	UpdateForumCategory(ctx context.Context, id, slug, name, description, color, icon string, position int, isLocked bool) error
 	DeleteForumCategory(ctx context.Context, id string) error
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // Category queries
@@ -23,14 +24,14 @@ func (db *DB) CreateForumCategory(ctx context.Context, id, siteID, parentID, slu
 
 func (db *DB) GetForumCategoryByID(ctx context.Context, id string) (*ForumCategory, error) {
 	query := `
-		SELECT id, site_id, parent_id, slug, name, description, color, icon, position, is_locked, created_at, updated_at
+		SELECT id, site_id, parent_id, slug, name, description, color, icon, position, is_locked, COALESCE(visibility, 'public'), created_at, updated_at
 		FROM forum_categories WHERE id = $1
 	`
 	var c ForumCategory
 	var isLocked int
 	err := db.QueryRowContext(ctx, query, id).Scan(
 		&c.ID, &c.SiteID, &c.ParentID, &c.Slug, &c.Name, &c.Description,
-		&c.Color, &c.Icon, &c.Position, &isLocked, &c.CreatedAt, &c.UpdatedAt,
+		&c.Color, &c.Icon, &c.Position, &isLocked, &c.Visibility, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -41,14 +42,14 @@ func (db *DB) GetForumCategoryByID(ctx context.Context, id string) (*ForumCatego
 
 func (db *DB) GetForumCategoryBySlug(ctx context.Context, siteID, slug string) (*ForumCategory, error) {
 	query := `
-		SELECT id, site_id, parent_id, slug, name, description, color, icon, position, is_locked, created_at, updated_at
+		SELECT id, site_id, parent_id, slug, name, description, color, icon, position, is_locked, COALESCE(visibility, 'public'), created_at, updated_at
 		FROM forum_categories WHERE site_id = $1 AND slug = $2
 	`
 	var c ForumCategory
 	var isLocked int
 	err := db.QueryRowContext(ctx, query, siteID, slug).Scan(
 		&c.ID, &c.SiteID, &c.ParentID, &c.Slug, &c.Name, &c.Description,
-		&c.Color, &c.Icon, &c.Position, &isLocked, &c.CreatedAt, &c.UpdatedAt,
+		&c.Color, &c.Icon, &c.Position, &isLocked, &c.Visibility, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -57,15 +58,27 @@ func (db *DB) GetForumCategoryBySlug(ctx context.Context, siteID, slug string) (
 	return &c, err
 }
 
-func (db *DB) ListForumCategories(ctx context.Context, siteID string) ([]ForumCategory, error) {
+// ListForumCategories returns categories filtered by visibility.
+// Pass nil for maxVisibility to return all (admin). Pass allowed visibilities for public/member access.
+func (db *DB) ListForumCategories(ctx context.Context, siteID string, visibilities ...string) ([]ForumCategory, error) {
 	query := `
-		SELECT fc.id, fc.site_id, fc.parent_id, fc.slug, fc.name, fc.description, fc.color, fc.icon, fc.position, fc.is_locked, fc.created_at, fc.updated_at,
+		SELECT fc.id, fc.site_id, fc.parent_id, fc.slug, fc.name, fc.description, fc.color, fc.icon, fc.position, fc.is_locked, COALESCE(fc.visibility, 'public'), fc.created_at, fc.updated_at,
 			COALESCE((SELECT COUNT(*) FROM forum_topics WHERE category_id = fc.id), 0) as topic_count
 		FROM forum_categories fc
 		WHERE fc.site_id = $1
-		ORDER BY fc.position, fc.name
 	`
-	rows, err := db.QueryContext(ctx, query, siteID)
+	args := []interface{}{siteID}
+	if len(visibilities) > 0 {
+		placeholders := make([]string, len(visibilities))
+		for i, v := range visibilities {
+			args = append(args, v)
+			placeholders[i] = fmt.Sprintf("$%d", i+2)
+		}
+		query += ` AND COALESCE(fc.visibility, 'public') IN (` + strings.Join(placeholders, ",") + `)`
+	}
+	query += ` ORDER BY fc.position, fc.name`
+
+	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +90,7 @@ func (db *DB) ListForumCategories(ctx context.Context, siteID string) ([]ForumCa
 		var isLocked int
 		if err := rows.Scan(
 			&c.ID, &c.SiteID, &c.ParentID, &c.Slug, &c.Name, &c.Description,
-			&c.Color, &c.Icon, &c.Position, &isLocked, &c.CreatedAt, &c.UpdatedAt, &c.TopicCount,
+			&c.Color, &c.Icon, &c.Position, &isLocked, &c.Visibility, &c.CreatedAt, &c.UpdatedAt, &c.TopicCount,
 		); err != nil {
 			return nil, err
 		}

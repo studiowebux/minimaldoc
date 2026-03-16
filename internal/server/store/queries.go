@@ -185,6 +185,7 @@ type ForumCategory struct {
 	Icon        sql.NullString
 	Position    int
 	IsLocked    bool
+	Visibility  string // public, members_only, staff_only
 	CreatedAt   string
 	UpdatedAt   string
 	// Joined/computed fields

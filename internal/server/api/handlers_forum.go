@@ -314,7 +314,18 @@ func (r *Router) listForumCategories(c *gin.Context) {
 		return
 	}
 
-	categories, err := r.db.ListForumCategories(c.Request.Context(), siteID)
+	// Filter categories by visibility based on auth status
+	var categories []store.ForumCategory
+	var err error
+	_, userErr := getUserID(c)
+	role, _ := getUserRole(c)
+	if role == "admin" || role == "editor" {
+		categories, err = r.db.ListForumCategories(c.Request.Context(), siteID)
+	} else if userErr == nil {
+		categories, err = r.db.ListForumCategories(c.Request.Context(), siteID, "public", "members_only")
+	} else {
+		categories, err = r.db.ListForumCategories(c.Request.Context(), siteID, "public")
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		return
