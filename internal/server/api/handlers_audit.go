@@ -17,6 +17,7 @@ func (r *Router) adminAuditLog(c *gin.Context) {
 		"Title":       "Audit Log",
 		"CurrentPage": "audit-log",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 

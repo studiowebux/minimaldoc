@@ -96,7 +96,7 @@
             </div>
         </main>
     </div>
-    <script>
+    <script nonce="{{.Nonce}}">
     document.getElementById('period-select').addEventListener('change', function() {
         var period = this.value;
         htmx.ajax('GET', '/admin/fragments/top-pages?period=' + period, '#top-pages');

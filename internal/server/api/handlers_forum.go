@@ -1877,6 +1877,7 @@ func (r *Router) adminForum(c *gin.Context) {
 		"Title":       "Forum",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -1886,6 +1887,7 @@ func (r *Router) adminForumCategories(c *gin.Context) {
 		"Title":       "Forum Categories",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -1895,6 +1897,7 @@ func (r *Router) adminForumTopics(c *gin.Context) {
 		"Title":       "Forum Topics",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -1904,6 +1907,7 @@ func (r *Router) adminForumFlags(c *gin.Context) {
 		"Title":       "Forum Flags",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -1913,6 +1917,7 @@ func (r *Router) adminForumBans(c *gin.Context) {
 		"Title":       "Forum Bans",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -1922,6 +1927,7 @@ func (r *Router) adminForumTags(c *gin.Context) {
 		"Title":       "Forum Tags",
 		"CurrentPage": "forum",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 

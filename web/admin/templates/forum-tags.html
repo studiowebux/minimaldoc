@@ -56,7 +56,7 @@
             </div>
         </main>
     </div>
-    <script>
+    <script nonce="{{.Nonce}}">
         async function loadTags() {
             try {
                 const res = await fetch('/api/forum/tags');

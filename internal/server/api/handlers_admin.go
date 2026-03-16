@@ -22,6 +22,7 @@ func (r *Router) adminDashboard(c *gin.Context) {
 		"Title":       "Dashboard",
 		"CurrentPage": "dashboard",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -123,6 +124,7 @@ func (r *Router) adminAnalytics(c *gin.Context) {
 		"Title":       "Analytics",
 		"CurrentPage": "analytics",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -136,6 +138,7 @@ func (r *Router) adminFeedback(c *gin.Context) {
 		"Title":       "Feedback",
 		"CurrentPage": "feedback",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -149,6 +152,7 @@ func (r *Router) adminSubscribers(c *gin.Context) {
 		"Title":       "Subscribers",
 		"CurrentPage": "subscribers",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -182,6 +186,7 @@ func (r *Router) adminSettings(c *gin.Context) {
 		"Title":       "Settings",
 		"CurrentPage": "settings",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 		"SiteID":      siteID,
 		"APIKey":      apiKey,
 		"ServerURL":   serverURL,

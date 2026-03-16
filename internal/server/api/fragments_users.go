@@ -16,6 +16,7 @@ func (r *Router) adminUsers(c *gin.Context) {
 		"User":        claims,
 		"AdminPath":   r.config.Server.AdminPath,
 		"CurrentPage": "users",
+		"Nonce":       cspNonce(c),
 	})
 }
 

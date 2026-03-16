@@ -12,6 +12,14 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
 
+// cspNonce returns the per-request CSP nonce from gin context.
+func cspNonce(c *gin.Context) string {
+	if nonce, ok := c.Get("csp_nonce"); ok {
+		return nonce.(string)
+	}
+	return ""
+}
+
 // Response helpers
 
 // respondHTML sends an HTML response with proper content type.
@@ -211,6 +219,7 @@ func (r *Router) getPublicPageData(c *gin.Context, currentPage string) gin.H {
 		"docs_url":      r.getDocsURL(),
 		"user":          user,
 		"authenticated": user != nil,
+		"Nonce":         cspNonce(c),
 	}
 }
 

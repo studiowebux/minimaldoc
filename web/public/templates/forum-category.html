@@ -36,7 +36,7 @@
 
     {{template "footer"}}
 
-    <script>
+    <script nonce="{{.Nonce}}">
     document.body.addEventListener('htmx:afterSwap', function(event) {
         if (event.detail.target.id === 'forum-category-header') {
             var nameEl = event.detail.target.querySelector('.forum-category-title, h1');

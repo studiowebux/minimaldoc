@@ -35,7 +35,7 @@
 
     {{template "footer"}}
 
-    <script>
+    <script nonce="{{.Nonce}}">
     document.body.addEventListener('htmx:afterSwap', function(event) {
         if (event.detail.target.id === 'blog-article-detail') {
             var titleEl = event.detail.target.querySelector('.blog-article-title, h1');

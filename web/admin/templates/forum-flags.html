@@ -56,7 +56,7 @@
             </div>
         </main>
     </div>
-    <script>
+    <script nonce="{{.Nonce}}">
         async function loadFlags() {
             const status = document.getElementById('status-filter').value;
             let url = '/api/forum/flags?limit=50';

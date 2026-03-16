@@ -37,7 +37,7 @@
 
     {{template "footer"}}
 
-    <script>
+    <script nonce="{{.Nonce}}">
         document.getElementById('blog-search').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();

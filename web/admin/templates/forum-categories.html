@@ -66,7 +66,7 @@
             </div>
         </main>
     </div>
-    <script>
+    <script nonce="{{.Nonce}}">
         async function loadCategories() {
             try {
                 const res = await fetch('/api/forum/categories');

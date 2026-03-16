@@ -59,7 +59,7 @@
             </div>
         </main>
     </div>
-    <script>
+    <script nonce="{{.Nonce}}">
         async function loadForumStats() {
             try {
                 const res = await fetch('/api/forum/stats');

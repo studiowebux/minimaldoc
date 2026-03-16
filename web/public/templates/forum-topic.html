@@ -49,7 +49,7 @@
     {{template "footer"}}
 
     <script src="/static/js/htmx-json-enc.js"></script>
-    <script>
+    <script nonce="{{.Nonce}}">
     document.body.addEventListener('htmx:afterSwap', function(event) {
         if (event.detail.target.id === 'forum-topic-detail') {
             var titleEl = event.detail.target.querySelector('.forum-topic-title, h1');

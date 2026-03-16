@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -40,9 +42,23 @@ func TracingMiddleware() gin.HandlerFunc {
 	}
 }
 
+// generateNonce creates a 16-byte base64-encoded cryptographic nonce for CSP.
+func generateNonce() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(b)
+}
+
 // SecurityHeadersMiddleware adds common security headers to responses.
+// Generates a per-request nonce for CSP and stores it in gin context as "csp_nonce".
 func SecurityHeadersMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Generate per-request nonce for inline scripts/styles
+		nonce := generateNonce()
+		c.Set("csp_nonce", nonce)
+
 		// Prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
 		// Prevent clickjacking
@@ -53,9 +69,12 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		// Permissions policy - disable unnecessary features
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		// Content Security Policy - restrict resource loading
-		// Allow self, inline styles (for admin UI), and data: URIs for images
-		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+		// Content Security Policy with nonce — no unsafe-inline
+		csp := fmt.Sprintf(
+			"default-src 'self'; script-src 'self' 'nonce-%s'; style-src 'self' 'nonce-%s'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+			nonce, nonce,
+		)
+		c.Header("Content-Security-Policy", csp)
 
 		c.Next()
 	}

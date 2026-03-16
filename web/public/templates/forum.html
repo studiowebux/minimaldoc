@@ -86,7 +86,7 @@
 
     {{template "footer"}}
 
-    <script>
+    <script nonce="{{.Nonce}}">
         document.getElementById('forum-search').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();

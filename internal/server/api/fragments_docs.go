@@ -16,6 +16,7 @@ func (r *Router) adminDocAccess(c *gin.Context) {
 		"User":        claims,
 		"AdminPath":   r.config.Server.AdminPath,
 		"CurrentPage": "doc-access",
+		"Nonce":       cspNonce(c),
 	})
 }
 

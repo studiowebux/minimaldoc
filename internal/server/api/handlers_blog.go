@@ -821,6 +821,7 @@ func (r *Router) adminBlog(c *gin.Context) {
 		"Title":       "Blog",
 		"CurrentPage": "blog",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -868,6 +869,7 @@ func (r *Router) adminBlogEditor(c *gin.Context) {
 		"CurrentPage": "blog",
 		"User":        claims,
 		"Post":        post,
+		"Nonce":       cspNonce(c),
 	})
 }
 
@@ -877,6 +879,7 @@ func (r *Router) adminComments(c *gin.Context) {
 		"Title":       "Comments",
 		"CurrentPage": "comments",
 		"User":        claims,
+		"Nonce":       cspNonce(c),
 	})
 }
 

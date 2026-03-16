@@ -58,7 +58,7 @@
     {{template "footer"}}
 
     <script src="/static/js/htmx-json-enc.js"></script>
-    <script>
+    <script nonce="{{.Nonce}}">
         document.body.addEventListener('htmx:afterRequest', function(evt) {
             var resultDiv = document.getElementById('form-result');
             if (evt.detail.successful && evt.detail.xhr.status === 201) {
