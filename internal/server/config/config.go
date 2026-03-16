@@ -211,7 +211,7 @@ func Load() (*Config, error) {
 			WriteTimeout:   getEnvDuration("SERVER_WRITE_TIMEOUT", 30*time.Second),
 			AdminPath:      getEnv("SERVER_ADMIN_PATH", "/admin"),
 			APIPath:        getEnv("SERVER_API_PATH", "/api"),
-			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", []string{"*"}),
+			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", nil),
 			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
 			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
 			Environment:    getEnv("SERVER_ENV", "development"),
@@ -479,7 +479,14 @@ func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
 
 func getEnvSlice(key string, defaultVal []string) []string {
 	if val := os.Getenv(key); val != "" {
-		return strings.Split(val, ",")
+		parts := strings.Split(val, ",")
+		result := make([]string, 0, len(parts))
+		for _, p := range parts {
+			if trimmed := strings.TrimSpace(p); trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		return result
 	}
 	return defaultVal
 }
