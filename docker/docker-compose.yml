@@ -1,5 +1,5 @@
 # MinimalDoc Server - Development Environment
-# Usage: docker-compose -f docker/docker-compose.yml up
+# Usage: cp docker/.env.example docker/.env && docker-compose -f docker/docker-compose.yml up
 
 services:
   server:
@@ -12,14 +12,13 @@ services:
       # Server
       SERVER_HOST: "0.0.0.0"
       SERVER_PORT: "8080"
-      SERVER_CORS_ORIGINS: "*"
 
       # Database
       DB_DRIVER: "postgres"
       DATABASE_URL: "postgres://minimaldoc:minimaldoc@db:5432/minimaldoc?sslmode=disable"
 
-      # Auth
-      AUTH_JWT_SECRET: "change-this-to-a-secure-secret-key-at-least-32-chars"
+      # Auth — MUST be set in .env file (see .env.example)
+      AUTH_JWT_SECRET: "${AUTH_JWT_SECRET}"
       AUTH_ENABLE_LOCAL: "true"
       AUTH_ENABLE_OAUTH: "false"
 
@@ -31,6 +30,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
     restart: unless-stopped
 
   db:
@@ -48,6 +52,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
     restart: unless-stopped
 
   # Optional: Mailhog for email testing
