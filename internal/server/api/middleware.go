@@ -250,18 +250,19 @@ func OptionalAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc 
 			return
 		}
 
-		// Try to validate JWT
+		// Token present — validate it. Invalid/revoked tokens get 401, not anonymous fallback.
 		claims, err := auth.ValidateToken(token, cfg.Auth.JWTSecret)
 		if err != nil {
-			// Invalid token, continue as anonymous
-			c.Next()
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
 			return
 		}
 
 		// Check if token has been revoked
 		if claims.ID != "" {
 			if revoked, _ := db.IsTokenRevoked(c.Request.Context(), claims.ID); revoked {
-				c.Next()
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "token revoked"})
+				c.Abort()
 				return
 			}
 		}
