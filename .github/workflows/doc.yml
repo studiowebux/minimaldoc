@@ -1,6 +1,13 @@
 name: Publish Documentation
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "internal/assets/**"
+      - "templates/**"
+      - ".github/workflows/doc.yml"
   workflow_dispatch:
 
 permissions:

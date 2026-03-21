@@ -2,8 +2,7 @@
 
 A minimal static site generator for documentation. Fast, clean, and easy to use.
 
-> **Work in Progress** — Most features are stable. Some newer additions
-> (waitlist, claude-assist, PDF export) are still being refined.
+> **Work in Progress** — Most features are stable.
 
 > **Note:** The optional backend server (`minimaldoc-server`) has been removed
 > from this repository. The scope was expanding too fast and the code was not
@@ -27,7 +26,7 @@ cd my-docs
 
 ## Documentation
 
-Full documentation: [minimaldoc.studiowebux.com](https://minimaldoc.studiowebux.com)
+Full documentation: [minimaldoc.com](https://minimaldoc.com)
 
 The `docs/` directory is a demo site that showcases what MinimalDoc can generate.
 Build it locally with `make docs` then open `public/index.html`.
