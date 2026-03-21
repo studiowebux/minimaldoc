@@ -587,9 +587,9 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 	// Static files for admin UI (admin.css, auth.css, public.css)
 	r.Static("/static", "web/admin/static")
 
-	// Serve uploaded files (local storage)
+	// Serve uploaded files behind auth (local storage)
 	if cfg.Storage.Provider == "local" {
-		r.Static("/uploads", cfg.Storage.LocalPath)
+		r.GET("/uploads/*filepath", AdminUIAuthMiddleware(cfg, r.db), r.serveUpload)
 	}
 
 	return r

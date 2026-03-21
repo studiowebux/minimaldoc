@@ -126,13 +126,6 @@
             }
         }
 
-        function escapeHtml(s) {
-            if (!s) return '';
-            const div = document.createElement('div');
-            div.textContent = s;
-            return div.innerHTML;
-        }
-
         loadForumStats();
         loadRecentTopics();
         loadPendingFlags();

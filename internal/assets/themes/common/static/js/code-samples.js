@@ -331,9 +331,12 @@
     });
 
     if (hasBody) {
+      var jsonStr = JSON.stringify(body, null, 4);
       lines.push('');
-      lines.push('let body: [String: Any] = ' + JSON.stringify(body, null, 4).replace(/"/g, '\\"').replace(/\n/g, '\n'));
-      lines.push('request.httpBody = try? JSONSerialization.data(withJSONObject: body)');
+      lines.push('let jsonString = """');
+      lines.push(jsonStr);
+      lines.push('"""');
+      lines.push('request.httpBody = jsonString.data(using: .utf8)');
     }
 
     lines.push('');

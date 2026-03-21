@@ -156,13 +156,6 @@
             return new Date(dateStr).toLocaleDateString();
         }
 
-        function escapeHtml(s) {
-            if (!s) return '';
-            const div = document.createElement('div');
-            div.textContent = s;
-            return div.innerHTML;
-        }
-
         loadBans();
     </script>
 </body>

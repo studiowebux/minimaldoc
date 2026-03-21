@@ -56,6 +56,7 @@ func (g *WaitlistGenerator) Generate() error {
 		"Config":   g.site.WaitlistPage.Config,
 		"BasePath": g.getBasePath(),
 		"Version":  g.version,
+		"Footer":   BuildFooter(g.site, g.version),
 	}
 
 	var buf bytes.Buffer

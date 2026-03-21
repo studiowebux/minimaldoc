@@ -308,8 +308,11 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		result.Analytics = cfg.Analytics
 	}
 
-	// MCP config (cfg.MCP uses core.MCPConfig with bare bool, take address)
-	mergeBool(&result.MCP.Enabled, &cfg.MCP.Enabled, cliFlags, "mcp")
+	// MCP config: bare bool cannot distinguish "false" from "unset",
+	// so only override the default/CLI when the file explicitly enables MCP.
+	if cfg.MCP.Enabled {
+		result.MCP.Enabled = true
+	}
 	if result.MCP.Enabled {
 		mergeStringSlice(&result.MCP.SpecFiles, cfg.MCP.SpecFiles, cliFlags, "mcp-dir")
 		mergeStringNoFlag(&result.MCP.Path, cfg.MCP.Path)

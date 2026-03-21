@@ -180,6 +180,54 @@ func (r *Router) listUploads(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"uploads": uploads})
 }
 
+// serveUpload serves uploaded files behind auth, scoped to the user's site.
+func (r *Router) serveUpload(c *gin.Context) {
+	reqPath := c.Param("filepath")
+	if reqPath == "" || reqPath == "/" {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+
+	// Strip leading slash for DB lookup
+	storagePath := strings.TrimPrefix(reqPath, "/")
+
+	// Look up the upload in the DB to validate it belongs to the user's site
+	siteID, _ := c.Get("site_id")
+	siteIDStr, _ := siteID.(string)
+
+	upload, err := r.db.GetUploadByPath(c.Request.Context(), storagePath)
+	if err != nil || upload == nil {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+
+	if upload.SiteID != siteIDStr {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+
+	// Serve the file from disk
+	fullPath := filepath.Join(r.config.Storage.LocalPath, filepath.FromSlash(storagePath))
+
+	// Prevent directory traversal
+	absBase, err := filepath.Abs(r.config.Storage.LocalPath)
+	if err != nil {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+	if !strings.HasPrefix(absPath, absBase+string(filepath.Separator)) {
+		respondNotFound(c, ErrUploadNotFound, "Upload not found")
+		return
+	}
+
+	c.File(fullPath)
+}
+
 // sanitizeFilename removes path components and limits length for safe display.
 func sanitizeFilename(name string) string {
 	// Strip directory components

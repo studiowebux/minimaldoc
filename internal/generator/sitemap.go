@@ -96,6 +96,38 @@ func (g *SitemapGenerator) Generate() error {
 		urlSet.URLs = append(urlSet.URLs, url)
 	}
 
+	// Add enabled feature pages that aren't part of the docs tree
+	type featurePage struct {
+		enabled bool
+		path    string
+		defPath string
+	}
+	features := []featurePage{
+		{g.site.Config.Faq.Enabled, g.site.Config.Faq.Path, "faq"},
+		{g.site.Config.Contact.Enabled, g.site.Config.Contact.Path, "contact"},
+		{g.site.Config.Portfolio.Enabled, g.site.Config.Portfolio.Path, "portfolio"},
+		{g.site.Config.Roadmap.Enabled, g.site.Config.Roadmap.Path, "roadmap"},
+		{g.site.Config.Changelog.Enabled, g.site.Config.Changelog.Path, "changelog"},
+		{g.site.Config.Status.Enabled, g.site.Config.Status.Path, "status"},
+		{g.site.Config.KnowledgeBase.Enabled, g.site.Config.KnowledgeBase.Path, "kb"},
+		{g.site.Config.Legal.Enabled, g.site.Config.Legal.Path, "legal"},
+		{g.site.Config.OpenAPI.Enabled, "", "api"},
+	}
+	for _, f := range features {
+		if !f.enabled {
+			continue
+		}
+		p := f.path
+		if p == "" {
+			p = f.defPath
+		}
+		urlSet.URLs = append(urlSet.URLs, URL{
+			Loc:        fmt.Sprintf("%s/%s/", baseURL, strings.TrimPrefix(p, "/")),
+			ChangeFreq: "weekly",
+			Priority:   0.7,
+		})
+	}
+
 	// Marshal to XML
 	output, err := xml.MarshalIndent(urlSet, "", "  ")
 	if err != nil {

@@ -249,12 +249,6 @@
         renderTags();
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
     // Markdown editor
     function insertMarkdown(before, after) {
         const textarea = document.getElementById('content');

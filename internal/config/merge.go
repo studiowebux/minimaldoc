@@ -86,9 +86,9 @@ func mergeStringFields(dst, src any) {
 		srcVal = srcVal.Elem()
 	}
 
+	srcType := srcVal.Type()
 	for i := 0; i < srcVal.NumField(); i++ {
 		srcField := srcVal.Field(i)
-		dstField := dstVal.Field(i)
 
 		// Only handle string fields
 		if srcField.Kind() != reflect.String {
@@ -96,7 +96,13 @@ func mergeStringFields(dst, src any) {
 		}
 
 		// Only merge if source is non-empty
-		if srcField.String() != "" && dstField.CanSet() {
+		if srcField.String() == "" {
+			continue
+		}
+
+		// Match by field name, not index
+		dstField := dstVal.FieldByName(srcType.Field(i).Name)
+		if dstField.IsValid() && dstField.CanSet() && dstField.Kind() == reflect.String {
 			dstField.SetString(srcField.String())
 		}
 	}

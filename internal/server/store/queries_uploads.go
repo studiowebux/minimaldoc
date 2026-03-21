@@ -29,6 +29,17 @@ func (db *DB) GetUpload(ctx context.Context, id string) (*Upload, error) {
 	return &u, err
 }
 
+// GetUploadByPath retrieves an upload by its storage path.
+func (db *DB) GetUploadByPath(ctx context.Context, storagePath string) (*Upload, error) {
+	query := `SELECT id, site_id, user_id, filename, mime_type, size_bytes, storage_path, url, created_at FROM uploads WHERE storage_path = $1`
+	var u Upload
+	err := db.QueryRowContext(ctx, query, storagePath).Scan(&u.ID, &u.SiteID, &u.UserID, &u.Filename, &u.MimeType, &u.SizeBytes, &u.StoragePath, &u.URL, &u.CreatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &u, err
+}
+
 // DeleteUpload removes an upload record.
 func (db *DB) DeleteUpload(ctx context.Context, id string) error {
 	_, err := db.ExecContext(ctx, `DELETE FROM uploads WHERE id = $1`, id)

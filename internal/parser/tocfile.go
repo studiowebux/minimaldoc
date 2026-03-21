@@ -47,6 +47,9 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 	//        - [Title](path.md)
 	listItemRegex := regexp.MustCompile(`^(\s*)[-*]\s+(?:\[([^\]]+)\]\(([^\)]+)\)|(.+))$`)
 
+	// Detect indent unit from the first indented line (supports 2-space, 4-space, tabs)
+	indentUnit := 0
+
 	lineNum := 0
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -63,7 +66,13 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 		}
 
 		indent := len(matches[1])
-		level := indent / 2 // Assuming 2 spaces per level
+		if indent > 0 && indentUnit == 0 {
+			indentUnit = indent
+		}
+		level := 0
+		if indentUnit > 0 {
+			level = indent / indentUnit
+		}
 
 		var title, filePath string
 		var isExternal bool

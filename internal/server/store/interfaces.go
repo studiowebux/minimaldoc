@@ -262,6 +262,7 @@ type SiteStore interface {
 type UploadStore interface {
 	CreateUpload(ctx context.Context, id, siteID, userID, filename, mimeType string, sizeBytes int64, storagePath, url string) (*Upload, error)
 	GetUpload(ctx context.Context, id string) (*Upload, error)
+	GetUploadByPath(ctx context.Context, storagePath string) (*Upload, error)
 	DeleteUpload(ctx context.Context, id string) error
 	ListUploads(ctx context.Context, siteID, userID string, limit, offset int) ([]Upload, error)
 }

@@ -87,6 +87,7 @@ func (g *RoadmapGenerator) Generate() error {
 		"Tags":       tags,
 		"PageTitle":  g.site.Config.Roadmap.Title,
 		"ActivePath": "/" + roadmapPath + "/",
+		"Footer":     BuildFooter(g.site, g.version),
 	}
 
 	var buf bytes.Buffer

@@ -27,7 +27,14 @@ func (r *Router) trackPageView(c *gin.Context) {
 		return
 	}
 
-	err := r.db.RecordPageView(c.Request.Context(),
+	// Validate site exists to prevent data pollution
+	site, err := r.db.GetSiteByID(c.Request.Context(), req.SiteID)
+	if err != nil || site == nil {
+		respondBadRequest(c, ErrSiteInvalid, "invalid site_id")
+		return
+	}
+
+	err = r.db.RecordPageView(c.Request.Context(),
 		req.SiteID, req.Path, req.Referrer, req.Country,
 		req.DeviceType, req.Browser, req.OS, req.SessionHash)
 	if err != nil {

@@ -23,6 +23,9 @@ func BaseFuncMap() template.FuncMap {
 		"join":           strings.Join,
 		"replace":        replaceFunc,
 		"hasCustomTheme": hasCustomThemeFunc,
+		"formatDate": func(t time.Time) string {
+			return t.Format("January 2, 2006")
+		},
 	}
 }
 
@@ -152,9 +155,6 @@ func StatusFuncMap() template.FuncMap {
 		"formatTime": func(t time.Time) string {
 			return t.Format("Jan 2, 2006 15:04 MST")
 		},
-		"formatDate": func(t time.Time) string {
-			return t.Format("January 2, 2006")
-		},
 	})
 }
 
@@ -163,9 +163,6 @@ func ChangelogFuncMap() template.FuncMap {
 	return ExtendFuncMap(template.FuncMap{
 		"changeColor": func(ct core.ChangeType) string {
 			return ct.Color()
-		},
-		"formatDate": func(t time.Time) string {
-			return t.Format("January 2, 2006")
 		},
 		"formatDateShort": func(t time.Time) string {
 			return t.Format("2006-01-02")
