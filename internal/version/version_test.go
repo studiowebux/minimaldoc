@@ -135,15 +135,17 @@ func TestTruncateNotes_UTF8(t *testing.T) {
 // Version constant
 // ---------------------------------------------------------------------------
 
-func TestVersionConstant_NotEmpty(t *testing.T) {
+func TestVersionVar_NotEmpty(t *testing.T) {
 	if Version == "" {
-		t.Error("Version constant should not be empty")
+		t.Error("Version variable should not be empty")
 	}
 }
 
-func TestVersionConstant_Parseable(t *testing.T) {
+func TestVersionVar_DevOrParseable(t *testing.T) {
+	if Version == "dev" {
+		return // dev is the expected default when not set via ldflags
+	}
 	parts := parseVersion(Version)
-	// At least major should be > 0 for a released version
 	if parts[0] == 0 && parts[1] == 0 && parts[2] == 0 {
 		t.Errorf("Version %q parses to [0,0,0] — unexpected for a released version", Version)
 	}

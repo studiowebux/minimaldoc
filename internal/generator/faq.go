@@ -54,10 +54,7 @@ func (g *FaqGenerator) Generate() error {
 
 	fmt.Println("Generating FAQ page...")
 
-	faqPath := g.site.Config.Faq.Path
-	if faqPath == "" {
-		faqPath = "faq"
-	}
+	faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 
 	outputDir := filepath.Join(g.site.OutputRoot, faqPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -82,10 +79,7 @@ func (g *FaqGenerator) Generate() error {
 
 // generateMainPage generates the FAQ page
 func (g *FaqGenerator) generateMainPage(outputDir string) error {
-	faqPath := g.site.Config.Faq.Path
-	if faqPath == "" {
-		faqPath = "faq"
-	}
+	faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 	data := map[string]any{
 		"Site":       g.site,
 		"FaqPage":    g.site.FaqPage,

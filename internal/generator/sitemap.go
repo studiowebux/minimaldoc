@@ -44,7 +44,7 @@ func (g *SitemapGenerator) Generate() error {
 	}
 
 	// Validate that baseURL is absolute (contains protocol)
-	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+	baseURL := trimBaseURL(g.site.Config.BaseURL)
 	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
 		return fmt.Errorf("base_url must be an absolute URL (e.g., https://example.com), got: %s", g.site.Config.BaseURL)
 	}

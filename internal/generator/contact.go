@@ -54,10 +54,7 @@ func (g *ContactGenerator) Generate() error {
 
 	fmt.Println("Generating contact page...")
 
-	contactPath := g.site.Config.Contact.Path
-	if contactPath == "" {
-		contactPath = "contact"
-	}
+	contactPath := featurePath(g.site.Config.Contact.Path, "contact")
 
 	outputDir := filepath.Join(g.site.OutputRoot, contactPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -75,10 +72,7 @@ func (g *ContactGenerator) Generate() error {
 
 // generateMainPage generates the contact page
 func (g *ContactGenerator) generateMainPage(outputDir string) error {
-	contactPath := g.site.Config.Contact.Path
-	if contactPath == "" {
-		contactPath = "contact"
-	}
+	contactPath := featurePath(g.site.Config.Contact.Path, "contact")
 	data := map[string]any{
 		"Site":        g.site,
 		"ContactPage": g.site.ContactPage,

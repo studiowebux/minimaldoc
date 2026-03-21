@@ -62,10 +62,7 @@ func (g *RoadmapGenerator) Generate() error {
 
 	fmt.Println("Generating roadmap page...")
 
-	roadmapPath := g.site.Config.Roadmap.Path
-	if roadmapPath == "" {
-		roadmapPath = "roadmap"
-	}
+	roadmapPath := featurePath(g.site.Config.Roadmap.Path, "roadmap")
 
 	outputDir := filepath.Join(g.site.OutputRoot, roadmapPath)
 	if err := makeWebDir(outputDir); err != nil {

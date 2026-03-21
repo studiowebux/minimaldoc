@@ -54,10 +54,7 @@ func (g *LegalGenerator) Generate() error {
 
 	fmt.Println("Generating legal pages...")
 
-	legalPath := g.site.Config.Legal.Path
-	if legalPath == "" {
-		legalPath = "legal"
-	}
+	legalPath := featurePath(g.site.Config.Legal.Path, "legal")
 
 	outputDir := filepath.Join(g.site.OutputRoot, legalPath)
 	if err := makeWebDir(outputDir); err != nil {

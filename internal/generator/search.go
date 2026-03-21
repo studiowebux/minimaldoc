@@ -173,10 +173,7 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 
 	// Index FAQ items (if enabled)
 	if g.site.FaqPage != nil && g.site.Config.Faq.Enabled {
-		faqPath := g.site.Config.Faq.Path
-		if faqPath == "" {
-			faqPath = "faq"
-		}
+		faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 
 		for _, cat := range g.site.FaqPage.Categories {
 			for _, item := range cat.Items {
@@ -206,10 +203,7 @@ func (g *SearchGenerator) generateVersionIndex(versionInfo core.VersionInfo, pag
 
 	// Index KB articles (if enabled)
 	if g.site.KBPage != nil && g.site.Config.KnowledgeBase.Enabled {
-		kbPath := g.site.Config.KnowledgeBase.Path
-		if kbPath == "" {
-			kbPath = "kb"
-		}
+		kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 		for _, cat := range g.site.KBPage.Categories {
 			for _, article := range cat.Articles {
@@ -340,10 +334,7 @@ func (g *SearchGenerator) generateMainIndex() error {
 
 	// Index FAQ items (if enabled)
 	if g.site.FaqPage != nil && g.site.Config.Faq.Enabled {
-		faqPath := g.site.Config.Faq.Path
-		if faqPath == "" {
-			faqPath = "faq"
-		}
+		faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 
 		for _, cat := range g.site.FaqPage.Categories {
 			for _, item := range cat.Items {
@@ -379,10 +370,7 @@ func (g *SearchGenerator) generateMainIndex() error {
 
 	// Index KB articles (if enabled)
 	if g.site.KBPage != nil && g.site.Config.KnowledgeBase.Enabled {
-		kbPath := g.site.Config.KnowledgeBase.Path
-		if kbPath == "" {
-			kbPath = "kb"
-		}
+		kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 		for _, cat := range g.site.KBPage.Categories {
 			for _, article := range cat.Articles {

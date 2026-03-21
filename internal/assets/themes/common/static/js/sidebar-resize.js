@@ -4,10 +4,15 @@
 
   const STORAGE_KEY_LEFT = 'openapi-sidebar-left-width';
   const STORAGE_KEY_RIGHT = 'openapi-sidebar-right-width';
-  const MIN_WIDTH_LEFT = 200;
-  const MAX_WIDTH_LEFT = 800;
-  const MIN_WIDTH_RIGHT = 300;
-  const MAX_WIDTH_RIGHT = 800;
+
+  // Read constraints from CSS custom properties, falling back to sensible defaults.
+  var styles = getComputedStyle(document.documentElement);
+  const MIN_WIDTH_LEFT = parseInt(styles.getPropertyValue('--sidebar-min-left'), 10) || 200;
+  const MAX_WIDTH_LEFT = parseInt(styles.getPropertyValue('--sidebar-max-left'), 10) || 800;
+  const MIN_WIDTH_RIGHT = parseInt(styles.getPropertyValue('--sidebar-min-right'), 10) || 300;
+  const MAX_WIDTH_RIGHT = parseInt(styles.getPropertyValue('--sidebar-max-right'), 10) || 800;
+  const DEFAULT_WIDTH_LEFT = parseInt(styles.getPropertyValue('--openapi-sidebar-width'), 10) || 350;
+  const DEFAULT_WIDTH_RIGHT = parseInt(styles.getPropertyValue('--openapi-tester-width'), 10) || 450;
 
   function init() {
     initLeftSidebar();
@@ -64,8 +69,8 @@
 
     // Handle double-click to reset
     handle.addEventListener('dblclick', () => {
-      setLeftSidebarWidth(350); // Default width
-      localStorage.setItem(STORAGE_KEY_LEFT, '350');
+      setLeftSidebarWidth(DEFAULT_WIDTH_LEFT);
+      localStorage.setItem(STORAGE_KEY_LEFT, DEFAULT_WIDTH_LEFT.toString());
     });
   }
 
@@ -120,8 +125,8 @@
 
     // Handle double-click to reset
     handle.addEventListener('dblclick', () => {
-      setRightSidebarWidth(400); // Default width
-      localStorage.setItem(STORAGE_KEY_RIGHT, '400');
+      setRightSidebarWidth(DEFAULT_WIDTH_RIGHT);
+      localStorage.setItem(STORAGE_KEY_RIGHT, DEFAULT_WIDTH_RIGHT.toString());
     });
   }
 

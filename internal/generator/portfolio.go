@@ -54,10 +54,7 @@ func (g *PortfolioGenerator) Generate() error {
 
 	fmt.Println("Generating portfolio page...")
 
-	portfolioPath := g.site.Config.Portfolio.Path
-	if portfolioPath == "" {
-		portfolioPath = "portfolio"
-	}
+	portfolioPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 
 	outputDir := filepath.Join(g.site.OutputRoot, portfolioPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -80,10 +77,7 @@ func (g *PortfolioGenerator) Generate() error {
 
 // generateMainPage generates the main portfolio listing page
 func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
-	portfolioPath := g.site.Config.Portfolio.Path
-	if portfolioPath == "" {
-		portfolioPath = "portfolio"
-	}
+	portfolioPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,
@@ -125,10 +119,7 @@ func (g *PortfolioGenerator) generateProjectPages(outputDir string) error {
 
 // generateProjectPage generates a single project detail page
 func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core.Project) error {
-	pPath := g.site.Config.Portfolio.Path
-	if pPath == "" {
-		pPath = "portfolio"
-	}
+	pPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,

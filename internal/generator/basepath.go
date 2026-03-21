@@ -2,6 +2,21 @@ package generator
 
 import "strings"
 
+// featurePath returns configPath if non-empty, otherwise defaultPath.
+// Replaces the repeated pattern: if path == "" { path = "default" }
+func featurePath(configPath, defaultPath string) string {
+	if configPath == "" {
+		return defaultPath
+	}
+	return configPath
+}
+
+// trimBaseURL strips the trailing slash from a base URL for concatenation.
+// Replaces the repeated pattern: strings.TrimSuffix(g.site.Config.BaseURL, "/")
+func trimBaseURL(baseURL string) string {
+	return strings.TrimSuffix(baseURL, "/")
+}
+
 // GetBasePath extracts the path component from a BaseURL for asset linking.
 // Examples:
 //   - "https://example.com/docs/" → "/docs"

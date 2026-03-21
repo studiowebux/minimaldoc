@@ -1,8 +1,11 @@
 .PHONY: build clean test lint ci docs check
 
+VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null || echo dev)
+LDFLAGS := -X github.com/studiowebux/minimaldoc/internal/version.Version=$(VERSION)
+
 # Build the minimaldoc CLI binary
 build:
-	go build -o minimaldoc ./cmd/minimaldoc
+	go build -ldflags "$(LDFLAGS)" -o minimaldoc ./cmd/minimaldoc
 
 # Build docs site (docs/ → public/)
 docs: build

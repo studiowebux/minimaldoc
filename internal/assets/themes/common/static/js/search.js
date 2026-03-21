@@ -45,11 +45,16 @@
     // Load search manifest (pages + sections + shard list)
     function loadManifest() {
         if (manifestLoaded || manifestLoading) {
-            return manifestLoaded ? Promise.resolve() : new Promise(function(resolve) {
+            return manifestLoaded ? Promise.resolve() : new Promise(function(resolve, reject) {
+                var elapsed = 0;
                 var check = setInterval(function() {
+                    elapsed += 50;
                     if (manifestLoaded) {
                         clearInterval(check);
                         resolve();
+                    } else if (elapsed >= 10000) {
+                        clearInterval(check);
+                        reject(new Error('Manifest load timeout'));
                     }
                 }, 50);
             });

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
@@ -60,10 +59,7 @@ func (g *StatusGenerator) Generate() error {
 
 	fmt.Println("Generating status page...")
 
-	statusPath := g.site.Config.Status.Path
-	if statusPath == "" {
-		statusPath = "status"
-	}
+	statusPath := featurePath(g.site.Config.Status.Path, "status")
 
 	outputDir := filepath.Join(g.site.OutputRoot, statusPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -110,10 +106,7 @@ func (g *StatusGenerator) Generate() error {
 
 // generateMainPage generates the main status dashboard
 func (g *StatusGenerator) generateMainPage(outputDir string) error {
-	statusPath := g.site.Config.Status.Path
-	if statusPath == "" {
-		statusPath = "status"
-	}
+	statusPath := featurePath(g.site.Config.Status.Path, "status")
 	data := map[string]any{
 		"Site":       g.site,
 		"StatusPage": g.site.StatusPage,
@@ -159,10 +152,7 @@ func (g *StatusGenerator) generateIncidentPages(outputDir string) error {
 
 // generateIncidentPage generates a single incident detail page
 func (g *StatusGenerator) generateIncidentPage(incidentDir string, incident core.Incident) error {
-	statusPath := g.site.Config.Status.Path
-	if statusPath == "" {
-		statusPath = "status"
-	}
+	statusPath := featurePath(g.site.Config.Status.Path, "status")
 	data := map[string]any{
 		"Site":       g.site,
 		"StatusPage": g.site.StatusPage,
@@ -209,10 +199,7 @@ func (g *StatusGenerator) generateMaintenancePages(outputDir string) error {
 
 // generateMaintenancePage generates a single maintenance detail page
 func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, maintenance core.Maintenance) error {
-	stPath := g.site.Config.Status.Path
-	if stPath == "" {
-		stPath = "status"
-	}
+	stPath := featurePath(g.site.Config.Status.Path, "status")
 	data := map[string]any{
 		"Site":        g.site,
 		"StatusPage":  g.site.StatusPage,
@@ -238,10 +225,7 @@ func (g *StatusGenerator) generateMaintenancePage(maintenanceDir string, mainten
 
 // generateHistoryPage generates the incident history page
 func (g *StatusGenerator) generateHistoryPage(outputDir string) error {
-	histPath := g.site.Config.Status.Path
-	if histPath == "" {
-		histPath = "status"
-	}
+	histPath := featurePath(g.site.Config.Status.Path, "status")
 	data := map[string]any{
 		"Site":           g.site,
 		"StatusPage":     g.site.StatusPage,
@@ -321,10 +305,7 @@ type MaintenanceJSON struct {
 
 // generateStatusJSON generates the status.json API file
 func (g *StatusGenerator) generateStatusJSON(outputDir string) error {
-	statusPath := g.site.Config.Status.Path
-	if statusPath == "" {
-		statusPath = "status"
-	}
+	statusPath := featurePath(g.site.Config.Status.Path, "status")
 
 	// Build components list
 	components := make([]ComponentJSON, 0, len(g.site.StatusPage.Components))
@@ -435,12 +416,9 @@ type rssFeed struct {
 
 // generateRSSFeed generates an RSS feed for status updates
 func (g *StatusGenerator) generateRSSFeed(outputDir string) error {
-	statusPath := g.site.Config.Status.Path
-	if statusPath == "" {
-		statusPath = "status"
-	}
+	statusPath := featurePath(g.site.Config.Status.Path, "status")
 
-	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+	baseURL := trimBaseURL(g.site.Config.BaseURL)
 
 	// Build RSS items from incidents
 	items := make([]rssItem, 0)

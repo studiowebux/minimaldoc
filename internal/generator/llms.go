@@ -91,7 +91,7 @@ func (g *LLMSGenerator) generateIndex() error {
 	}
 
 	// H2 sections with file lists
-	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+	baseURL := trimBaseURL(g.site.Config.BaseURL)
 
 	for _, section := range sectionOrder {
 		pages := sections[section]
