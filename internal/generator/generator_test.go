@@ -132,8 +132,8 @@ func TestEscapeJS(t *testing.T) {
 		input    string
 		contains string // substring that must appear in output
 	}{
-		{`alert("hi")`, `alert(`},      // quotes should be escaped
-		{"line\nnewline", "line"},       // newline escaped
+		{`alert("hi")`, `alert(`},        // quotes should be escaped
+		{"line\nnewline", "line"},        // newline escaped
 		{"back\\slash", "back\\\\slash"}, // backslash doubled
 	}
 

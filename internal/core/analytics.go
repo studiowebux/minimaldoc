@@ -78,4 +78,3 @@ func (p AnalyticsProvider) GetConfigSlice(key string) []string {
 	}
 	return nil
 }
-

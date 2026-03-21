@@ -17,8 +17,8 @@ type Site struct {
 	ContactPage   *ContactPage   // Contact page data (if enabled)
 	FaqPage       *FaqPage       // FAQ page data (if enabled)
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
-	KBPage      *KBPage      // Knowledge Base data (if enabled)
-	RoadmapPage *RoadmapPage // Roadmap page data (if enabled)
+	KBPage        *KBPage        // Knowledge Base data (if enabled)
+	RoadmapPage   *RoadmapPage   // Roadmap page data (if enabled)
 	MCPSpecs      []*MCPSpec     // MCP server documentation (if enabled)
 
 	// Versioning
