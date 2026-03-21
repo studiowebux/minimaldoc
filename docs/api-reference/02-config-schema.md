@@ -104,6 +104,7 @@ changelog:
 stale_warning:
   enabled: boolean               # Enable stale warnings (default: true)
   threshold_days: integer        # Days before stale (default: 365)
+  message: string                # Custom warning message (default: built-in)
   show_update_date: boolean      # Show last update (default: true)
 
 # Link Check Configuration
@@ -735,6 +736,18 @@ stale_warning:
 
 Type: `integer`
 Default: `365`
+
+### stale_warning.message
+
+Custom warning message displayed on stale pages. Leave empty to use the built-in default.
+
+```yaml
+stale_warning:
+  message: "This page may be outdated."
+```
+
+Type: `string`
+Default: `""` (uses built-in message)
 
 ### stale_warning.show_update_date
 

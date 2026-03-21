@@ -151,15 +151,36 @@ Used for pages in the `__faq__/` directory or with FAQ-category items.
 
 ### Version Fields
 
-Used when multi-version documentation is enabled.
+Used when multi-version documentation is enabled via `versions.enabled: true` in config.yaml. Versioned pages live in `docs/__versions__/<version-name>/` directories.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `versions` | []string | all | Versions this page appears in |
+| `versions` | []string | all | Versions this page appears in (empty = all versions) |
 | `since` | string | - | Version where feature was introduced |
 | `deprecated_in` | string | - | Version where feature was deprecated |
 | `removed_in` | string | - | Version where feature was removed |
-| `version_note` | string | - | Version to show special note for |
+| `version_note` | string | - | Note displayed for version context |
+
+**How it works:**
+
+- Pages in `docs/` appear in all versions by default
+- Pages in `docs/__versions__/v2/` only appear in the v2 version
+- The `versions` frontmatter field limits which versions a page appears in
+- `since` and `deprecated_in` render version badges on the page
+- `removed_in` hides the page from versions after removal
+
+**Directory structure:**
+
+```
+docs/
+  getting-started/         # Appears in all versions
+    install.md
+  __versions__/
+    v1/
+      migration.md         # Only in v1
+    v2/
+      new-feature.md       # Only in v2
+```
 
 ## Examples
 

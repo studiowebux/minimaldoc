@@ -15,76 +15,202 @@ dark_mode: false
 enable_llms: true      # Generate llms.txt for AI tools
 enable_search: true    # Enable client-side search
 clean_urls: false      # Use /page/ instead of /page.html
+# entrypoint: ""       # Custom homepage file (default: index.md)
+# nav_depth: 0         # Max navigation tree depth (0 = unlimited)
 
 # OpenAPI/Swagger documentation
-openapi:
-  enabled: false
-  spec_files:
-    - "api/openapi.yaml"
-  spec_urls: []
-  default_view: "path"        # path | tag | flat
-  sync_on_build: false        # Fetch remote specs on build
-  cache_dir: ".openapi-cache"
-  enable_testing: true        # Show "Try It" interface
-  enable_export: true         # Enable cURL/restcli export
-  enable_code_samples: true   # Show code samples panel
-  lazy_load_chunk_size: 51200
+# openapi:
+#   enabled: false
+#   spec_files:
+#     - "api/openapi.yaml"
+#   spec_urls: []
+#   default_view: "path"        # path | tag | flat
+#   sync_on_build: false        # Fetch remote specs on build
+#   cache_dir: ".openapi-cache"
+#   enable_testing: true        # Show "Try It" interface
+#   enable_export: true         # Enable cURL/restcli export
+#   enable_code_samples: true   # Show code samples panel
+#   lazy_load_chunk_size: 51200
+
+# MCP server documentation
+# mcp:
+#   enabled: false
+#   spec_files:
+#     - "mcp/*.mcp.json"
 
 # Status page
-status:
-  enabled: false
-  title: "Service Status"
-  description: "Current operational status of our services"
-  path: "status"
-  show_history: true
-  history_months: 12
-  rss_enabled: true
+# status:
+#   enabled: false
+#   title: "Service Status"
+#   description: "Current operational status"
+#   path: "status"
+#   show_history: true
+#   history_months: 12
+#   rss_enabled: true
 
-# Social links in sidebar
+# Changelog
+# changelog:
+#   enabled: false
+#   title: "Changelog"
+#   path: "changelog"
+#   rss_enabled: true
+#   repository: "https://github.com/org/repo"
+
+# Stale content warning
+# stale_warning:
+#   enabled: true
+#   threshold_days: 365
+#   message: ""                  # Custom message (empty = built-in default)
+#   show_update_date: true
+
+# Link checker
+# link_check:
+#   enabled: true
+#   mode: "warn"                 # error | warn | ignore
+#   check_external: false
+#   external_timeout: 5
+
+# Landing page
+# landing:
+#   enabled: false
+#   nav:
+#     - text: "Docs"
+#       url: "/getting-started/installation.html"
+#   hero:
+#     title: "Documentation Made Simple"
+#     subtitle: "A minimal static site generator"
+#     buttons:
+#       - text: "Get Started"
+#         url: "/getting-started/installation.html"
+#         primary: true
+#   features:
+#     title: "Features"
+#     items:
+#       - emoji: "~"
+#         title: "Fast"
+#         description: "Sub-second builds"
+#   steps:
+#     title: "Quick Start"
+#     items:
+#       - title: "Install"
+#         description: "Download the binary"
+#         code: "curl -sSL ..."
+
+# Portfolio
+# portfolio:
+#   enabled: false
+#   title: "Projects"
+#   description: "Showcase of projects"
+#   path: "portfolio"
+
+# Contact
+# contact:
+#   enabled: false
+#   title: "Contact"
+#   description: "Get in touch"
+#   path: "contact"
+#   email: "hello@example.com"
+#   info:
+#     - icon: "mail"
+#       text: "hello@example.com"
+
+# FAQ
+# faq:
+#   enabled: false
+#   title: "FAQ"
+#   description: "Frequently asked questions"
+#   path: "faq"
+
+# Legal pages
+# legal:
+#   enabled: false
+#   path: "legal"
+#   footer_group: "Legal"
+
+# Knowledge base
+# knowledgebase:
+#   enabled: false
+#   title: "Knowledge Base"
+#   description: "Find answers and solutions"
+#   path: "kb"
+#   search:
+#     enabled: true
+#     placeholder: "Search articles..."
+
+# Roadmap
+# roadmap:
+#   enabled: false
+#   title: "Roadmap"
+#   description: "What we're building"
+#   layout: "board"
+#   path: "roadmap"
+
+# Multi-version documentation
+# versions:
+#   enabled: false
+#   default: "v1"
+#   list:
+#     - name: "v1"
+#       label: "1.x (Latest)"
+#       path: ""
+#     - name: "v0"
+#       label: "0.x (EOL)"
+#       path: "v0"
+#       eol: "2025-01-01"
+#   selector:
+#     position: "header"
+#     show_eol_warning: true
+
+# Internationalization
+# i18n:
+#   enabled: false
+#   default_locale: "en"
+#   hide_default_locale: true
+#   show_untranslated: true
+#   fallback: "en"
+#   locales:
+#     - code: "en"
+#       name: "English"
+#       direction: "ltr"
+#   selector:
+#     position: "header"
+#     show_flags: false
+
+# Footer
+# footer:
+#   copyright: "2026 Your Company"
+#   links:
+#     - title: "Documentation"
+#       items:
+#         - text: "Getting Started"
+#           url: "/getting-started/installation.html"
+#   social:
+#     - name: GitHub
+#       url: https://github.com/org/repo
+#       icon: github
+
+# Social links (sidebar)
 social_links:
   - name: GitHub
     url: https://github.com/your-org/your-project
     icon: github
-  # - name: Twitter
-  #   url: https://twitter.com/handle
-  #   icon: twitter
-  # - name: Discord
-  #   url: https://discord.gg/invite
-  #   icon: discord
+# Supported icons: github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
 
-# Supported social icons:
-# github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
+# PDF export
+# pdf_export:
+#   enabled: false
+#   page_break_level: 2          # 0=none, 1=h1, 2=h1+h2
 
-# Analytics configuration
-analytics:
-  enabled: false
-  providers:
-    # Google Analytics 4
-    # - type: ga4
-    #   enabled: true
-    #   config:
-    #     measurement_id: "G-XXXXXXXXXX"
+# Claude assist
+# claude_assist:
+#   enabled: false
+#   label: "Ask Claude"
 
-    # Plausible Analytics (privacy-friendly)
-    # - type: plausible
-    #   enabled: true
-    #   config:
-    #     domain: "your-domain.com"
-    #     src: "https://plausible.io/js/script.js"
-
-    # Umami Analytics (self-hosted)
-    # - type: umami
-    #   enabled: true
-    #   config:
-    #     website_id: "your-website-id"
-    #     src: "https://your-umami-instance.com/script.js"
-
-    # Custom analytics script
-    # - type: custom
-    #   enabled: true
-    #   config:
-    #     src: "https://example.com/analytics.js"
-    #     location: "head"  # head | body
-    #     defer: "true"
-    #     attrs:
-    #       data-key: "value"
+# Analytics
+# analytics:
+#   enabled: false
+#   providers:
+#     - type: ga4
+#       enabled: true
+#       config:
+#         measurement_id: "G-XXXXXXXXXX"

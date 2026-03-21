@@ -37,6 +37,7 @@ type FileConfig struct {
 	EnableSearch *bool  `yaml:"enable_search"`
 	CleanURLs    *bool  `yaml:"clean_urls"`
 	Entrypoint   string `yaml:"entrypoint"`
+	NavDepth     *int   `yaml:"nav_depth"`
 
 	OpenAPI struct {
 		Enabled           *bool    `yaml:"enabled"`
@@ -239,6 +240,9 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	mergeBool(&result.EnableSearch, cfg.EnableSearch, cliFlags, "search")
 	mergeBool(&result.CleanURLs, cfg.CleanURLs, cliFlags, "clean-urls")
 	mergeStringNoFlag(&result.Entrypoint, cfg.Entrypoint)
+	if cfg.NavDepth != nil {
+		result.NavDepth = *cfg.NavDepth
+	}
 
 	// OpenAPI config
 	mergeBool(&result.OpenAPI.Enabled, cfg.OpenAPI.Enabled, cliFlags, "openapi")

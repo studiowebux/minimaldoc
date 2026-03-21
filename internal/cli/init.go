@@ -232,7 +232,7 @@ enable_llms: true                 # Generate llms.txt for AI tools
 enable_search: true               # Client-side search (Cmd+K / Ctrl+K)
 clean_urls: false                 # /page/ instead of /page.html
 # entrypoint: ""                  # Custom homepage file (default: index.md)
-# NOTE: nav_depth is a CLI-only flag (--nav-depth), not a config key.
+# nav_depth: 0                    # Max navigation tree depth (0 = unlimited)
 
 # ── Stale Content Warnings ───────────────────────────────────
 # Show a banner on pages that haven't been updated in a while.
