@@ -4,40 +4,9 @@
 package core
 
 // DefaultConfigs returns a fully initialized SiteConfig with all defaults applied.
-// This is the single source of truth for default configuration values.
+// Delegates to DefaultSiteConfig to ensure a single source of truth.
 func DefaultConfigs() SiteConfig {
-	return SiteConfig{
-		// Basic site settings
-		Title:        "Documentation",
-		Description:  "Documentation site powered by Minimal Doc",
-		Theme:        "default",
-		DarkMode:     false,
-		EnableLLMS:   true,
-		EnableSearch: true,
-		CleanURLs:    false,
-
-		// Feature configs - each calls its DefaultXxxConfig() function
-		OpenAPI:       DefaultOpenAPIConfig(),
-		Status:        DefaultStatusConfig(),
-		Changelog:     DefaultChangelogConfig(),
-		StaleWarning:  DefaultStaleWarningConfig(),
-		Landing:       DefaultLandingConfig(),
-		ThemeConfig:   DefaultThemeConfig(),
-		Portfolio:     DefaultPortfolioConfig(),
-		Contact:       DefaultContactConfig(),
-		Faq:           DefaultFaqConfig(),
-		Legal:         DefaultLegalConfig(),
-		KnowledgeBase: DefaultKBConfig(),
-		Waitlist:      DefaultWaitlistConfig(),
-		Roadmap:       DefaultRoadmapConfig(),
-		Footer:        DefaultFooterConfig(),
-		LinkCheck:     DefaultLinkCheckConfig(),
-		Versions:      DefaultVersionConfig(),
-		I18n:          DefaultI18nConfig(),
-		PDFExport:     DefaultPDFExportConfig(),
-		ClaudeAssist:  DefaultClaudeAssistConfig(),
-		Analytics:     DefaultAnalyticsConfig(),
-	}
+	return DefaultSiteConfig()
 }
 
 // DefaultConfigRegistry lists all default config functions for documentation
@@ -56,7 +25,6 @@ var DefaultConfigRegistry = map[string]func() any{
 	"faq":           func() any { return DefaultFaqConfig() },
 	"legal":         func() any { return DefaultLegalConfig() },
 	"knowledgebase": func() any { return DefaultKBConfig() },
-	"waitlist":      func() any { return DefaultWaitlistConfig() },
 	"roadmap":       func() any { return DefaultRoadmapConfig() },
 	"footer":        func() any { return DefaultFooterConfig() },
 	"link_check":    func() any { return DefaultLinkCheckConfig() },

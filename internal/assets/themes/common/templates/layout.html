@@ -236,7 +236,7 @@ document.addEventListener('click',function(e){if(e.target.closest('a'))sessionSt
 </div>
 </div>
 {{end}}
-{{if not .Page.Metadata.NoWidgets}}{{template "widgets-docs" .}}{{end}}
+{{template "widgets-docs" .}}
 {{if or .Page.Prev .Page.Next}}<nav class="page-nav">
 {{if .Page.Prev}}<a href="{{$.BasePath}}/{{.Page.Prev.Slug}}.html" class="page-nav-link page-nav-prev">
 <span class="page-nav-label">Previous</span>

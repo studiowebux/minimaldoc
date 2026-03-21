@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -47,6 +48,9 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 	//        - [Title](path.md)
 	listItemRegex := regexp.MustCompile(`^(\s*)[-*]\s+(?:\[([^\]]+)\]\(([^\)]+)\)|(.+))$`)
 
+	// Detect indent unit from the first indented line (supports 2-space, 4-space, tabs)
+	indentUnit := 0
+
 	lineNum := 0
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -63,7 +67,13 @@ func (p *TOCFileParser) Parse(tocFilePath string) ([]*TOCEntry, error) {
 		}
 
 		indent := len(matches[1])
-		level := indent / 2 // Assuming 2 spaces per level
+		if indent > 0 && indentUnit == 0 {
+			indentUnit = indent
+		}
+		level := 0
+		if indentUnit > 0 {
+			level = indent / indentUnit
+		}
 
 		var title, filePath string
 		var isExternal bool
@@ -123,9 +133,21 @@ func (p *TOCFileParser) Flatten(entries []*TOCEntry) []string {
 
 	flatten = func(entries []*TOCEntry) {
 		for _, entry := range entries {
-			if entry.FilePath != "" {
-				// Resolve relative path
+			if entry.FilePath != "" && !entry.IsExternal {
+				// Resolve relative path and validate against traversal
 				fullPath := filepath.Join(p.docsDir, entry.FilePath)
+				absPath, err := filepath.Abs(fullPath)
+				if err != nil {
+					continue
+				}
+				absRoot, err := filepath.Abs(p.docsDir)
+				if err != nil {
+					continue
+				}
+				if !strings.HasPrefix(absPath, absRoot+string(filepath.Separator)) && absPath != absRoot {
+					fmt.Fprintf(os.Stderr, "Warning: TOC path %q escapes docs directory, skipping\n", entry.FilePath)
+					continue
+				}
 				result = append(result, fullPath)
 			}
 			if len(entry.Children) > 0 {

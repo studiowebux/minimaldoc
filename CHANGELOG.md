@@ -8,6 +8,31 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Removed
+
+- **Backend server** (`minimaldoc-server`) — extracted to a separate private
+  repository. The scope was expanding too fast and the codebase was not
+  production-ready after a full security audit revealed 52 issues. This project
+  now focuses exclusively on the static site generator.
+
+### Changed
+
+- Repository restructured: all server code, admin UI, Docker configs, and
+  deployment files removed. Only the static site generator remains.
+- Go module updated to latest dependencies (libopenapi v0.34.3, goldmark
+  v1.7.17, bluemonday v1.0.27).
+
+### Fixed
+
+- SSRF protection in OpenAPI spec URL fetching (private IP filtering)
+- XSS: analytics and OpenAPI HTML generation now use proper escaping
+- Race condition in link checker heading cache (added sync.RWMutex)
+- Open redirect prevention in search.js navigation
+- Config validation: path traversal checks, URL scheme validation, email format
+- TOC parser: path traversal protection, auto-detect indent unit
+- Reflection panic guard in config merge
+- Version parser error handling
+
 ## [1.4.2] - 2026-03-12
 
 ### Fixed

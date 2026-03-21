@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
@@ -22,13 +24,16 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	htmlrenderer "github.com/yuin/goldmark/renderer/html"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
-// OpenAPIParser handles parsing of OpenAPI specifications
+// OpenAPIParser handles parsing of OpenAPI specifications.
+// Descriptions in OpenAPI specs may come from remote URLs, so the rendered
+// HTML is sanitized with bluemonday to prevent XSS from untrusted specs.
 type OpenAPIParser struct {
-	cacheDir string
-	md       goldmark.Markdown // Markdown renderer for descriptions
+	cacheDir  string
+	md        goldmark.Markdown  // Markdown renderer for descriptions
+	sanitizer *bluemonday.Policy // HTML sanitizer for rendered descriptions
 }
 
 // NewOpenAPIParser creates a new OpenAPI parser
@@ -47,8 +52,9 @@ func NewOpenAPIParser(cacheDir string) *OpenAPIParser {
 	)
 
 	return &OpenAPIParser{
-		cacheDir: cacheDir,
-		md:       md,
+		cacheDir:  cacheDir,
+		md:        md,
+		sanitizer: bluemonday.UGCPolicy(),
 	}
 }
 
@@ -60,8 +66,8 @@ func (p *OpenAPIParser) ParseFile(filePath string) (*core.APISpec, error) {
 	}
 
 	doc, err := libopenapi.NewDocumentWithConfiguration(specBytes, &datamodel.DocumentConfiguration{
-		AllowFileReferences:   true,
-		AllowRemoteReferences: true,
+		AllowFileReferences:   true,  // Needed for multi-file specs ($ref: "./schemas/user.yaml")
+		AllowRemoteReferences: false, // Disabled: local specs should not trigger HTTP requests (SSRF risk)
 		BasePath:              filepath.Dir(filePath),
 	})
 	if err != nil {
@@ -91,7 +97,20 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 		return nil, fmt.Errorf("invalid OpenAPI spec URL (must be http or https): %s", url)
 	}
 
-	resp, err := http.Get(url) // #nosec G107 -- scheme validated above
+	// Block requests to private/loopback IPs to prevent SSRF
+	hostname := parsed.Hostname()
+	ips, lookupErr := net.LookupIP(hostname)
+	if lookupErr != nil {
+		return nil, fmt.Errorf("DNS lookup failed for OpenAPI spec URL %s: %w", url, lookupErr)
+	}
+	for _, ip := range ips {
+		if isPrivateOrLoopback(ip) {
+			return nil, fmt.Errorf("OpenAPI spec URL %s resolves to private/loopback address", url)
+		}
+	}
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(url) // #nosec G107 -- scheme validated, private IPs blocked
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: %w", url, err)
 	}
@@ -587,7 +606,9 @@ func (p *OpenAPIParser) convertSchemaProxy(proxy *base.SchemaProxy) *core.APISch
 	return s
 }
 
-// renderMarkdown converts markdown description to HTML
+// renderMarkdown converts markdown description to HTML.
+// Output is sanitized with bluemonday because OpenAPI specs may come from
+// remote URLs — their descriptions are not fully trusted content.
 func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 	if markdown == "" {
 		return ""
@@ -598,7 +619,8 @@ func (p *OpenAPIParser) renderMarkdown(markdown string) string {
 		return markdown
 	}
 
-	html := strings.TrimSpace(buf.String())
+	// Sanitize rendered HTML to strip dangerous tags (script, event handlers, etc.)
+	html := p.sanitizer.Sanitize(strings.TrimSpace(buf.String()))
 
 	// Only trim <p> tags if it's a single paragraph (no newlines, starts/ends with <p>)
 	if strings.HasPrefix(html, "<p>") && strings.HasSuffix(html, "</p>") && strings.Count(html, "<p>") == 1 {
@@ -800,4 +822,28 @@ func decodeYAMLNodes(nodes []*yaml.Node) []any {
 		result = append(result, decodeYAMLNode(n))
 	}
 	return result
+}
+
+// privateNetworks defines CIDR ranges blocked for SSRF prevention.
+var privateNetworks = func() []*net.IPNet {
+	cidrs := []string{
+		"127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+		"169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10",
+	}
+	nets := make([]*net.IPNet, 0, len(cidrs))
+	for _, cidr := range cidrs {
+		_, n, _ := net.ParseCIDR(cidr)
+		nets = append(nets, n)
+	}
+	return nets
+}()
+
+// isPrivateOrLoopback returns true if the IP falls within a private/loopback range.
+func isPrivateOrLoopback(ip net.IP) bool {
+	for _, n := range privateNetworks {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

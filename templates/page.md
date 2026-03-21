@@ -8,6 +8,10 @@ author: Author Name
 menu_title: Short Nav Title
 menu_order: 10
 hidden: false
+# full_width: true
+# no_header: true
+# stale_warning: false
+# stale_threshold_days: 730
 seo:
   title: SEO Title Override
   description: SEO description override

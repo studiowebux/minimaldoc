@@ -1,5 +1,7 @@
 package core
 
+import "sort"
+
 // KBPage represents the complete Knowledge Base page data
 type KBPage struct {
 	Config        KBConfig
@@ -110,6 +112,7 @@ func CollectKBTags(articles []KBArticle) []string {
 	for tag := range tagMap {
 		tags = append(tags, tag)
 	}
+	sort.Strings(tags)
 	return tags
 }
 
@@ -152,13 +155,9 @@ func FindRelatedArticles(current KBArticle, allArticles []KBArticle, limit int) 
 	}
 
 	// Sort by score descending
-	for i := 0; i < len(candidates)-1; i++ {
-		for j := i + 1; j < len(candidates); j++ {
-			if candidates[j].score > candidates[i].score {
-				candidates[i], candidates[j] = candidates[j], candidates[i]
-			}
-		}
-	}
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].score > candidates[j].score
+	})
 
 	// Return top N
 	var related []KBArticle

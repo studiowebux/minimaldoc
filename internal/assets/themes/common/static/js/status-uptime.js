@@ -82,13 +82,11 @@
    * Get component URL from status.json data
    */
   function getComponentUrl(componentId) {
-    // Try to find URL from data attributes or fetch from status.json
-    const statusPath = document.documentElement.dataset.statusPath || 'status';
-    const statusJsonUrl = `${basePath}/${statusPath}/status.json`;
-
-    // Synchronous lookup from cached data or return null
-    // In practice, we'd cache the status.json on page load
-    return null; // Placeholder - component URL should be in data attributes
+    const el = document.querySelector(`.uptime-component[data-component-id="${componentId}"]`);
+    if (el && el.dataset.componentUrl) {
+      return el.dataset.componentUrl;
+    }
+    return null;
   }
 
   /**
@@ -145,7 +143,7 @@
    */
   function showError(placeholder, message) {
     if (placeholder) {
-      placeholder.innerHTML = `<p class="loading-uptime error">Uptime unavailable: ${message}</p>`;
+      placeholder.textContent = 'Uptime unavailable: ' + message;
     }
   }
 

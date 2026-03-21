@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	stdhtml "html"
 	"regexp"
 	"strings"
 
@@ -162,9 +163,9 @@ func (r *admonitionHTMLRenderer) renderAdmonition(w util.BufWriter, source []byt
 		_, _ = w.WriteString(n.AdmonType)
 		_, _ = w.WriteString(`">`)
 
-		// Title
+		// Title (escaped to prevent XSS)
 		_, _ = w.WriteString(`<div class="admonition-title">`)
-		_, _ = w.WriteString(n.Title)
+		_, _ = w.WriteString(stdhtml.EscapeString(n.Title))
 		_, _ = w.WriteString(`</div>`)
 
 		// Content wrapper

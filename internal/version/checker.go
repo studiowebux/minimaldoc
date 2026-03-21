@@ -100,20 +100,23 @@ func parseVersion(v string) [3]int {
 	result := [3]int{0, 0, 0}
 
 	for i := 0; i < len(parts) && i < 3; i++ {
-		// Handle pre-release suffixes (e.g., "1.0.0-beta")
+		// Handle pre-release suffixes (e.g., "1.0.0-beta") — strip everything after hyphen
 		numStr := strings.Split(parts[i], "-")[0]
 		var num int
-		_, _ = fmt.Sscanf(numStr, "%d", &num) // non-numeric string defaults num to 0
+		if _, err := fmt.Sscanf(numStr, "%d", &num); err != nil {
+			num = 0 // non-numeric part treated as 0
+		}
 		result[i] = num
 	}
 
 	return result
 }
 
-// truncateNotes truncates release notes to a maximum length
+// truncateNotes truncates release notes to a maximum rune length. UTF-8 safe.
 func truncateNotes(notes string, maxLen int) string {
-	if len(notes) <= maxLen {
+	runes := []rune(notes)
+	if len(runes) <= maxLen {
 		return notes
 	}
-	return notes[:maxLen] + "..."
+	return string(runes[:maxLen]) + "..."
 }

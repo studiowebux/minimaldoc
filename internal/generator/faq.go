@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
@@ -55,10 +54,7 @@ func (g *FaqGenerator) Generate() error {
 
 	fmt.Println("Generating FAQ page...")
 
-	faqPath := g.site.Config.Faq.Path
-	if faqPath == "" {
-		faqPath = "faq"
-	}
+	faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 
 	outputDir := filepath.Join(g.site.OutputRoot, faqPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -83,10 +79,7 @@ func (g *FaqGenerator) Generate() error {
 
 // generateMainPage generates the FAQ page
 func (g *FaqGenerator) generateMainPage(outputDir string) error {
-	faqPath := g.site.Config.Faq.Path
-	if faqPath == "" {
-		faqPath = "faq"
-	}
+	faqPath := featurePath(g.site.Config.Faq.Path, "faq")
 	data := map[string]any{
 		"Site":       g.site,
 		"FaqPage":    g.site.FaqPage,
@@ -112,28 +105,5 @@ func (g *FaqGenerator) generateMainPage(outputDir string) error {
 
 // getBasePath extracts the path component from BaseURL
 func (g *FaqGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

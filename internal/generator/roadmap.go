@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
@@ -63,10 +62,7 @@ func (g *RoadmapGenerator) Generate() error {
 
 	fmt.Println("Generating roadmap page...")
 
-	roadmapPath := g.site.Config.Roadmap.Path
-	if roadmapPath == "" {
-		roadmapPath = "roadmap"
-	}
+	roadmapPath := featurePath(g.site.Config.Roadmap.Path, "roadmap")
 
 	outputDir := filepath.Join(g.site.OutputRoot, roadmapPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -88,6 +84,7 @@ func (g *RoadmapGenerator) Generate() error {
 		"Tags":       tags,
 		"PageTitle":  g.site.Config.Roadmap.Title,
 		"ActivePath": "/" + roadmapPath + "/",
+		"Footer":     BuildFooter(g.site, g.version),
 	}
 
 	var buf bytes.Buffer
@@ -211,28 +208,5 @@ func (g *RoadmapGenerator) collectTags() []string {
 
 // getBasePath extracts the path component from BaseURL
 func (g *RoadmapGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

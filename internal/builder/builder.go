@@ -213,7 +213,12 @@ func (b *Builder) Build() error {
 func (b *Builder) discoverPages() error {
 	// Single-file mode: only process the entrypoint file
 	if b.site.Config.SingleFileMode && b.site.Config.Entrypoint != "" {
-		filePath := filepath.Join(b.site.DocsRoot, b.site.Config.Entrypoint)
+		filePath := filepath.Clean(filepath.Join(b.site.DocsRoot, b.site.Config.Entrypoint))
+		// Guard against path traversal: resolved path must stay within DocsRoot.
+		docsRoot := filepath.Clean(b.site.DocsRoot)
+		if !strings.HasPrefix(filePath, docsRoot+string(filepath.Separator)) && filePath != docsRoot {
+			return fmt.Errorf("entrypoint %q escapes the docs directory", b.site.Config.Entrypoint)
+		}
 		if _, err := os.Stat(filePath); err != nil {
 			return fmt.Errorf("entrypoint file not found: %s", filePath)
 		}
@@ -227,6 +232,11 @@ func (b *Builder) discoverPages() error {
 	return filepath.WalkDir(b.site.DocsRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
+		}
+
+		// Skip symlinks — following them could expose files outside DocsRoot.
+		if d.Type()&os.ModeSymlink != 0 {
+			return nil
 		}
 
 		// Skip the status directory entirely (it has its own build process)
@@ -579,6 +589,23 @@ func (b *Builder) getBasePath() string {
 	}
 
 	return path
+}
+
+// cloneMetadata creates a deep copy of Metadata, copying Tags and Custom
+// so mutations on the clone don't affect the original.
+func cloneMetadata(m core.Metadata) core.Metadata {
+	clone := m
+	if m.Tags != nil {
+		clone.Tags = make([]string, len(m.Tags))
+		copy(clone.Tags, m.Tags)
+	}
+	if m.Custom != nil {
+		clone.Custom = make(map[string]any, len(m.Custom))
+		for k, v := range m.Custom {
+			clone.Custom[k] = v
+		}
+	}
+	return clone
 }
 
 // calculateStaleWarning calculates whether a page is stale and sets the relevant fields

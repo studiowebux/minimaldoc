@@ -76,8 +76,6 @@
   }
 
   async function init() {
-    console.log('OpenAPI Explorer initializing...');
-
     // Load spec data
     await loadSpecData();
 
@@ -96,7 +94,6 @@
     handleHashNavigation();
     window.addEventListener('hashchange', handleHashNavigation);
 
-    console.log('OpenAPI Explorer ready');
   }
 
   // Load spec metadata
@@ -104,8 +101,6 @@
     try {
       const response = await fetch('./spec-data.json');
       state.spec = await response.json();
-      console.log('Loaded spec:', state.spec.title, 'v' + state.spec.version);
-
       // Store schemas
       if (state.spec.schemas) {
         state.schemas = state.spec.schemas;
@@ -217,7 +212,7 @@
 
     container.innerHTML = `
       <div class="welcome-state">
-        <h2>Welcome to ${state.spec ? state.spec.title : 'API'} Documentation</h2>
+        <h2>Welcome to ${state.spec ? escapeHtml(state.spec.title) : 'API'} Documentation</h2>
         <p>Select an endpoint from the navigation to view its documentation.</p>
       </div>
     `;
@@ -254,7 +249,7 @@
 
     // Description
     if (schema.Description) {
-      html += `<div class="endpoint-description" style="margin-bottom: 1.5rem;">${schema.Description}</div>`;
+      html += `<div class="endpoint-description" style="margin-bottom: 1.5rem;">${escapeHtml(schema.Description)}</div>`;
     }
 
     // Only show schema viewer if there's content
@@ -346,7 +341,7 @@
       html += `<div class="schema-card-body">`;
 
       if (schema.Description) {
-        html += `<p style="margin-bottom: 1rem; color: var(--openapi-fg-secondary);">${schema.Description}</p>`;
+        html += `<p style="margin-bottom: 1rem; color: var(--openapi-fg-secondary);">${escapeHtml(schema.Description)}</p>`;
       }
 
       html += renderSchemaProperties(schema);
@@ -386,7 +381,7 @@
 
   // Build full URL for endpoint
   function buildFullURL(endpoint) {
-    const server = getServerURL();
+    const server = getServerURL().replace(/\/$/, '');
     let url = server + endpoint.Path;
     return url;
   }
@@ -419,7 +414,7 @@
 
         // Description
         if (scheme && scheme.Description) {
-          html += `<div class="auth-scheme-description">${scheme.Description}</div>`;
+          html += `<div class="auth-scheme-description">${escapeHtml(scheme.Description)}</div>`;
         }
 
         // Scheme details table
@@ -619,7 +614,7 @@
       html += `<div class="response-panel${i === 0 ? ' active' : ''}" data-code="${code}">`;
 
       if (response.Description) {
-        html += `<p class="response-desc">${response.Description}</p>`;
+        html += `<p class="response-desc">${escapeHtml(response.Description)}</p>`;
       }
 
       // Response content
@@ -803,7 +798,7 @@
       html += `<p class="endpoint-summary">${escapeHtml(endpoint.Summary)}</p>`;
     }
     if (endpoint.Description) {
-      html += `<div class="endpoint-description">${endpoint.Description}</div>`;
+      html += `<div class="endpoint-description">${escapeHtml(endpoint.Description)}</div>`;
     }
 
     // Authentication Section
@@ -825,7 +820,7 @@
         html += `<td>${escapeHtml(param.In)}</td>`;
         html += `<td>${escapeHtml(typeDisplay)}</td>`;
         html += `<td>${param.Required ? 'Yes' : 'No'}</td>`;
-        html += `<td>${param.Description || ''}</td>`;
+        html += `<td>${escapeHtml(param.Description || '')}</td>`;
         html += `</tr>`;
       });
       html += `</tbody></table></div>`;
@@ -1058,7 +1053,7 @@
           html += '</summary>';
 
           if (prop.Description) {
-            html += `<div class="property-description">${prop.Description}</div>`;
+            html += `<div class="property-description">${escapeHtml(prop.Description)}</div>`;
           }
 
           // Render nested content
@@ -1084,7 +1079,7 @@
             html += '<span class="property-required">required</span>';
           }
           if (prop.Description) {
-            html += `<span class="property-description">${prop.Description}</span>`;
+            html += `<span class="property-description">${escapeHtml(prop.Description)}</span>`;
           }
           html += '</div>';
         }
@@ -1106,7 +1101,7 @@
       html += '<div class="schema-primitive">';
       html += `<span class="property-type">${escapeHtml(getSchemaTypeDisplay(schema))}</span>`;
       if (schema.Description) {
-        html += `<span class="property-description">${schema.Description}</span>`;
+        html += `<span class="property-description">${escapeHtml(schema.Description)}</span>`;
       }
       html += '</div>';
     }
@@ -1335,11 +1330,11 @@
 
       if (!code) return;
 
+      const originalText = btn.textContent;
       try {
         await navigator.clipboard.writeText(code);
 
         // Visual feedback
-        const originalText = btn.textContent;
         btn.textContent = 'Copied!';
         btn.classList.add('copied');
 
@@ -1404,7 +1399,6 @@
       window.APITester.loadEndpoint(endpoint);
     }
 
-    console.log('Loading endpoint in tester:', endpoint.Method, endpoint.Path);
   }
 
   // Copy endpoint link
@@ -1413,8 +1407,6 @@
 
     try {
       await navigator.clipboard.writeText(url);
-      console.log('Link copied:', url);
-
       // Show visual feedback
       if (button) {
         const originalText = button.textContent;

@@ -8,9 +8,9 @@
 <a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}"{{if $.ActivePath}}{{if eq .URL $.ActivePath}} class="active"{{end}}{{end}}>{{.Text}}</a>
 {{- end}}
 {{if .Site.Config.OpenAPI.Enabled}}<a href="{{$.BasePath}}/api/"{{if eq $.ActivePath "/api/"}} class="active"{{end}}>API</a>{{end}}
-{{if .Site.Config.Portfolio.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Portfolio.Path)}} class="active"{{end}}>Portfolio</a>{{end}}
-{{if .Site.Config.Faq.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Faq.Path)}} class="active"{{end}}>FAQ</a>{{end}}
-{{if .Site.Config.KnowledgeBase.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.KnowledgeBase.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.KnowledgeBase.Path)}} class="active"{{end}}>KB</a>{{end}}
-{{if .Site.Config.Contact.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Contact.Path)}} class="active"{{end}}>Contact</a>{{end}}
-{{if .Site.Config.Roadmap.Enabled}}<a href="{{$.BasePath}}/{{.Site.Config.Roadmap.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Roadmap.Path)}} class="active"{{end}}>Roadmap</a>{{end}}
+{{if and .Site.Config.Portfolio.Enabled .Site.Config.Portfolio.Path}}<a href="{{$.BasePath}}/{{.Site.Config.Portfolio.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Portfolio.Path)}} class="active"{{end}}>Portfolio</a>{{end}}
+{{if and .Site.Config.Faq.Enabled .Site.Config.Faq.Path}}<a href="{{$.BasePath}}/{{.Site.Config.Faq.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Faq.Path)}} class="active"{{end}}>FAQ</a>{{end}}
+{{if and .Site.Config.KnowledgeBase.Enabled .Site.Config.KnowledgeBase.Path}}<a href="{{$.BasePath}}/{{.Site.Config.KnowledgeBase.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.KnowledgeBase.Path)}} class="active"{{end}}>KB</a>{{end}}
+{{if and .Site.Config.Contact.Enabled .Site.Config.Contact.Path}}<a href="{{$.BasePath}}/{{.Site.Config.Contact.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Contact.Path)}} class="active"{{end}}>Contact</a>{{end}}
+{{if and .Site.Config.Roadmap.Enabled .Site.Config.Roadmap.Path}}<a href="{{$.BasePath}}/{{.Site.Config.Roadmap.Path}}/"{{if eq $.ActivePath (printf "/%s/" .Site.Config.Roadmap.Path)}} class="active"{{end}}>Roadmap</a>{{end}}
 {{- end}}

@@ -45,9 +45,18 @@ menu_title: Short Title      # Override title in navigation
 menu_order: 10               # Sort order (lower = earlier)
 hidden: false                # Hide from navigation
 
+# Layout overrides
+full_width: false            # Full-width layout (no sidebar)
+no_header: false             # Hide page header
+
 # Stale warning
 stale_warning: true          # Override site setting
 stale_threshold_days: 730    # Override threshold for this page
+
+# OpenAPI integration
+openapi_spec: petstore.yaml  # Embed API endpoint in this page
+openapi_path: /pets
+openapi_method: GET
 
 # SEO overrides
 seo:
@@ -101,6 +110,44 @@ seo:
 | `seo.canonical` | string | Canonical URL |
 | `seo.noindex` | bool | Add noindex meta |
 | `seo.nofollow` | bool | Add nofollow meta |
+
+### Layout Fields
+
+Control page layout and chrome visibility.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `full_width` | bool | false | Hide sidebar, use full-width layout |
+| `no_header` | bool | false | Hide page header (title, description, buttons) |
+
+### OpenAPI Integration Fields
+
+Embed OpenAPI endpoint documentation in a markdown page.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `openapi_spec` | string | Reference to OpenAPI spec file or URL |
+| `openapi_path` | string | Specific API endpoint path to embed (e.g., `/pets`) |
+| `openapi_method` | string | HTTP method to embed (e.g., `GET`, `POST`) |
+
+### Portfolio Fields
+
+Used for pages in the `__portfolio__/` directory.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `image` | string | - | Project thumbnail image path |
+| `links` | []object | - | Project links (each has `text` and `url`) |
+| `featured` | bool | false | Highlight project in the portfolio grid |
+
+### FAQ Fields
+
+Used for pages in the `__faq__/` directory or with FAQ-category items.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `question` | string | FAQ question text |
+| `category` | string | FAQ category name for grouping |
 
 ### Version Fields
 

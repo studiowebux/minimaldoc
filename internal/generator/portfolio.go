@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
@@ -55,10 +54,7 @@ func (g *PortfolioGenerator) Generate() error {
 
 	fmt.Println("Generating portfolio page...")
 
-	portfolioPath := g.site.Config.Portfolio.Path
-	if portfolioPath == "" {
-		portfolioPath = "portfolio"
-	}
+	portfolioPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 
 	outputDir := filepath.Join(g.site.OutputRoot, portfolioPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -81,10 +77,7 @@ func (g *PortfolioGenerator) Generate() error {
 
 // generateMainPage generates the main portfolio listing page
 func (g *PortfolioGenerator) generateMainPage(outputDir string) error {
-	portfolioPath := g.site.Config.Portfolio.Path
-	if portfolioPath == "" {
-		portfolioPath = "portfolio"
-	}
+	portfolioPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,
@@ -126,10 +119,7 @@ func (g *PortfolioGenerator) generateProjectPages(outputDir string) error {
 
 // generateProjectPage generates a single project detail page
 func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core.Project) error {
-	pPath := g.site.Config.Portfolio.Path
-	if pPath == "" {
-		pPath = "portfolio"
-	}
+	pPath := featurePath(g.site.Config.Portfolio.Path, "portfolio")
 	data := map[string]any{
 		"Site":          g.site,
 		"PortfolioPage": g.site.PortfolioPage,
@@ -156,28 +146,5 @@ func (g *PortfolioGenerator) generateProjectPage(projectDir string, project core
 
 // getBasePath extracts the path component from BaseURL
 func (g *PortfolioGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

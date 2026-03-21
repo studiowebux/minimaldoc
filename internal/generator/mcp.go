@@ -251,25 +251,7 @@ a{color:var(--link-color)}
 
 // getBasePath extracts the path component from BaseURL
 func (g *MCPGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-	for _, prefix := range []string{"https://", "http://"} {
-		if strings.HasPrefix(baseURL, prefix) {
-			baseURL = strings.TrimPrefix(baseURL, prefix)
-			break
-		}
-	}
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-	path := "/" + strings.TrimSuffix(parts[1], "/")
-	if path == "/" {
-		return ""
-	}
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }
 
 // specSlug converts an MCP spec name to a URL-safe slug

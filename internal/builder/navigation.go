@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,6 +12,9 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/core"
 	"github.com/studiowebux/minimaldoc/internal/parser"
 )
+
+// navNumPrefixRe matches numeric prefixes like "01-", "02_" in nav paths.
+var navNumPrefixRe = regexp.MustCompile(`^(\d+)[-_]`)
 
 // NavigationBuilder builds the site navigation tree from pages
 type NavigationBuilder struct{}
@@ -57,8 +61,14 @@ func (b *NavigationBuilder) buildFromTOC(pages []*core.Page, docsDir string, toc
 	tocParser := parser.NewTOCFileParser(docsDir)
 	entries, err := tocParser.Parse(tocPath)
 	if err != nil {
-		// Fall back to folder-based navigation on error
-		return b.Build(pages, docsDir, maxDepth)
+		// Fall back to folder-based navigation on error (call buildTree directly to avoid infinite recursion)
+		visiblePages := make([]*core.Page, 0)
+		for _, page := range pages {
+			if !page.IsHidden() {
+				visiblePages = append(visiblePages, page)
+			}
+		}
+		return &core.Navigation{Items: b.buildTree(visiblePages, maxDepth)}
 	}
 
 	// Create a map of file paths to pages for quick lookup
@@ -212,14 +222,24 @@ func (b *NavigationBuilder) groupToNavItems(group *pathGroup, depth int, maxDept
 		return items[i].Title < items[j].Title
 	})
 
+	// Warn about duplicate labels at this level
+	seen := make(map[string]string) // label -> first directory path
+	for _, child := range group.children {
+		label := cleanPathSegment(child.path)
+		if prev, exists := seen[label]; exists {
+			fmt.Fprintf(os.Stderr, "Warning: navigation label collision — directories %q and %q both produce label %q. Rename one to avoid duplicate sidebar entries.\n", prev, child.path, label)
+		} else {
+			seen[label] = child.path
+		}
+	}
+
 	return items
 }
 
 // extractOrder extracts the order number from a filename or directory name
 // Examples: "01-intro" -> 1, "02-guide" -> 2, "guide" -> 999
 func extractOrder(name string) int {
-	re := regexp.MustCompile(`^(\d+)[-_]`)
-	matches := re.FindStringSubmatch(filepath.Base(name))
+	matches := navNumPrefixRe.FindStringSubmatch(filepath.Base(name))
 
 	if len(matches) > 1 {
 		order, err := strconv.Atoi(matches[1])
@@ -235,8 +255,7 @@ func extractOrder(name string) int {
 // Examples: "01-getting-started" -> "Getting Started", "02_API" -> "API"
 func cleanPathSegment(segment string) string {
 	// Remove number prefix
-	re := regexp.MustCompile(`^(\d+)[-_]`)
-	clean := re.ReplaceAllString(segment, "")
+	clean := navNumPrefixRe.ReplaceAllString(segment, "")
 
 	// Replace separators with spaces
 	clean = strings.ReplaceAll(clean, "-", " ")

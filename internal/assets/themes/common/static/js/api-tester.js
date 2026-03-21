@@ -32,7 +32,6 @@
     setupCloseButton();
     setupAddHeaderButton();
 
-    console.log('API Tester ready');
   }
 
   // Load endpoint into tester
@@ -54,7 +53,6 @@
     populateParameters();
     populateRequestBody();
 
-    console.log('Loaded endpoint:', endpoint.Method, endpoint.Path);
   }
 
   // Setup server select
@@ -469,8 +467,6 @@
       curlBtn.addEventListener('click', () => {
         if (window.ExportHandler) {
           window.ExportHandler.exportCurl(state);
-        } else {
-          console.log('Export to cURL:', buildCurlCommand());
         }
       });
     }
@@ -479,8 +475,6 @@
       restcliBtn.addEventListener('click', () => {
         if (window.ExportHandler) {
           window.ExportHandler.exportRestcli(state);
-        } else {
-          console.log('Export to restcli:', buildRestcliConfig());
         }
       });
     }

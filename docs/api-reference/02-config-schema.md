@@ -61,6 +61,7 @@ theme_config:
 enable_llms: boolean             # Generate llms.txt (default: true)
 enable_search: boolean           # Enable search (default: true)
 clean_urls: boolean              # Use /page/ URLs (default: false)
+nav_depth: integer               # Max nav tree depth, 0=unlimited (default: 0)
 
 # MCP Server Documentation
 mcp:
@@ -382,6 +383,17 @@ clean_urls: true
 
 Type: `boolean`
 Default: `false`
+
+### nav_depth
+
+Maximum depth for the navigation tree. Set to 0 for unlimited depth.
+
+```yaml
+nav_depth: 3
+```
+
+Type: `integer`
+Default: `0` (unlimited)
 
 Requires server configuration for fallback.
 

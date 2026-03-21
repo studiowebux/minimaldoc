@@ -18,7 +18,6 @@ type Site struct {
 	FaqPage       *FaqPage       // FAQ page data (if enabled)
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
 	KBPage        *KBPage        // Knowledge Base data (if enabled)
-	WaitlistPage  *WaitlistPage  // Waitlist page data (if enabled)
 	RoadmapPage   *RoadmapPage   // Roadmap page data (if enabled)
 	MCPSpecs      []*MCPSpec     // MCP server documentation (if enabled)
 
@@ -98,9 +97,6 @@ type SiteConfig struct {
 
 	// Knowledge Base
 	KnowledgeBase KBConfig `yaml:"knowledgebase"` // Knowledge Base configuration
-
-	// Waitlist
-	Waitlist WaitlistConfig `yaml:"waitlist"` // Waitlist landing page configuration
 
 	// Roadmap
 	Roadmap RoadmapConfig `yaml:"roadmap"` // Roadmap page configuration
@@ -206,7 +202,6 @@ func DefaultSiteConfig() SiteConfig {
 		Faq:           DefaultFaqConfig(),
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),
-		Waitlist:      DefaultWaitlistConfig(),
 		Roadmap:       DefaultRoadmapConfig(),
 		Footer:        DefaultFooterConfig(),
 		LinkCheck:     DefaultLinkCheckConfig(),
@@ -239,13 +234,15 @@ type NavItem struct {
 // NewSite creates a new Site instance
 func NewSite(docsRoot, outputRoot string, config SiteConfig) *Site {
 	return &Site{
-		Config:     config,
-		Pages:      []*Page{},
-		RootPages:  []*Page{},
-		Navigation: &Navigation{Items: []*NavItem{}},
-		APISpecs:   []*APISpec{},
-		MCPSpecs:   []*MCPSpec{},
-		DocsRoot:   docsRoot,
-		OutputRoot: outputRoot,
+		Config:         config,
+		Pages:          []*Page{},
+		RootPages:      []*Page{},
+		Navigation:     &Navigation{Items: []*NavItem{}},
+		APISpecs:       []*APISpec{},
+		MCPSpecs:       []*MCPSpec{},
+		VersionedPages: make(map[string][]*Page),
+		LocalizedPages: make(map[string][]*Page),
+		DocsRoot:       docsRoot,
+		OutputRoot:     outputRoot,
 	}
 }

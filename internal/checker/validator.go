@@ -2,11 +2,14 @@ package checker
 
 import (
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
@@ -21,7 +24,8 @@ type LinkValidator struct {
 	cleanURLs  bool
 
 	// Cache for heading IDs in HTML files
-	headingCache map[string]map[string]bool
+	headingCache   map[string]map[string]bool
+	headingCacheMu sync.RWMutex
 
 	// HTTP client for external links
 	httpClient *http.Client
@@ -240,8 +244,64 @@ func (v *LinkValidator) validateAsset(link core.CollectedLink) *core.BrokenLink 
 	return nil
 }
 
+// privateNetworks defines CIDR ranges that must not be reached by the link checker.
+var privateNetworks = func() []*net.IPNet {
+	cidrs := []string{
+		"127.0.0.0/8",
+		"10.0.0.0/8",
+		"172.16.0.0/12",
+		"192.168.0.0/16",
+		"169.254.0.0/16",
+		"::1/128",
+		"fc00::/7",
+		"fe80::/10",
+	}
+	nets := make([]*net.IPNet, 0, len(cidrs))
+	for _, cidr := range cidrs {
+		_, n, _ := net.ParseCIDR(cidr)
+		nets = append(nets, n)
+	}
+	return nets
+}()
+
+// isPrivateIP returns true if the IP falls within a private/loopback range.
+func isPrivateIP(ip net.IP) bool {
+	for _, n := range privateNetworks {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
 // validateExternal validates an external URL
 func (v *LinkValidator) validateExternal(link core.CollectedLink) *core.BrokenLink {
+	parsed, err := url.Parse(link.URL)
+	if err != nil {
+		return &core.BrokenLink{
+			Link:   link,
+			Reason: fmt.Sprintf("invalid URL: %v", err),
+		}
+	}
+
+	// Resolve hostname and block private/loopback IPs to prevent SSRF
+	hostname := parsed.Hostname()
+	ips, err := net.LookupIP(hostname)
+	if err != nil {
+		return &core.BrokenLink{
+			Link:   link,
+			Reason: fmt.Sprintf("DNS lookup failed: %v", err),
+		}
+	}
+	for _, ip := range ips {
+		if isPrivateIP(ip) {
+			return &core.BrokenLink{
+				Link:   link,
+				Reason: "URL resolves to private/loopback address",
+			}
+		}
+	}
+
 	req, err := http.NewRequest("HEAD", link.URL, nil)
 	if err != nil {
 		return &core.BrokenLink{
@@ -309,14 +369,19 @@ func (v *LinkValidator) resolveOutputPath(urlPath string) string {
 
 // validateFragment checks if a fragment/anchor exists in an HTML file
 func (v *LinkValidator) validateFragment(htmlPath, fragment string) bool {
-	// Check cache first
+	// Check cache first (read lock)
+	v.headingCacheMu.RLock()
 	if headings, ok := v.headingCache[htmlPath]; ok {
+		v.headingCacheMu.RUnlock()
 		return headings[fragment]
 	}
+	v.headingCacheMu.RUnlock()
 
-	// Parse HTML file for id attributes
+	// Parse HTML file for id attributes (write lock)
 	headings := v.extractHeadingIDs(htmlPath)
+	v.headingCacheMu.Lock()
 	v.headingCache[htmlPath] = headings
+	v.headingCacheMu.Unlock()
 
 	return headings[fragment]
 }
@@ -366,10 +431,15 @@ func (v *LinkValidator) findSimilarFile(path string) string {
 
 // findSimilarAnchor suggests a similar anchor name
 func (v *LinkValidator) findSimilarAnchor(htmlPath, fragment string) string {
+	v.headingCacheMu.RLock()
 	headings := v.headingCache[htmlPath]
+	v.headingCacheMu.RUnlock()
+
 	if headings == nil {
 		headings = v.extractHeadingIDs(htmlPath)
+		v.headingCacheMu.Lock()
 		v.headingCache[htmlPath] = headings
+		v.headingCacheMu.Unlock()
 	}
 
 	fragmentLower := strings.ToLower(fragment)

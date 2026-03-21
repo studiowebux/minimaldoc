@@ -55,10 +55,7 @@ func (g *KBGenerator) Generate() error {
 
 	fmt.Println("Generating Knowledge Base...")
 
-	kbPath := g.site.Config.KnowledgeBase.Path
-	if kbPath == "" {
-		kbPath = "kb"
-	}
+	kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 	outputDir := filepath.Join(g.site.OutputRoot, kbPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -91,10 +88,7 @@ func (g *KBGenerator) Generate() error {
 
 // generateLanding generates the KB landing page
 func (g *KBGenerator) generateLanding(outputDir string) error {
-	kbPath := g.site.Config.KnowledgeBase.Path
-	if kbPath == "" {
-		kbPath = "kb"
-	}
+	kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 	data := map[string]any{
 		"Site":       g.site,
@@ -122,10 +116,7 @@ func (g *KBGenerator) generateLanding(outputDir string) error {
 
 // generateCategory generates a category page and its articles
 func (g *KBGenerator) generateCategory(outputDir string, cat core.KBCategory) error {
-	kbPath := g.site.Config.KnowledgeBase.Path
-	if kbPath == "" {
-		kbPath = "kb"
-	}
+	kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 	catDir := filepath.Join(outputDir, cat.Slug)
 	if err := makeWebDir(catDir); err != nil {
@@ -167,10 +158,7 @@ func (g *KBGenerator) generateCategory(outputDir string, cat core.KBCategory) er
 
 // generateArticle generates a single article page
 func (g *KBGenerator) generateArticle(catDir string, cat core.KBCategory, article core.KBArticle) error {
-	kbPath := g.site.Config.KnowledgeBase.Path
-	if kbPath == "" {
-		kbPath = "kb"
-	}
+	kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 	data := map[string]any{
 		"Site":       g.site,
@@ -209,10 +197,7 @@ func (g *KBGenerator) generateSearchIndex(outputDir string) error {
 		Content     string   `json:"content"`
 	}
 
-	kbPath := g.site.Config.KnowledgeBase.Path
-	if kbPath == "" {
-		kbPath = "kb"
-	}
+	kbPath := featurePath(g.site.Config.KnowledgeBase.Path, "kb")
 
 	var entries []searchEntry
 	for _, cat := range g.site.KBPage.Categories {
@@ -289,30 +274,7 @@ func stripHTML(html string) string {
 
 // getBasePath extracts the path component from BaseURL
 func (g *KBGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }
 
 // KBFuncMap returns template functions specific to KB pages.

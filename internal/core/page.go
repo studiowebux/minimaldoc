@@ -3,9 +3,13 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
+
+// numPrefixRe matches a leading numeric prefix like "01-", "02_", "100-"
+var numPrefixRe = regexp.MustCompile(`^\d+[-_]`)
 
 // Page represents a single documentation page
 type Page struct {
@@ -78,12 +82,10 @@ func GenerateSlugFromPath(relPath string) string {
 	// Remove extension
 	slug := strings.TrimSuffix(relPath, filepath.Ext(relPath))
 
-	// Remove numbered prefixes from each segment
+	// Remove numbered prefixes from each segment (e.g., "01-" but not "100")
 	parts := strings.Split(slug, string(filepath.Separator))
 	for i, part := range parts {
-		// Remove leading numbers and separators (e.g., "01-", "02_")
-		part = strings.TrimLeft(part, "0123456789-_")
-		parts[i] = part
+		parts[i] = numPrefixRe.ReplaceAllString(part, "")
 	}
 
 	slug = strings.Join(parts, "/")
@@ -114,8 +116,8 @@ func titleFromFilename(sourcePath string) string {
 	base := filepath.Base(sourcePath)
 	base = strings.TrimSuffix(base, filepath.Ext(base))
 
-	// Remove number prefix
-	base = strings.TrimLeft(base, "0123456789-_")
+	// Remove number prefix (e.g., "01-" but not "100")
+	base = numPrefixRe.ReplaceAllString(base, "")
 
 	// Replace separators with spaces
 	base = strings.ReplaceAll(base, "-", " ")

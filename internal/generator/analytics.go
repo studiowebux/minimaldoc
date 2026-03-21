@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"strings"
 
@@ -11,59 +12,9 @@ import (
 // AnalyticsFuncMap returns template functions for analytics rendering.
 func AnalyticsFuncMap() template.FuncMap {
 	return template.FuncMap{
-		"analyticsHeadScripts":     analyticsHeadScripts,
-		"analyticsBodyScripts":     analyticsBodyScripts,
-		"hasMinimalDocFeedback":    hasMinimalDocFeedback,
-		"hasMinimalDocNewsletter":  hasMinimalDocNewsletter,
-		"minimalDocFeedbackWidget": minimalDocFeedbackWidget,
-		"minimalDocNewsletterForm": minimalDocNewsletterForm,
-		"feedbackWidgetFor":        feedbackWidgetFor,
-		"newsletterFormFor":        newsletterFormFor,
+		"analyticsHeadScripts": analyticsHeadScripts,
+		"analyticsBodyScripts": analyticsBodyScripts,
 	}
-}
-
-// hasMinimalDocFeedback checks if feedback feature is enabled
-func hasMinimalDocFeedback(config core.AnalyticsConfig) bool {
-	return config.HasMinimalDocFeature("feedback")
-}
-
-// hasMinimalDocNewsletter checks if newsletter feature is enabled
-func hasMinimalDocNewsletter(config core.AnalyticsConfig) bool {
-	return config.HasMinimalDocFeature("newsletter")
-}
-
-// minimalDocFeedbackWidget renders the feedback widget placeholder (for docs pages - backward compat)
-func minimalDocFeedbackWidget(config core.AnalyticsConfig) template.HTML {
-	return feedbackWidgetFor(config, "docs")
-}
-
-// minimalDocNewsletterForm renders the newsletter form placeholder (for docs pages - backward compat)
-func minimalDocNewsletterForm(config core.AnalyticsConfig) template.HTML {
-	return newsletterFormFor(config, "docs")
-}
-
-// feedbackWidgetFor renders the feedback widget for a specific page type
-func feedbackWidgetFor(config core.AnalyticsConfig, pageType string) template.HTML {
-	if !config.ShouldShowFeedback(pageType) {
-		return ""
-	}
-	return template.HTML(`<div class="minimaldoc-feedback-wrapper" data-minimaldoc-feedback></div>`)
-}
-
-// newsletterFormFor renders the newsletter form for a specific page type
-func newsletterFormFor(config core.AnalyticsConfig, pageType string) template.HTML {
-	if !config.ShouldShowNewsletter(pageType) {
-		return ""
-	}
-	return template.HTML(`<div class="minimaldoc-newsletter-wrapper">
-<form data-minimaldoc-newsletter class="minimaldoc-newsletter-form">
-<label for="newsletter-email">Subscribe to updates</label>
-<div class="newsletter-input-group">
-<input type="email" id="newsletter-email" placeholder="Enter your email" required>
-<button type="submit">Subscribe</button>
-</div>
-</form>
-</div>`)
 }
 
 // analyticsHeadScripts generates script tags for analytics providers that go in <head>
@@ -133,11 +84,6 @@ func renderProviderScript(provider core.AnalyticsProvider, location string) stri
 			return ""
 		}
 		return renderSimpleAnalytics(provider)
-	case "minimaldoc":
-		if location != "body" {
-			return ""
-		}
-		return renderMinimalDoc(provider)
 	case "custom":
 		return renderCustom(provider, location)
 	default:
@@ -153,7 +99,7 @@ func renderGA4(provider core.AnalyticsProvider) string {
 	}
 	return fmt.Sprintf(`<script async src="https://www.googletagmanager.com/gtag/js?id=%s"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','%s');</script>`,
-		escapeHTML(measurementID), escapeHTML(measurementID))
+		escapeHTML(measurementID), escapeJS(measurementID))
 }
 
 // renderPlausible renders Plausible Analytics script tag
@@ -191,7 +137,7 @@ func renderMatomo(provider core.AnalyticsProvider) string {
 	// Ensure URL ends without trailing slash for consistency
 	url = strings.TrimSuffix(url, "/")
 	return fmt.Sprintf(`<script>var _paq=window._paq=window._paq||[];_paq.push(['trackPageView']);_paq.push(['enableLinkTracking']);(function(){var u="%s/";_paq.push(['setTrackerUrl',u+'matomo.php']);_paq.push(['setSiteId','%s']);var d=document,g=d.createElement('script'),s=d.getElementsByTagName('script')[0];g.async=true;g.src=u+'matomo.js';s.parentNode.insertBefore(g,s);})();</script>`,
-		escapeHTML(url), escapeHTML(siteID))
+		escapeJS(url), escapeJS(siteID))
 }
 
 // renderFathom renders Fathom Analytics script tag
@@ -217,30 +163,6 @@ func renderSimpleAnalytics(provider core.AnalyticsProvider) string {
 	return fmt.Sprintf(`<script async defer src="%s"></script>
 <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade"/></noscript>`,
 		escapeHTML(src))
-}
-
-// renderMinimalDoc renders the MinimalDoc backend tracking script
-func renderMinimalDoc(provider core.AnalyticsProvider) string {
-	endpoint := provider.GetConfigString("endpoint")
-	siteID := provider.GetConfigString("site_id")
-	if endpoint == "" || siteID == "" {
-		return ""
-	}
-
-	// Features to enable (default: analytics only)
-	features := provider.GetConfigString("features")
-	if features == "" {
-		features = "analytics"
-	}
-
-	// Debug mode
-	debug := ""
-	if provider.GetConfigString("debug") == "true" {
-		debug = ` data-debug`
-	}
-
-	return fmt.Sprintf(`<script src="%s/minimaldoc.js" data-endpoint="%s" data-site-id="%s" data-features="%s"%s defer></script>`,
-		escapeHTML(endpoint), escapeHTML(endpoint), escapeHTML(siteID), escapeHTML(features), debug)
 }
 
 // renderCustom renders a custom analytics script tag with arbitrary attributes
@@ -276,12 +198,13 @@ func renderCustom(provider core.AnalyticsProvider, location string) string {
 	return fmt.Sprintf(`<script%s src="%s"></script>`, attrs.String(), escapeHTML(src))
 }
 
-// escapeHTML escapes special HTML characters
+// escapeHTML escapes special HTML characters for use in attributes.
 func escapeHTML(s string) string {
-	s = strings.ReplaceAll(s, "&", "&amp;")
-	s = strings.ReplaceAll(s, "<", "&lt;")
-	s = strings.ReplaceAll(s, ">", "&gt;")
-	s = strings.ReplaceAll(s, `"`, "&quot;")
-	s = strings.ReplaceAll(s, "'", "&#39;")
-	return s
+	return html.EscapeString(s)
+}
+
+// escapeJS escapes a string for safe embedding inside a JavaScript string literal
+// within a <script> tag (backslash-escaping, not HTML entity escaping).
+func escapeJS(s string) string {
+	return template.JSEscapeString(s)
 }

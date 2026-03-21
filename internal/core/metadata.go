@@ -17,7 +17,6 @@ type Metadata struct {
 	// Layout overrides
 	FullWidth bool `yaml:"full_width"` // Hide sidebar, use full-width layout
 	NoHeader  bool `yaml:"no_header"`  // Hide page header (title, buttons, description)
-	NoWidgets bool `yaml:"no_widgets"` // Hide feedback and newsletter widgets
 
 	// SEO metadata
 	SEO SEO `yaml:"seo"`

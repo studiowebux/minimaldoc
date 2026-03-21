@@ -15,21 +15,17 @@ var rootCmd = &cobra.Command{
 	Short: "Minimal Doc - A modern static site generator for documentation",
 	Long: `Minimal Doc is a fast, minimal static site generator for documentation.
 
-It converts your Markdown files into a beautiful, responsive documentation website
-with automatic navigation, table of contents, and dark mode support.
+It converts your Markdown files into a beautiful, responsive documentation site
+with automatic navigation, search, dark mode, and more.
 
-Features:
-  • Automatic navigation from folder structure
-  • Table of contents with scrollspy
-  • Light/Dark theme toggle
-  • LLM-friendly markdown export
-  • Clean, minimal design
-  • SEO optimized
-  • GitHub Pages ready`,
+Full documentation: https://minimaldoc.studiowebux.com`,
 	Version: version.Version,
 }
 
 func init() {
+	// Prevent cobra from printing errors (we handle them in main)
+	rootCmd.SilenceErrors = true
+
 	// Add subcommands
 	rootCmd.AddCommand(cli.BuildCmd)
 	rootCmd.AddCommand(cli.InitCmd)

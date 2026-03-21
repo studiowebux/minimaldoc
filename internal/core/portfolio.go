@@ -1,6 +1,9 @@
 package core
 
-import "time"
+import (
+	"sort"
+	"time"
+)
 
 // PortfolioPage represents the complete portfolio page data
 type PortfolioPage struct {
@@ -77,5 +80,6 @@ func CollectProjectTags(projects []Project) []string {
 	for tag := range tagMap {
 		tags = append(tags, tag)
 	}
+	sort.Strings(tags)
 	return tags
 }

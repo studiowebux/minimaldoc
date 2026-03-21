@@ -134,7 +134,6 @@ Complete list of all MinimalDoc features with one-liner descriptions.
 | Feature | Description |
 |---------|-------------|
 | Plugin System | Multiple providers can run simultaneously |
-| MinimalDoc Backend | Self-hosted cookie-free analytics with feedback and newsletter |
 | Google Analytics 4 | Native support with measurement ID |
 | Plausible | Privacy-friendly analytics (hosted or self-hosted) |
 | Umami | Open-source analytics support |
@@ -142,32 +141,6 @@ Complete list of all MinimalDoc features with one-liner descriptions.
 | Fathom | Privacy-focused analytics |
 | Simple Analytics | Minimal tracking solution |
 | Custom Provider | Arbitrary script injection with custom attributes |
-
-## Backend Server (Optional)
-
-| Feature | Description |
-|---------|-------------|
-| Self-Hosted | Single binary + SQLite/PostgreSQL, runs anywhere |
-| Cookie-Free Analytics | Privacy-first tracking without cookies or PII |
-| Feedback Widget | Page rating with optional comments |
-| Newsletter | Email subscription with double opt-in verification |
-| Email System | SMTP support with verification and welcome emails |
-| Admin Portal | Web dashboard for analytics, feedback, subscribers |
-| API | REST endpoints for all features |
-| Docker Ready | Dockerfile and docker-compose included |
-
-## Forum (Optional)
-
-| Feature | Description |
-|---------|-------------|
-| Categories | Organize discussions by topic with icons and colors |
-| Topics & Replies | Markdown content with threading and pagination |
-| Tags | Label topics for filtering and discovery |
-| Search | Full-text search across topics and posts |
-| Reputation | Points for creating content, receiving likes, solutions |
-| Moderation | Content flags, user bans, topic locking |
-| Notifications | Alerts for replies, likes, solutions, watched topics |
-| Leaderboard | Top contributors by reputation |
 
 ## Build
 

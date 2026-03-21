@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 
 	"github.com/adrg/frontmatter"
@@ -25,6 +26,7 @@ func (p *FrontmatterParser) Parse(content []byte) (core.Metadata, []byte, error)
 	rest, err := frontmatter.Parse(bytes.NewReader(content), &meta)
 	if err != nil {
 		// If no frontmatter found or parse error, return defaults with full content
+		fmt.Fprintf(os.Stderr, "Warning: failed to parse frontmatter: %v\n", err)
 		return meta, content, nil
 	}
 
@@ -46,6 +48,7 @@ func (p *FrontmatterParser) ParseFile(path string) (core.Metadata, []byte, error
 	rest, err := frontmatter.Parse(bytes.NewReader(content), &meta)
 	if err != nil {
 		// If no frontmatter found or parse error, return defaults with full content
+		fmt.Fprintf(os.Stderr, "Warning: failed to parse frontmatter: %v\n", err)
 		return meta, content, nil
 	}
 

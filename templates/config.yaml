@@ -59,15 +59,6 @@ social_links:
 analytics:
   enabled: false
   providers:
-    # MinimalDoc Backend (self-hosted, cookie-free)
-    # - type: minimaldoc
-    #   enabled: true
-    #   config:
-    #     endpoint: "https://your-minimaldoc-server.com"
-    #     site_id: "your-site-id"
-    #     features: "analytics,feedback"  # analytics, feedback, newsletter
-    #     debug: "false"
-
     # Google Analytics 4
     # - type: ga4
     #   enabled: true

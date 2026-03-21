@@ -29,6 +29,10 @@ to the 'public' directory.`,
 	RunE: runBuild,
 }
 
+// buildMarkerFile is written to the output directory after a successful build.
+// Its presence indicates the directory was created by minimaldoc and is safe to overwrite.
+const buildMarkerFile = ".minimaldoc-build"
+
 var (
 	outputDir       string
 	themeName       string
@@ -51,6 +55,7 @@ var (
 	checkExternal   bool
 	enableMCP       bool
 	mcpDir          string
+	forceOutput     bool
 )
 
 func init() {
@@ -75,6 +80,7 @@ func init() {
 	BuildCmd.Flags().BoolVar(&checkExternal, "check-external", false, "Check external URLs (slower)")
 	BuildCmd.Flags().BoolVar(&enableMCP, "mcp", false, "Enable MCP server documentation")
 	BuildCmd.Flags().StringVar(&mcpDir, "mcp-dir", "mcp", "Directory containing *.mcp.json manifest files (relative to docs root)")
+	BuildCmd.Flags().BoolVar(&forceOutput, "force", false, "Overwrite output directory even without build marker")
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -159,7 +165,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Create link check configuration
 	linkCheckConfig := core.DefaultLinkCheckConfig()
-	linkCheckConfig.Mode = core.LinkCheckMode(linkCheckMode)
+	switch linkCheckMode {
+	case "error", "warn", "ignore":
+		linkCheckConfig.Mode = core.LinkCheckMode(linkCheckMode)
+	default:
+		return fmt.Errorf("invalid link-check mode %q (must be error, warn, or ignore)", linkCheckMode)
+	}
 	linkCheckConfig.CheckExternal = checkExternal
 	if linkCheckMode == "ignore" {
 		linkCheckConfig.Enabled = false
@@ -194,26 +205,19 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		fmt.Println("Loaded configuration from config.yaml")
 	}
 
-	// Conflict check: waitlist and landing both produce index.html
-	if siteConfig.Waitlist.Enabled && siteConfig.Landing.Enabled {
-		return fmt.Errorf("waitlist and landing page cannot both be enabled: both generate index.html")
-	}
-
 	// In single-file mode, set the entrypoint to the file
 	if singleFile != "" {
 		siteConfig.Entrypoint = singleFile
 		siteConfig.SingleFileMode = true
 	}
 
+	// Output directory safety check
+	if err := checkOutputDir(outputDir, forceOutput); err != nil {
+		return err
+	}
+
 	// Create site
 	site := core.NewSite(docsDir, outputDir, siteConfig)
-
-	// Set up waitlist page data (pure config, no markdown builder needed)
-	if siteConfig.Waitlist.Enabled {
-		site.WaitlistPage = &core.WaitlistPage{
-			Config: siteConfig.Waitlist,
-		}
-	}
 
 	// Set up roadmap page data (pure config, no markdown builder needed)
 	if siteConfig.Roadmap.Enabled {
@@ -261,7 +265,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate llms.txt
-	if enableLLMS {
+	if site.Config.EnableLLMS {
 		llmsGen := generator.NewLLMSGenerator(site)
 		if err := llmsGen.Generate(); err != nil {
 			return fmt.Errorf("LLMS generation failed: %w", err)
@@ -396,17 +400,6 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Generate waitlist page (if enabled) - writes index.html, mutually exclusive with landing
-	waitlistGen, err := generator.NewWaitlistGenerator(site, assets.ThemeFS, version.Version)
-	if err != nil {
-		return fmt.Errorf("failed to create waitlist generator: %w", err)
-	}
-	if waitlistGen != nil {
-		if err := waitlistGen.Generate(); err != nil {
-			return fmt.Errorf("waitlist page generation failed: %w", err)
-		}
-	}
-
 	// Generate landing page (if enabled) - must be LAST to avoid being overwritten by versioned index.html
 	landingGen, err := generator.NewLandingGenerator(site, assets.ThemeFS, version.Version)
 	if err != nil {
@@ -424,10 +417,53 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Write build marker so future builds know this directory is safe to overwrite
+	markerPath := filepath.Join(outputDir, buildMarkerFile)
+	if err := os.WriteFile(markerPath, []byte("minimaldoc build output\n"), 0644); err != nil { // #nosec G306
+		fmt.Printf("Warning: could not write build marker: %v\n", err)
+	}
+
 	fmt.Println()
 	fmt.Println("✓ Build complete!")
 	fmt.Printf("✓ Output: %s\n", outputDir)
 	fmt.Println()
 
 	return nil
+}
+
+// checkOutputDir verifies the output directory is safe to write to.
+// If the directory exists and contains files but no .minimaldoc-build marker,
+// it refuses to overwrite unless --force is set.
+func checkOutputDir(dir string, force bool) error {
+	info, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return nil // directory doesn't exist yet, safe to create
+	}
+	if err != nil {
+		return fmt.Errorf("failed to check output directory: %w", err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("output path %q exists but is not a directory", dir)
+	}
+
+	// Check for build marker
+	if _, err := os.Stat(filepath.Join(dir, buildMarkerFile)); err == nil {
+		return nil // marker exists, safe to overwrite
+	}
+
+	// Directory exists without marker — check if it has contents
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("failed to read output directory: %w", err)
+	}
+	if len(entries) == 0 {
+		return nil // empty directory, safe to use
+	}
+
+	if force {
+		fmt.Printf("Warning: overwriting %q (no build marker found, --force used)\n", dir)
+		return nil
+	}
+
+	return fmt.Errorf("output directory %q exists and was not created by minimaldoc (no %s marker). Use --force to overwrite", dir, buildMarkerFile)
 }

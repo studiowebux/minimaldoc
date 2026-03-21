@@ -62,6 +62,8 @@
     versions.forEach(function(v) {
       if (relativePath.startsWith('/' + v + '/')) {
         relativePath = relativePath.substring(v.length + 1);
+      } else if (relativePath === '/' + v) {
+        relativePath = '/';
       }
     });
 

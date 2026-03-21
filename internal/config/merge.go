@@ -21,38 +21,39 @@ func mergeStringNoFlag(dst *string, src string) {
 	}
 }
 
-// mergeBool sets dst to src if src is true and the CLI flag was not set
-// Note: Cannot detect explicit false due to Go zero-value semantics
-func mergeBool(dst *bool, src bool, cliFlags map[string]bool, flagName string) {
+// mergeBool sets dst to *src if src is non-nil and the CLI flag was not set.
+// Using *bool for src correctly distinguishes "not set" (nil) from "explicitly false".
+func mergeBool(dst *bool, src *bool, cliFlags map[string]bool, flagName string) {
 	if flagName != "" && cliFlags[flagName] {
 		return
 	}
-	if src {
-		*dst = src
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeBoolNoFlag sets dst to src if src is true (no CLI flag check)
-func mergeBoolNoFlag(dst *bool, src bool) {
-	if src {
-		*dst = src
+// mergeBoolNoFlag sets dst to *src if src is non-nil (no CLI flag check)
+func mergeBoolNoFlag(dst *bool, src *bool) {
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeInt sets dst to src if src > 0 and the CLI flag was not set
-func mergeInt(dst *int, src int, cliFlags map[string]bool, flagName string) {
+// mergeInt sets dst to *src if src is non-nil and the CLI flag was not set.
+// Using *int for src correctly distinguishes "not set" (nil) from "explicitly 0".
+func mergeInt(dst *int, src *int, cliFlags map[string]bool, flagName string) {
 	if flagName != "" && cliFlags[flagName] {
 		return
 	}
-	if src > 0 {
-		*dst = src
+	if src != nil {
+		*dst = *src
 	}
 }
 
-// mergeIntNoFlag sets dst to src if src > 0 (no CLI flag check)
-func mergeIntNoFlag(dst *int, src int) {
-	if src > 0 {
-		*dst = src
+// mergeIntNoFlag sets dst to *src if src is non-nil (no CLI flag check)
+func mergeIntNoFlag(dst *int, src *int) {
+	if src != nil {
+		*dst = *src
 	}
 }
 
@@ -77,17 +78,31 @@ func mergeStringSliceNoFlag(dst *[]string, src []string) {
 // Both dst and src must be pointers to structs with matching string fields.
 // This eliminates repetitive if statements for structs with many string fields.
 func mergeStringFields(dst, src any) {
-	dstVal := reflect.ValueOf(dst).Elem()
+	dstV := reflect.ValueOf(dst)
+	if dstV.Kind() != reflect.Pointer || dstV.IsNil() {
+		return
+	}
+	dstVal := dstV.Elem()
+	if dstVal.Kind() != reflect.Struct {
+		return
+	}
+
 	srcVal := reflect.ValueOf(src)
 
 	// Handle pointer to struct
 	if srcVal.Kind() == reflect.Pointer {
+		if srcVal.IsNil() {
+			return
+		}
 		srcVal = srcVal.Elem()
 	}
+	if srcVal.Kind() != reflect.Struct {
+		return
+	}
 
+	srcType := srcVal.Type()
 	for i := 0; i < srcVal.NumField(); i++ {
 		srcField := srcVal.Field(i)
-		dstField := dstVal.Field(i)
 
 		// Only handle string fields
 		if srcField.Kind() != reflect.String {
@@ -95,7 +110,13 @@ func mergeStringFields(dst, src any) {
 		}
 
 		// Only merge if source is non-empty
-		if srcField.String() != "" && dstField.CanSet() {
+		if srcField.String() == "" {
+			continue
+		}
+
+		// Match by field name, not index
+		dstField := dstVal.FieldByName(srcType.Field(i).Name)
+		if dstField.IsValid() && dstField.CanSet() && dstField.Kind() == reflect.String {
 			dstField.SetString(srcField.String())
 		}
 	}

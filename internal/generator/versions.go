@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
@@ -129,12 +128,12 @@ func (g *VersionGenerator) generateVersionPages(versionInfo core.VersionInfo, pa
 		// Create output directory
 		outputDir := filepath.Dir(outputPath)
 		if err := makeWebDir(outputDir); err != nil {
-			return fmt.Errorf("failed to create output directory: %w", err)
+			return fmt.Errorf("failed to create output directory for %s: %w", page.Slug, err)
 		}
 
 		// Write HTML file
 		if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
+			return fmt.Errorf("failed to write HTML for page %s: %w", page.Slug, err)
 		}
 	}
 
@@ -182,28 +181,5 @@ func (g *VersionGenerator) getVersionPrefix(versionInfo core.VersionInfo, isDefa
 
 // getBasePath extracts the path component from BaseURL
 func (g *VersionGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

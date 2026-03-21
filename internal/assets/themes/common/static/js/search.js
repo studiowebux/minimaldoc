@@ -12,6 +12,17 @@
     var manifestLoading = false;
     var pendingSearch = null;   // Store pending search while loading
 
+    // Validate URL is relative or same-origin to prevent open redirects
+    function isSafeUrl(url) {
+        if (!url) return false;
+        // Allow relative URLs (starts with / or no protocol)
+        if (url.charAt(0) === '/' || url.charAt(0) === '.' || url.charAt(0) === '#') return true;
+        try {
+            var parsed = new URL(url, window.location.origin);
+            return parsed.origin === window.location.origin;
+        } catch(e) { return false; }
+    }
+
     var modal = document.getElementById('search-modal');
     var input = document.getElementById('search-input');
     var results = document.getElementById('search-results');
@@ -34,11 +45,16 @@
     // Load search manifest (pages + sections + shard list)
     function loadManifest() {
         if (manifestLoaded || manifestLoading) {
-            return manifestLoaded ? Promise.resolve() : new Promise(function(resolve) {
+            return manifestLoaded ? Promise.resolve() : new Promise(function(resolve, reject) {
+                var elapsed = 0;
                 var check = setInterval(function() {
+                    elapsed += 50;
                     if (manifestLoaded) {
                         clearInterval(check);
                         resolve();
+                    } else if (elapsed >= 10000) {
+                        clearInterval(check);
+                        reject(new Error('Manifest load timeout'));
                     }
                 }, 50);
             });
@@ -344,8 +360,10 @@
             }
 
             item.addEventListener('click', function() {
-                closeSearch();
-                window.location.href = page.u;
+                if (isSafeUrl(page.u)) {
+                    closeSearch();
+                    window.location.href = page.u;
+                }
             });
 
             results.appendChild(item);
@@ -382,7 +400,7 @@
         var items = results.querySelectorAll('.search-result-item');
         if (selectedIndex >= 0 && selectedIndex < items.length) {
             var url = items[selectedIndex].dataset.url;
-            if (url) {
+            if (url && isSafeUrl(url)) {
                 closeSearch();
                 window.location.href = url;
             }

@@ -392,37 +392,6 @@ roadmap:
 | `items[].shipped_date` | string | | Date shipped (YYYY-MM-DD) |
 | `items[].changelog_url` | string | | Link to changelog entry |
 
-### Waitlist
-
-Pre-launch landing page with email signup:
-
-```yaml
-waitlist:
-  enabled: true
-  title: Coming Soon
-  tagline: Sign up for early access
-  newsletter_endpoint: https://api.example.com/subscribe
-  site_id: my-site
-  success_message: "Thanks! We'll be in touch."
-  privacy_url: /legal/privacy.html
-  social_links:
-    - name: github
-      url: https://github.com/org/repo
-    - name: discord
-      url: https://discord.gg/invite
-```
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | bool | `false` | Enable waitlist page |
-| `title` | string | `""` | Page title |
-| `tagline` | string | `""` | Subtitle text |
-| `newsletter_endpoint` | string | `""` | POST endpoint for email signup |
-| `site_id` | string | `""` | Site identifier sent with signup |
-| `success_message` | string | `""` | Message shown after signup |
-| `privacy_url` | string | `""` | Link to privacy policy |
-| `social_links` | array | `[]` | Social links with `name` and `url` |
-
 ### FAQ
 
 Frequently asked questions page:

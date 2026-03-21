@@ -123,7 +123,7 @@ func (vb *VersionBuilder) clonePage(page *core.Page, version core.VersionInfo) *
 		Slug:            page.Slug,
 		OutputPath:      page.OutputPath,
 		ModTime:         page.ModTime,
-		Metadata:        page.Metadata,
+		Metadata:        cloneMetadata(page.Metadata),
 		RawMD:           page.RawMD,
 		HTML:            page.HTML,
 		Order:           page.Order,
@@ -177,8 +177,8 @@ func (vb *VersionBuilder) discoverVersionOverrides(versionDir, docsRoot string, 
 			page.Order = extractOrder(filepath.Base(path))
 		}
 
-		// Parse markdown
-		html, err := vb.markdownParser.Parse(content)
+		// Parse markdown with link transformation
+		html, err := vb.markdownParser.ParseWithContext(content, relPath, "")
 		if err != nil {
 			return err
 		}

@@ -60,10 +60,7 @@ func (g *ChangelogGenerator) Generate() error {
 
 	fmt.Println("Generating changelog...")
 
-	changelogPath := g.site.Config.Changelog.Path
-	if changelogPath == "" {
-		changelogPath = "changelog"
-	}
+	changelogPath := featurePath(g.site.Config.Changelog.Path, "changelog")
 
 	outputDir := filepath.Join(g.site.OutputRoot, changelogPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -98,10 +95,7 @@ func (g *ChangelogGenerator) Generate() error {
 
 // generateIndexPage generates the main changelog page
 func (g *ChangelogGenerator) generateIndexPage(outputDir string) error {
-	changelogPath := g.site.Config.Changelog.Path
-	if changelogPath == "" {
-		changelogPath = "changelog"
-	}
+	changelogPath := featurePath(g.site.Config.Changelog.Path, "changelog")
 	data := map[string]any{
 		"Site":          g.site,
 		"ChangelogPage": g.site.ChangelogPage,
@@ -136,10 +130,7 @@ func (g *ChangelogGenerator) generateReleasePages(outputDir string) error {
 
 // generateReleasePage generates a single release detail page
 func (g *ChangelogGenerator) generateReleasePage(outputDir string, release core.Release) error {
-	clPath := g.site.Config.Changelog.Path
-	if clPath == "" {
-		clPath = "changelog"
-	}
+	clPath := featurePath(g.site.Config.Changelog.Path, "changelog")
 	data := map[string]any{
 		"Site":          g.site,
 		"ChangelogPage": g.site.ChangelogPage,
@@ -190,10 +181,7 @@ type CategoryJSON struct {
 
 // generateChangelogJSON generates the changelog.json API file
 func (g *ChangelogGenerator) generateChangelogJSON(outputDir string) error {
-	changelogPath := g.site.Config.Changelog.Path
-	if changelogPath == "" {
-		changelogPath = "changelog"
-	}
+	changelogPath := featurePath(g.site.Config.Changelog.Path, "changelog")
 
 	releases := make([]ReleaseJSON, 0, len(g.site.ChangelogPage.Releases))
 	for _, r := range g.site.ChangelogPage.Releases {
@@ -268,12 +256,9 @@ type changelogRSSFeed struct {
 
 // generateRSSFeed generates an RSS feed for changelog releases
 func (g *ChangelogGenerator) generateRSSFeed(outputDir string) error {
-	changelogPath := g.site.Config.Changelog.Path
-	if changelogPath == "" {
-		changelogPath = "changelog"
-	}
+	changelogPath := featurePath(g.site.Config.Changelog.Path, "changelog")
 
-	baseURL := strings.TrimSuffix(g.site.Config.BaseURL, "/")
+	baseURL := trimBaseURL(g.site.Config.BaseURL)
 
 	// Build RSS items from releases
 	items := make([]changelogRSSItem, 0, len(g.site.ChangelogPage.Releases))
@@ -339,31 +324,5 @@ func (g *ChangelogGenerator) generateRSSFeed(outputDir string) error {
 
 // getBasePath extracts the path component from BaseURL for asset linking
 func (g *ChangelogGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	// Remove protocol
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	// Find the first / after the domain
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	// Get the path part
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

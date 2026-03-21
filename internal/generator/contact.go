@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"path/filepath"
-	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
@@ -55,10 +54,7 @@ func (g *ContactGenerator) Generate() error {
 
 	fmt.Println("Generating contact page...")
 
-	contactPath := g.site.Config.Contact.Path
-	if contactPath == "" {
-		contactPath = "contact"
-	}
+	contactPath := featurePath(g.site.Config.Contact.Path, "contact")
 
 	outputDir := filepath.Join(g.site.OutputRoot, contactPath)
 	if err := makeWebDir(outputDir); err != nil {
@@ -76,10 +72,7 @@ func (g *ContactGenerator) Generate() error {
 
 // generateMainPage generates the contact page
 func (g *ContactGenerator) generateMainPage(outputDir string) error {
-	contactPath := g.site.Config.Contact.Path
-	if contactPath == "" {
-		contactPath = "contact"
-	}
+	contactPath := featurePath(g.site.Config.Contact.Path, "contact")
 	data := map[string]any{
 		"Site":        g.site,
 		"ContactPage": g.site.ContactPage,
@@ -105,28 +98,5 @@ func (g *ContactGenerator) generateMainPage(outputDir string) error {
 
 // getBasePath extracts the path component from BaseURL
 func (g *ContactGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

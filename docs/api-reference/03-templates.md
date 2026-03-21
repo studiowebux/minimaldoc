@@ -17,11 +17,16 @@ Starter templates for common documentation patterns.
 | `config.yaml` | Site configuration | `docs/config.yaml` |
 | `page.md` | Documentation page | `docs/*.md` |
 | `toc.md` | Custom navigation | `docs/TOC.md` |
+| `portfolio-item.md` | Portfolio project | `docs/__portfolio__/*.md` |
+| `faq-item.md` | FAQ question/answer | `docs/__faq__/category/*.md` |
+| `kb-article.md` | Knowledge base article | `docs/__kb__/category/*.md` |
+| `legal-page.md` | Legal page | `docs/__legal__/*.md` |
+| `openapi-page.md` | OpenAPI endpoint page | `docs/api/*.md` |
+| `version-page.md` | Versioned documentation | `docs/__versions__/v*/*.md` |
+| `changelog-release.md` | Individual release | `docs/__changelog__/releases/*.md` |
 | `components.yaml` | Status components | `docs/__status__/components.yaml` |
 | `incident.md` | Incident report | `docs/__status__/incidents/*.md` |
 | `maintenance.md` | Maintenance notice | `docs/__status__/maintenance/*.md` |
-| `release.md` | Release notes | `docs/__changelog__/releases/*.md` |
-| `project.md` | Portfolio project | `docs/__portfolio__/*.md` |
 
 ## Page Template
 
@@ -324,23 +329,18 @@ tags:
   - web
   - documentation
 image: /images/project-screenshot.png
-url: https://project-url.com
+links:
+  - text: Live Demo
+    url: https://example.com
+  - text: Source Code
+    url: https://github.com/user/project
+date: 2025-01-15
 featured: true
 order: 1
 ---
 
 Project description with details about the implementation,
 technologies used, and outcomes achieved.
-
-## Features
-
-- Feature one
-- Feature two
-
-## Technologies
-
-- Technology A
-- Technology B
 ```
 
 ### Portfolio Fields
@@ -348,12 +348,144 @@ technologies used, and outcomes achieved.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `title` | string | Yes | Project name |
-| `description` | string | Yes | Brief description |
+| `description` | string | No | Brief description |
+| `image` | string | No | Thumbnail image URL or path |
 | `tags` | array | No | Filterable tags |
-| `image` | string | No | Screenshot/preview image |
-| `url` | string | No | Live project URL |
+| `links` | array | No | Array of `{text, url}` objects |
+| `date` | string | No | Project date (ISO 8601) |
 | `featured` | boolean | No | Show in featured section |
 | `order` | integer | No | Display order |
+
+## FAQ Item Template
+
+```markdown
+---
+question: How do I configure the site?
+category: Getting Started
+order: 1
+tags:
+  - configuration
+---
+
+Edit `config.yaml` in your docs directory.
+```
+
+### FAQ Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `question` | string | Yes | The FAQ question text |
+| `category` | string | Yes | Category name for grouping |
+| `order` | integer | No | Sort order within category |
+| `tags` | array | No | Tags for search |
+
+## Knowledge Base Article Template
+
+```markdown
+---
+title: Article Title
+description: Brief summary of what this article covers
+tags:
+  - troubleshooting
+  - setup
+order: 1
+---
+
+## Problem
+
+Describe the problem or topic.
+
+## Solution
+
+Step-by-step solution or explanation.
+```
+
+### Knowledge Base Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Article title |
+| `description` | string | No | Summary shown in article cards |
+| `tags` | array | No | Tags for search and related articles |
+| `order` | integer | No | Sort order within category |
+
+Category is determined by the directory name under `__kb__/`.
+
+## Legal Page Template
+
+```markdown
+---
+title: Privacy Policy
+description: How we handle your data
+order: 1
+---
+
+**Effective date:** YYYY-MM-DD
+
+## Information We Collect
+
+Describe what data is collected.
+```
+
+### Legal Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | Yes | Page title |
+| `description` | string | No | Brief description |
+| `order` | integer | No | Sort order in footer links |
+
+## OpenAPI Endpoint Page Template
+
+```markdown
+---
+title: Create User
+description: API endpoint for creating a new user
+openapi_spec: api/openapi.yaml
+openapi_path: /users
+openapi_method: POST
+---
+
+Additional context or usage notes for this endpoint.
+```
+
+### OpenAPI Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `openapi_spec` | string | Yes | Path to OpenAPI spec file or URL |
+| `openapi_path` | string | Yes | API endpoint path (e.g., `/users`) |
+| `openapi_method` | string | Yes | HTTP method (`GET`, `POST`, etc.) |
+
+Without `openapi_path` and `openapi_method`, the page embeds the full spec.
+
+## Versioned Page Template
+
+```markdown
+---
+title: Feature Name
+description: Feature available since v2.0
+versions:
+  - v2
+  - v3
+since: "v2.0"
+# deprecated_in: "v3.0"
+# removed_in: "v4.0"
+# version_note: Important version-specific information
+---
+
+Feature documentation content.
+```
+
+### Version Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `versions` | array | No | Versions this page appears in (empty = all) |
+| `since` | string | No | Version where feature was introduced |
+| `deprecated_in` | string | No | Version where feature was deprecated |
+| `removed_in` | string | No | Version where feature was removed |
+| `version_note` | string | No | Note displayed for version context |
 
 ## Changelog Release Template
 
@@ -402,23 +534,37 @@ Complete documentation structure:
 ```
 docs/
 ├── config.yaml               # All configuration
-├── TOC.md
-├── index.md
+├── TOC.md                    # Custom navigation (optional)
+├── index.md                  # Homepage
 ├── getting-started/
 │   └── *.md
 ├── features/
 │   └── *.md
 ├── api/
-│   └── openapi.yaml
-├── __status__/
-│   ├── components.yaml
-│   ├── incidents/
-│   │   └── YYYY-MM-DD-*.md
-│   └── maintenance/
-│       └── YYYY-MM-DD-*.md
-├── __changelog__/
+│   ├── openapi.yaml          # OpenAPI specs (if enabled)
+│   └── endpoint.md           # Per-endpoint pages (optional)
+├── __portfolio__/            # Portfolio (if enabled)
+│   └── project-name.md
+├── __faq__/                  # FAQ (if enabled)
+│   └── category-name/
+│       └── question.md
+├── __kb__/                   # Knowledge base (if enabled)
+│   └── category-name/
+│       └── article.md
+├── __legal__/                # Legal pages (if enabled)
+│   └── privacy-policy.md
+├── __changelog__/            # Per-release changelog (if enabled)
 │   └── releases/
+│       └── vX.Y.Z.md
+├── __versions__/             # Versioned docs (if enabled)
+│   ├── v1/
+│   │   └── *.md
+│   └── v2/
 │       └── *.md
-└── __portfolio__/
-    └── *.md
+└── __status__/               # Status page (if enabled)
+    ├── components.yaml
+    ├── incidents/
+    │   └── YYYY-MM-DD-*.md
+    └── maintenance/
+        └── YYYY-MM-DD-*.md
 ```

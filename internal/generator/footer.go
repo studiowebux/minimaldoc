@@ -15,10 +15,7 @@ func BuildFooter(site *core.Site, version string) core.FooterConfig {
 
 	// Auto-generate legal links group
 	if site.Config.Legal.Enabled && len(site.LegalPages) > 0 {
-		legalPath := site.Config.Legal.Path
-		if legalPath == "" {
-			legalPath = "legal"
-		}
+		legalPath := featurePath(site.Config.Legal.Path, "legal")
 
 		groupTitle := site.Config.Legal.FooterGroup
 		if groupTitle == "" {
