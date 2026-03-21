@@ -380,7 +380,7 @@ minimaldoc build ./docs \
 
 ```bash
 # Build in container
-docker run -v $(pwd):/app -w /app golang:1.24-alpine sh -c \
+docker run -v $(pwd):/app -w /app golang:1.26-alpine sh -c \
   "go install github.com/studiowebux/minimaldoc/cmd/minimaldoc@latest && \
    minimaldoc build ./docs --output dist"
 ```
