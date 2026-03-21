@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 It converts your Markdown files into a beautiful, responsive documentation site
 with automatic navigation, search, dark mode, and more.
 
-Full documentation: https://minimaldoc.studiowebux.com`,
+Full documentation: https://minimaldoc.com`,
 	Version: version.Version,
 }
 
