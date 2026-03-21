@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"os"
+	"log/slog"
 	"time"
 )
 
@@ -103,12 +103,12 @@ func (t *Templates) WelcomeEmail(email, unsubscribeToken string) *Message {
 func renderTemplate(tmpl string, data any) string {
 	t, err := template.New("email").Parse(tmpl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to parse email template: %v\n", err)
+		slog.Error("failed to parse email template", "error", err)
 		return ""
 	}
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, data); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to render email template: %v\n", err)
+		slog.Error("failed to render email template", "error", err)
 		return ""
 	}
 	return buf.String()

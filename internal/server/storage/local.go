@@ -51,7 +51,8 @@ func (s *LocalStorage) Upload(ctx context.Context, filename string, contentType 
 
 	// Copy content
 	if _, err := io.Copy(file, reader); err != nil {
-		// Clean up on failure (ignore cleanup error)
+		// Close before removal to avoid file lock issues on Windows
+		file.Close()
 		_ = os.Remove(fullPath)
 		return "", "", fmt.Errorf("failed to write file: %w", err)
 	}

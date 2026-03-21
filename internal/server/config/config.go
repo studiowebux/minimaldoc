@@ -80,7 +80,8 @@ type ServerConfig struct {
 	AdminPath      string // Path prefix for admin UI (default: /admin)
 	APIPath        string // Path prefix for API (default: /api)
 	CORSOrigins    []string
-	DocsDir        string // Directory containing static docs (default: public)
+	TrustedProxies []string // IP addresses of trusted reverse proxies (for X-Forwarded-For)
+	DocsDir        string   // Directory containing static docs (default: public)
 	DocsConfigPath string // Path to docs config.yaml (default: docs/config.yaml)
 	Environment    string // "production" or "development" (default: development)
 }
@@ -213,6 +214,7 @@ func Load() (*Config, error) {
 			AdminPath:      getEnv("SERVER_ADMIN_PATH", "/admin"),
 			APIPath:        getEnv("SERVER_API_PATH", "/api/v1"),
 			CORSOrigins:    getEnvSlice("SERVER_CORS_ORIGINS", nil),
+			TrustedProxies: getEnvSlice("SERVER_TRUSTED_PROXIES", nil),
 			DocsDir:        getEnv("SERVER_DOCS_DIR", "public"),
 			DocsConfigPath: getEnv("DOCS_CONFIG_PATH", "docs/config.yaml"),
 			Environment:    getEnv("SERVER_ENV", "development"),

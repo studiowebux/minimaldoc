@@ -49,6 +49,13 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 	engine := gin.New()
 	engine.RedirectTrailingSlash = true
 
+	// Configure trusted proxies for accurate client IP detection (rate limiting, logging)
+	if len(cfg.Server.TrustedProxies) > 0 {
+		_ = engine.SetTrustedProxies(cfg.Server.TrustedProxies)
+	} else {
+		_ = engine.SetTrustedProxies(nil) // trust no proxies by default
+	}
+
 	r := &Router{
 		Engine: engine,
 		config: cfg,
@@ -304,8 +311,17 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender, store storage.Storage) *Router {
 	gin.SetMode(gin.ReleaseMode)
 
+	adminEngine := gin.New()
+
+	// Configure trusted proxies for accurate client IP detection
+	if len(cfg.Server.TrustedProxies) > 0 {
+		_ = adminEngine.SetTrustedProxies(cfg.Server.TrustedProxies)
+	} else {
+		_ = adminEngine.SetTrustedProxies(nil)
+	}
+
 	r := &Router{
-		Engine:  gin.New(),
+		Engine:  adminEngine,
 		config:  cfg,
 		db:      db,
 		email:   emailSender,
