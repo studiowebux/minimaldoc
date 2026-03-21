@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -33,10 +34,12 @@ func GenerateAPIKey() (string, error) {
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
-// HashAPIKey creates a SHA-256 hash of an API key for storage.
-func HashAPIKey(key string) string {
-	hash := sha256.Sum256([]byte(key))
-	return base64.URLEncoding.EncodeToString(hash[:])
+// HashAPIKey creates an HMAC-SHA256 hash of an API key for storage.
+// The secret prevents rainbow table attacks against stored hashes.
+func HashAPIKey(key, secret string) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(key))
+	return base64.URLEncoding.EncodeToString(mac.Sum(nil))
 }
 
 // GenerateSessionToken creates a random session token.

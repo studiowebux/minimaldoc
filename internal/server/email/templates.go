@@ -73,8 +73,9 @@ func (t *Templates) UnsubscribeEmail(email string) *Message {
 }
 
 // WelcomeEmail generates a welcome email after verification.
-func (t *Templates) WelcomeEmail(email, siteID string) *Message {
-	unsubscribeURL := fmt.Sprintf("%s/api/newsletter/unsubscribe?site_id=%s&email=%s", t.baseURL, siteID, email)
+// unsubscribeToken is an HMAC-signed token from auth.SignUnsubscribeToken.
+func (t *Templates) WelcomeEmail(email, unsubscribeToken string) *Message {
+	unsubscribeURL := fmt.Sprintf("%s/api/newsletter/unsubscribe?token=%s", t.baseURL, unsubscribeToken)
 
 	data := struct {
 		SiteName       string

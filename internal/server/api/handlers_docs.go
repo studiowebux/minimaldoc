@@ -68,7 +68,7 @@ func (r *Router) checkDocAccess(c *gin.Context) {
 			respondBadRequest(c, ErrMissingSiteContext, "site context required")
 			return
 		}
-		apiKeyHash := auth.HashAPIKey(apiKey)
+		apiKeyHash := auth.HashAPIKey(apiKey, r.config.Auth.JWTSecret)
 		site, err := r.db.GetSiteByAPIKey(c.Request.Context(), apiKeyHash)
 		if err != nil || site == nil {
 			respondBadRequest(c, ErrInvalidAPIKey, "invalid API key")

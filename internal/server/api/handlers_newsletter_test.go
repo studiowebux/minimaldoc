@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/studiowebux/minimaldoc/internal/server/auth"
 )
 
 // bootstrapAndGetSiteID performs bootstrap and returns the site ID.
@@ -94,8 +96,10 @@ func TestUnsubscribe(t *testing.T) {
 		db.VerifySubscriber(testContext(), siteID, sub.VerifyToken.String)
 	}
 
-	// Unsubscribe
-	w := performRequest(r.Engine, http.MethodPost, "/api/newsletter/unsubscribe", strings.NewReader(body))
+	// Unsubscribe with signed token
+	token := auth.SignUnsubscribeToken(siteID, "subscriber@test.com", "test-secret-key-min-32-characters-long")
+	unsubBody := `{"token":"` + token + `"}`
+	w := performRequest(r.Engine, http.MethodPost, "/api/newsletter/unsubscribe", strings.NewReader(unsubBody))
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d, body = %s", w.Code, http.StatusOK, w.Body.String())

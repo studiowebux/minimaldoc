@@ -62,8 +62,8 @@ func (p *OAuthProvider) Authenticate(ctx context.Context, credentials map[string
 	return nil, fmt.Errorf("use GetAuthURL and HandleCallback for OAuth")
 }
 
-// GetAuthURL returns the URL to redirect for OAuth login.
-func (p *OAuthProvider) GetAuthURL(state string) string {
+// GetAuthURL returns the URL to redirect for OAuth login, with PKCE challenge.
+func (p *OAuthProvider) GetAuthURL(state, codeChallenge string) string {
 	authURL := p.getAuthEndpoint()
 
 	params := url.Values{}
@@ -73,13 +73,19 @@ func (p *OAuthProvider) GetAuthURL(state string) string {
 	params.Set("scope", strings.Join(p.cfg.Scopes, " "))
 	params.Set("state", state)
 
+	if codeChallenge != "" {
+		params.Set("code_challenge", codeChallenge)
+		params.Set("code_challenge_method", "S256")
+	}
+
 	return authURL + "?" + params.Encode()
 }
 
 // HandleCallback processes the OAuth callback and returns user info.
-func (p *OAuthProvider) HandleCallback(ctx context.Context, code string) (*UserInfo, error) {
+// codeVerifier is the PKCE verifier to send with the token exchange.
+func (p *OAuthProvider) HandleCallback(ctx context.Context, code, codeVerifier string) (*UserInfo, error) {
 	// Exchange code for token
-	token, err := p.exchangeCode(ctx, code)
+	token, err := p.exchangeCode(ctx, code, codeVerifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code: %w", err)
 	}
@@ -156,8 +162,8 @@ func (p *OAuthProvider) getUserInfoEndpoint() string {
 	}
 }
 
-// exchangeCode exchanges authorization code for access token.
-func (p *OAuthProvider) exchangeCode(ctx context.Context, code string) (string, error) {
+// exchangeCode exchanges authorization code for access token, with optional PKCE verifier.
+func (p *OAuthProvider) exchangeCode(ctx context.Context, code, codeVerifier string) (string, error) {
 	tokenURL := p.getTokenEndpoint()
 
 	data := url.Values{}
@@ -166,6 +172,9 @@ func (p *OAuthProvider) exchangeCode(ctx context.Context, code string) (string, 
 	data.Set("redirect_uri", p.cfg.RedirectURL)
 	data.Set("client_id", p.cfg.ClientID)
 	data.Set("client_secret", p.cfg.ClientSecret)
+	if codeVerifier != "" {
+		data.Set("code_verifier", codeVerifier)
+	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, strings.NewReader(data.Encode()))
 	if err != nil {

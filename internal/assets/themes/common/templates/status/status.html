@@ -103,7 +103,7 @@
 <div class="uptime-components">
 {{range .StatusPage.Components}}
 {{if .Uptime.Mode}}
-<div class="uptime-component" data-component-id="{{.ID}}" data-uptime-mode="{{.Uptime.Mode}}" data-uptime-endpoint="{{.Uptime.Endpoint}}">
+<div class="uptime-component" data-component-id="{{.ID}}" data-uptime-mode="{{.Uptime.Mode}}" data-uptime-endpoint="{{.Uptime.Endpoint}}" data-component-url="{{.URL}}">
 <div class="uptime-component-header">
 <span class="uptime-component-name">{{.Name}}</span>
 {{if .UptimeData}}

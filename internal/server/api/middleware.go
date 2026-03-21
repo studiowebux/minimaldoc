@@ -172,7 +172,7 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 		// Check API key header first
 		apiKey := c.GetHeader("X-API-Key")
 		if apiKey != "" {
-			keyHash := auth.HashAPIKey(apiKey)
+			keyHash := auth.HashAPIKey(apiKey, cfg.Auth.JWTSecret)
 			site, err := db.GetSiteByAPIKey(c.Request.Context(), keyHash)
 			if err != nil || site == nil {
 				respondUnauthorized(c, ErrInvalidAPIKey, "invalid API key")

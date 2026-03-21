@@ -1777,7 +1777,7 @@ func (r *Router) getForumLeaderboard(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
 		if apiKey := c.GetHeader("X-API-Key"); apiKey != "" {
-			hash := auth.HashAPIKey(apiKey)
+			hash := auth.HashAPIKey(apiKey, r.config.Auth.JWTSecret)
 			site, err := r.db.GetSiteByAPIKey(c.Request.Context(), hash)
 			if err != nil || site == nil {
 				respondBadRequest(c, ErrSiteInvalid, "invalid api key")

@@ -57,7 +57,7 @@ func (r *Router) createSite(c *gin.Context) {
 		respondInternalError(c, ErrAPIKeyGenFailed, "failed to generate API key")
 		return
 	}
-	apiKeyHash := auth.HashAPIKey(apiKey)
+	apiKeyHash := auth.HashAPIKey(apiKey, r.config.Auth.JWTSecret)
 
 	site, err := r.db.CreateSite(c.Request.Context(), siteID, req.Name, req.Domain, apiKeyHash)
 	if err != nil {
@@ -180,7 +180,7 @@ func (r *Router) regenerateAPIKey(c *gin.Context) {
 		respondInternalError(c, ErrAPIKeyGenFailed, "failed to generate API key")
 		return
 	}
-	apiKeyHash := auth.HashAPIKey(apiKey)
+	apiKeyHash := auth.HashAPIKey(apiKey, r.config.Auth.JWTSecret)
 
 	if err := r.db.UpdateSiteAPIKey(c.Request.Context(), id, apiKeyHash); err != nil {
 		respondInternalError(c, ErrDatabaseError, "failed to update API key")

@@ -149,6 +149,7 @@ func NewPublicRouter(cfg *config.Config, db store.Store, emailSender email.Sende
 				newsletter.POST("/subscribe", r.subscribe)
 			}
 			newsletter.GET("/verify", r.verifySubscription)
+			newsletter.GET("/unsubscribe", r.unsubscribe)
 			newsletter.POST("/unsubscribe", r.unsubscribe)
 		}
 

@@ -446,19 +446,25 @@ func (r *Router) oauthLogin(c *gin.Context) {
 		return
 	}
 
-	// Generate state nonce and HMAC-signed cookie
+	// Generate state nonce, PKCE verifier, and HMAC-signed cookie
 	nonce, err := auth.GenerateSessionToken()
 	if err != nil {
 		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate state")
 		return
 	}
-	signedState := auth.SignOAuthState(nonce, siteID, "", r.config.Auth.JWTSecret)
+	verifier, err := auth.GeneratePKCEVerifier()
+	if err != nil {
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate PKCE verifier")
+		return
+	}
+	signedState := auth.SignOAuthStateWithPKCE(nonce, siteID, "", verifier, r.config.Auth.JWTSecret)
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", signedState, 600, "/", "", r.config.Auth.SecureCookies, true)
 
-	// Redirect to provider with nonce as state parameter
-	authURL := providerCfg.GetAuthURL(nonce)
+	// Redirect to provider with nonce as state parameter and PKCE challenge
+	challenge := auth.PKCECodeChallenge(verifier)
+	authURL := providerCfg.GetAuthURL(nonce, challenge)
 	c.Redirect(http.StatusTemporaryRedirect, authURL)
 }
 
@@ -473,7 +479,7 @@ func (r *Router) oauthCallback(c *gin.Context) {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
-	siteID, _, err := auth.VerifyOAuthState(signedState, state, r.config.Auth.JWTSecret)
+	verifier, siteID, _, err := auth.VerifyOAuthStateWithPKCE(signedState, state, r.config.Auth.JWTSecret)
 	if err != nil {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
@@ -498,8 +504,8 @@ func (r *Router) oauthCallback(c *gin.Context) {
 		return
 	}
 
-	// Exchange code for user info
-	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code)
+	// Exchange code for user info with PKCE verifier
+	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code, verifier)
 	if err != nil {
 		respondBadRequest(c, ErrBadRequest, err.Error())
 		return
@@ -735,13 +741,19 @@ func (r *Router) publicOAuthLogin(c *gin.Context) {
 	if c.Query("intent") == "subscribe" && r.config.Auth.AllowNewsletterOAuth {
 		intent = "subscribe"
 	}
-	signedState := auth.SignOAuthState(nonce, siteID, intent, r.config.Auth.JWTSecret)
+	verifier, err := auth.GeneratePKCEVerifier()
+	if err != nil {
+		respondInternalError(c, ErrTokenGenerationFailed, "failed to generate PKCE verifier")
+		return
+	}
+	signedState := auth.SignOAuthStateWithPKCE(nonce, siteID, intent, verifier, r.config.Auth.JWTSecret)
 
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("oauth_state", signedState, 600, "/", "", r.config.Auth.SecureCookies, true)
 
-	// Redirect to provider with nonce as state parameter
-	authURL := providerCfg.GetAuthURL(nonce)
+	// Redirect to provider with nonce as state parameter and PKCE challenge
+	challenge := auth.PKCECodeChallenge(verifier)
+	authURL := providerCfg.GetAuthURL(nonce, challenge)
 	c.Redirect(http.StatusTemporaryRedirect, authURL)
 }
 
@@ -751,13 +763,13 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
 
-	// Verify HMAC-signed state cookie and extract site_id + intent
+	// Verify HMAC-signed state cookie and extract site_id, intent, and PKCE verifier
 	signedState, err := c.Cookie("oauth_state")
 	if err != nil {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
 	}
-	siteID, intent, err := auth.VerifyOAuthState(signedState, state, r.config.Auth.JWTSecret)
+	verifier, siteID, intent, err := auth.VerifyOAuthStateWithPKCE(signedState, state, r.config.Auth.JWTSecret)
 	if err != nil {
 		respondBadRequest(c, ErrInvalidState, "invalid state")
 		return
@@ -782,8 +794,8 @@ func (r *Router) publicOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	// Exchange code for user info
-	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code)
+	// Exchange code for user info with PKCE verifier
+	userInfo, err := providerCfg.HandleCallback(c.Request.Context(), code, verifier)
 	if err != nil {
 		respondBadRequest(c, ErrBadRequest, err.Error())
 		return

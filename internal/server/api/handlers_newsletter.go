@@ -137,7 +137,8 @@ func (r *Router) verifySubscription(c *gin.Context) {
 
 func (r *Router) sendWelcomeEmail(siteName, siteID, emailAddr string) {
 	templates := email.NewTemplates(siteName, r.config.Email.BaseURL)
-	msg := templates.WelcomeEmail(emailAddr, siteID)
+	unsubToken := auth.SignUnsubscribeToken(siteID, emailAddr, r.config.Auth.JWTSecret)
+	msg := templates.WelcomeEmail(emailAddr, unsubToken)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -146,14 +147,33 @@ func (r *Router) sendWelcomeEmail(siteName, siteID, emailAddr string) {
 	}
 }
 
+// UnsubscribeRequest represents a token-based unsubscribe request.
+type UnsubscribeRequest struct {
+	Token string `json:"token" form:"token" binding:"required"`
+}
+
 func (r *Router) unsubscribe(c *gin.Context) {
-	var req SubscribeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		respondBadRequest(c, ErrBadRequest, err.Error())
+	var req UnsubscribeRequest
+
+	// Support both JSON body and query parameter (for email link clicks)
+	if c.Request.Method == http.MethodGet {
+		req.Token = c.Query("token")
+	} else if err := c.ShouldBindJSON(&req); err != nil {
+		req.Token = c.Query("token")
+	}
+
+	if req.Token == "" {
+		respondBadRequest(c, ErrBadRequest, "missing unsubscribe token")
 		return
 	}
 
-	err := r.db.UnsubscribeByEmail(c.Request.Context(), req.SiteID, req.Email)
+	siteID, email, err := auth.VerifyUnsubscribeToken(req.Token, r.config.Auth.JWTSecret)
+	if err != nil {
+		respondBadRequest(c, ErrBadRequest, "invalid or expired unsubscribe token")
+		return
+	}
+
+	err = r.db.UnsubscribeByEmail(c.Request.Context(), siteID, email)
 	if err != nil {
 		respondInternalError(c, ErrUnsubscribeFailed, "failed to unsubscribe")
 		return

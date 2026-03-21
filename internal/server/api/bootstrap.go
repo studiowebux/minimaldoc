@@ -51,7 +51,7 @@ func Bootstrap(ctx context.Context, db store.Store, cfg *config.Config, siteName
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate API key: %w", err)
 	}
-	apiKeyHash := auth.HashAPIKey(apiKey)
+	apiKeyHash := auth.HashAPIKey(apiKey, cfg.Auth.JWTSecret)
 
 	userID, err := auth.GenerateSessionToken()
 	if err != nil {
