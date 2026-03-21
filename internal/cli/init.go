@@ -177,37 +177,354 @@ func incidentFilename() string {
 }
 
 // Config template (base)
-var configContent = `# MinimalDoc Configuration
-# Full reference: https://minimaldoc.dev/getting-started/configuration.html
+// Every supported key is present. Core fields are active; optional sections
+// are commented out so the user can see what exists and uncomment as needed.
+var configContent = `# ──────────────────────────────────────────────────────────────
+# MinimalDoc Configuration
+# Docs: https://minimaldoc.dev/getting-started/configuration.html
+# ──────────────────────────────────────────────────────────────
 
-# Site Information
+# ── Site Information ──────────────────────────────────────────
 title: My Documentation
 description: Documentation for my project
-base_url: ""                    # Set for production (e.g., https://docs.example.com)
 author: Your Name
 
-# Theme & Appearance
-theme: default                  # default | minimal | dark
-dark_mode: false                # Start in dark mode
+# IMPORTANT: Set base_url before deploying. It controls how asset
+# and navigation URLs are built. Leave empty for local preview.
+#   Root domain  → https://docs.example.com
+#   Subdirectory → https://example.com/docs
+base_url: ""
 
-# Features
-enable_llms: true               # Generate llms.txt for AI tools
-enable_search: true             # Enable client-side search (Cmd+K)
-clean_urls: false               # Use /page/ instead of /page.html
+# ── Theme & Appearance ───────────────────────────────────────
+theme: default                    # default | yellow
+dark_mode: false                  # Start in dark mode
 
-# Stale Content Warnings
+# Custom theme colors and fonts (uncomment to override)
+# theme_config:
+#   colors:
+#     light:
+#       bg_primary: "#fafafa"
+#       text_primary: "#1a1a1a"
+#       link_color: "#2563eb"
+#       accent_primary: "#2a2a2a"
+#     dark:
+#       bg_primary: "#1a1a1a"
+#       text_primary: "#ffffff"
+#       link_color: "#7bb3ff"
+#       accent_primary: "#e5e5e5"
+#   fonts:
+#     heading: "Inter, sans-serif"
+#     body: "Inter, sans-serif"
+#     code: "Fira Code, monospace"
+#     google_url: "https://fonts.googleapis.com/css2?family=Inter&display=swap"
+#   hero:
+#     background_image: ""
+#     background_overlay: "rgba(0,0,0,0.6)"
+#     text_align: center            # left | center | right
+#     min_height: ""                # e.g. "80vh"
+
+# ── Features ─────────────────────────────────────────────────
+enable_llms: true                 # Generate llms.txt for AI tools
+enable_search: true               # Client-side search (Cmd+K / Ctrl+K)
+clean_urls: false                 # /page/ instead of /page.html
+# entrypoint: ""                  # Custom homepage file (default: index.md)
+# NOTE: nav_depth is a CLI-only flag (--nav-depth), not a config key.
+
+# ── Stale Content Warnings ───────────────────────────────────
+# Show a banner on pages that haven't been updated in a while.
 stale_warning:
   enabled: false
   threshold_days: 365
   show_update_date: true
+  # message: ""                   # Custom warning text
 
-# Social Links (shown in sidebar)
+# ── Social Links ─────────────────────────────────────────────
+# Shown in the sidebar. Icons: github, twitter, linkedin, youtube,
+# discord, mastodon, rss, email, website
 social_links:
   - name: GitHub
     url: https://github.com/your-org/your-project
     icon: github
 
-# Available icons: github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
+# ── OpenAPI / Swagger ────────────────────────────────────────
+# Interactive API docs from OpenAPI 3.x specs.
+# openapi:
+#   enabled: true
+#   spec_files:                   # Local spec files (relative to docs dir)
+#     - "api/openapi.yaml"
+#   # spec_urls:                  # Remote specs (fetched on build)
+#   #   - "https://api.example.com/openapi.json"
+#   default_view: "path"          # path | tag | flat
+#   # sync_on_build: false        # Re-fetch remote specs every build
+#   # cache_dir: ".openapi-cache" # Cache directory for remote specs
+#   enable_testing: true          # Show "Try It" request tester
+#   enable_export: true           # cURL / restcli export buttons
+#   enable_code_samples: true     # Code samples panel
+#   # lazy_load_chunk_size: 0     # Split large specs (0 = no split)
+
+# ── MCP Server Documentation ────────────────────────────────
+# Generate docs from MCP server JSON manifests.
+# mcp:
+#   enabled: true
+#   spec_files:
+#     - "mcp/server-manifest.json"
+#   path: "mcp"                   # Output URL path
+
+# ── Status Page ──────────────────────────────────────────────
+# Service status with components, incidents, and maintenance windows.
+# Reads from __status__/ directory.
+# status:
+#   enabled: true
+#   title: "Service Status"
+#   description: "Current operational status"
+#   path: "status"
+#   show_history: true
+#   history_months: 12
+#   rss_enabled: true
+
+# ── Changelog ────────────────────────────────────────────────
+# Release notes. Reads from __changelog__/releases/ directory.
+# changelog:
+#   enabled: true
+#   title: "Changelog"
+#   description: "All notable changes to this project"
+#   path: "changelog"
+#   rss_enabled: true
+#   # repository: "https://github.com/your-org/your-project"
+
+# ── Roadmap ──────────────────────────────────────────────────
+# Public roadmap board or timeline.
+# roadmap:
+#   enabled: true
+#   title: "Roadmap"
+#   description: "What we're building and where we're headed."
+#   path: "roadmap"
+#   layout: "board"               # board | timeline
+#   show_versions: true
+#   columns:
+#     - id: planned
+#       label: Planned
+#     - id: in-progress
+#       label: In Progress
+#     - id: shipped
+#       label: Shipped
+#   items:
+#     - title: "Feature X"
+#       description: "Short description"
+#       status: planned            # Must match a column id
+#       version: "1.0"
+#       tags: [backend]
+
+# ── Landing Page ─────────────────────────────────────────────
+# Full-featured landing page with hero, features, CTA, etc.
+# Replaces index.md as the homepage when enabled.
+# landing:
+#   enabled: true
+#   nav:
+#     - text: Docs
+#       url: /getting-started/installation.html
+#     - text: Features
+#       url: /features/overview.html
+#   hero:
+#     title: "Build Docs Fast"
+#     subtitle: "A minimal static site generator for documentation."
+#     buttons:
+#       - text: Get Started
+#         url: /getting-started/installation.html
+#         primary: true
+#       - text: View on GitHub
+#         url: https://github.com/your-org/your-project
+#   features:
+#     title: Features
+#     items:
+#       - title: Fast
+#         description: "Builds in milliseconds"
+#         icon: "~"
+#   # steps, cta, testimonials, opensource, links sections also available
+
+# ── Portfolio ────────────────────────────────────────────────
+# Project showcase page. Reads markdown from __portfolio__/ directory.
+# portfolio:
+#   enabled: true
+#   title: "Portfolio"
+#   description: "Projects and experiments"
+#   path: "portfolio"
+
+# ── FAQ ──────────────────────────────────────────────────────
+# Accordion-style FAQ. Reads markdown from __faq__/ directory or
+# define inline categories below.
+# faq:
+#   enabled: true
+#   title: "FAQ"
+#   description: "Frequently asked questions"
+#   path: "faq"
+#   # categories:
+#   #   - name: General
+#   #     items:
+#   #       - question: "What is this?"
+#   #         answer: "A documentation tool."
+
+# ── Contact ──────────────────────────────────────────────────
+# Simple contact page with email and info items.
+# contact:
+#   enabled: true
+#   title: "Contact"
+#   description: "Get in touch"
+#   path: "contact"
+#   email: "hello@example.com"
+#   info:
+#     - icon: email
+#       text: "hello@example.com"
+
+# ── Knowledge Base ───────────────────────────────────────────
+# Categorized help articles. Reads from __knowledgebase__/ directory.
+# knowledgebase:
+#   enabled: true
+#   title: "Knowledge Base"
+#   description: "Find answers and solutions"
+#   path: "kb"
+#   search:
+#     enabled: true
+#     placeholder: "Search articles..."
+
+# ── Legal Pages ──────────────────────────────────────────────
+# Privacy policy, terms of service, etc. Reads from __legal__/ directory.
+# legal:
+#   enabled: true
+#   path: "legal"
+#   footer_group: "Legal"         # Footer column header for legal links
+
+# ── Waitlist ─────────────────────────────────────────────────
+# Pre-launch landing page with newsletter signup.
+# waitlist:
+#   enabled: true
+#   title: "Coming Soon"
+#   tagline: "Sign up to be notified when we launch."
+#   newsletter_endpoint: "https://your-api.com/subscribe"
+#   site_id: "your-site-id"
+#   success_message: "You're on the list."
+#   privacy_url: "/legal/privacy/"
+#   social_links:
+#     - name: github
+#       url: https://github.com/your-org
+
+# ── PDF Export ───────────────────────────────────────────────
+# Add an "Export PDF" button to documentation pages.
+# pdf_export:
+#   enabled: true
+#   page_break_level: 1           # Page break before: 1=h1, 2=h1+h2, 0=none
+
+# ── Claude Assist ────────────────────────────────────────────
+# "Ask Claude" button that copies page context for AI assistance.
+# claude_assist:
+#   enabled: true
+#   label: "Ask Claude"
+#   prompt: ""                    # Custom prompt prefix
+
+# ── Analytics ────────────────────────────────────────────────
+# Support for GA4, Plausible, Umami, Matomo, Fathom, and MinimalDoc.
+# analytics:
+#   enabled: true
+#   providers:
+#     - type: plausible
+#       enabled: true
+#       config:
+#         domain: "docs.example.com"
+#         src: "https://plausible.io/js/script.js"
+#     # - type: ga4
+#     #   enabled: true
+#     #   config:
+#     #     measurement_id: "G-XXXXXXXXXX"
+#     # - type: umami
+#     #   enabled: true
+#     #   config:
+#     #     website_id: "your-website-id"
+#     #     src: "https://analytics.example.com/script.js"
+#     # - type: minimaldoc
+#     #   enabled: true
+#     #   config:
+#     #     endpoint: "https://your-minimaldoc-server.com"
+#     #     site_id: "your-site-id"
+#     #     features: "analytics,feedback,newsletter"
+
+# ── Multi-Version Documentation ──────────────────────────────
+# Serve multiple doc versions side-by-side. Each version reads from
+# a subdirectory under __versions__/ (e.g., __versions__/v1/).
+# versions:
+#   enabled: true
+#   default: "v2"
+#   list:
+#     - name: v2
+#       label: "2.x (Latest)"
+#       path: v2
+#     - name: v1
+#       label: "1.x"
+#       path: v1
+#       eol: "2025-12-31"         # Show end-of-life warning
+#   selector:
+#     position: header            # header | sidebar
+#     show_eol_warning: true
+
+# ── Internationalization (i18n) ──────────────────────────────
+# Multi-language documentation. Each locale reads from a subdirectory
+# under __translations__/ (e.g., __translations__/fr/).
+# i18n:
+#   enabled: true
+#   default_locale: en
+#   fallback: en
+#   hide_default_locale: true     # /page.html instead of /en/page.html
+#   show_untranslated: true       # Show fallback content with warning
+#   locales:
+#     - code: en
+#       name: English
+#     - code: fr
+#       name: "Français"
+#     - code: ar
+#       name: "العربية"
+#       direction: rtl
+#   selector:
+#     position: header
+#     show_flags: false
+
+# ── Footer ───────────────────────────────────────────────────
+# Footer for landing and standalone pages.
+# footer:
+#   copyright: "© 2026 Your Company. All rights reserved."
+#   hideVersion: false            # Hide "minimaldoc vX.Y.Z" in footer
+#   links:
+#     - title: Product
+#       items:
+#         - text: Documentation
+#           url: /
+#         - text: Changelog
+#           url: /changelog/
+#     - title: Company
+#       items:
+#         - text: About
+#           url: https://example.com/about
+#   social:
+#     - name: GitHub
+#       url: https://github.com/your-org
+#       icon: github
+#   badges:                       # "Powered by" badges
+#     - text: "Built with MinimalDoc"
+#       url: https://minimaldoc.dev
+
+# ── Link Checker ─────────────────────────────────────────────
+# Validates internal (and optionally external) links at build time.
+link_check:
+  enabled: true                   # Run link checker during build
+  mode: warn                      # error | warn | ignore
+  check_external: false
+  # external_timeout: 5           # Seconds per external request
+  # ignore_patterns: []           # Glob patterns to skip
+  # allowed_broken: []            # Known broken links to ignore
+
+# ── Custom Fields ────────────────────────────────────────────
+# Arbitrary key-value pairs accessible in templates via .Site.Config.Custom
+# custom:
+#   company_name: "Acme Corp"
+#   support_email: "support@example.com"
 `
 
 // OpenAPI config section (appended when --with-openapi is used)
@@ -218,7 +535,8 @@ openapi:
   spec_files:
     - "api/openapi.yaml"
   default_view: "path"            # path | tag | flat
-  enable_testing: true            # Show "Try It" interface
+  enable_testing: true            # Show "Try It" request tester
+  enable_export: true             # cURL / restcli export buttons
   enable_code_samples: true       # Show code samples panel
 `
 
@@ -241,6 +559,7 @@ var changelogConfigSection = `
 changelog:
   enabled: true
   title: "Changelog"
+  description: "All notable changes to this project"
   path: "changelog"
   rss_enabled: true
 `
