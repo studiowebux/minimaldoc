@@ -1,0 +1,90 @@
+# MinimalDoc Site Configuration
+# Place this file in your docs directory root
+
+# Basic site information
+title: My Documentation
+description: Documentation for my project
+base_url: https://docs.example.com
+author: Your Name
+
+# Theme settings
+theme: default
+dark_mode: false
+
+# Feature toggles
+enable_llms: true      # Generate llms.txt for AI tools
+enable_search: true    # Enable client-side search
+clean_urls: false      # Use /page/ instead of /page.html
+
+# OpenAPI/Swagger documentation
+openapi:
+  enabled: false
+  spec_files:
+    - "api/openapi.yaml"
+  spec_urls: []
+  default_view: "path"        # path | tag | flat
+  sync_on_build: false        # Fetch remote specs on build
+  cache_dir: ".openapi-cache"
+  enable_testing: true        # Show "Try It" interface
+  enable_export: true         # Enable cURL/restcli export
+  enable_code_samples: true   # Show code samples panel
+  lazy_load_chunk_size: 51200
+
+# Status page
+status:
+  enabled: false
+  title: "Service Status"
+  description: "Current operational status of our services"
+  path: "status"
+  show_history: true
+  history_months: 12
+  rss_enabled: true
+
+# Social links in sidebar
+social_links:
+  - name: GitHub
+    url: https://github.com/your-org/your-project
+    icon: github
+  # - name: Twitter
+  #   url: https://twitter.com/handle
+  #   icon: twitter
+  # - name: Discord
+  #   url: https://discord.gg/invite
+  #   icon: discord
+
+# Supported social icons:
+# github, twitter, linkedin, youtube, discord, mastodon, rss, email, website
+
+# Analytics configuration
+analytics:
+  enabled: false
+  providers:
+    # Google Analytics 4
+    # - type: ga4
+    #   enabled: true
+    #   config:
+    #     measurement_id: "G-XXXXXXXXXX"
+
+    # Plausible Analytics (privacy-friendly)
+    # - type: plausible
+    #   enabled: true
+    #   config:
+    #     domain: "your-domain.com"
+    #     src: "https://plausible.io/js/script.js"
+
+    # Umami Analytics (self-hosted)
+    # - type: umami
+    #   enabled: true
+    #   config:
+    #     website_id: "your-website-id"
+    #     src: "https://your-umami-instance.com/script.js"
+
+    # Custom analytics script
+    # - type: custom
+    #   enabled: true
+    #   config:
+    #     src: "https://example.com/analytics.js"
+    #     location: "head"  # head | body
+    #     defer: "true"
+    #     attrs:
+    #       data-key: "value"

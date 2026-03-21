@@ -1,0 +1,95 @@
+package generator
+
+import (
+	"bytes"
+	"embed"
+	"fmt"
+	"html/template"
+	"path/filepath"
+
+	"github.com/studiowebux/minimaldoc/internal/core"
+)
+
+// LandingGenerator generates landing page HTML
+type LandingGenerator struct {
+	site      *core.Site
+	templates *template.Template
+	themeFS   embed.FS
+	version   string
+}
+
+// NewLandingGenerator creates a new landing generator
+func NewLandingGenerator(site *core.Site, themeFS embed.FS, version string) (*LandingGenerator, error) {
+	if !site.Config.Landing.Enabled {
+		return nil, nil
+	}
+
+	tmpl := template.New("").Funcs(BaseFuncMap()).Funcs(AnalyticsFuncMap())
+
+	var err error
+	tmpl, err = tmpl.ParseFS(
+		themeFS,
+		"themes/common/templates/partials/landing-*.html",
+		"themes/common/templates/partials/analytics.html",
+		"themes/common/templates/partials/minimaldoc-widgets.html",
+		"themes/common/templates/landing/*.html",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse landing templates: %w", err)
+	}
+
+	return &LandingGenerator{
+		site:      site,
+		templates: tmpl,
+		themeFS:   themeFS,
+		version:   version,
+	}, nil
+}
+
+// Generate generates the landing page
+func (g *LandingGenerator) Generate() error {
+	if g.site.LandingPage == nil || !g.site.Config.Landing.Enabled {
+		return nil
+	}
+
+	fmt.Println("Generating landing page...")
+
+	// Generate main landing page as index.html
+	if err := g.generateMainPage(); err != nil {
+		return fmt.Errorf("failed to generate landing page: %w", err)
+	}
+
+	fmt.Println("Generated landing page")
+	return nil
+}
+
+// generateMainPage generates the main landing page
+func (g *LandingGenerator) generateMainPage() error {
+	footer := BuildFooter(g.site, g.version)
+
+	data := map[string]any{
+		"Site":        g.site,
+		"LandingPage": g.site.LandingPage,
+		"Footer":      footer,
+		"BasePath":    g.getBasePath(),
+		"Version":     g.version,
+		"PageTitle":   g.site.Config.Title,
+	}
+
+	var buf bytes.Buffer
+	if err := g.templates.ExecuteTemplate(&buf, "landing.html", data); err != nil {
+		return fmt.Errorf("template execution failed: %w", err)
+	}
+
+	outputPath := filepath.Join(g.site.OutputRoot, "index.html")
+	if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
+		return fmt.Errorf("failed to write landing page: %w", err)
+	}
+
+	return nil
+}
+
+// getBasePath extracts the path component from BaseURL
+func (g *LandingGenerator) getBasePath() string {
+	return GetBasePath(g.site.Config.BaseURL)
+}

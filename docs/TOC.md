@@ -1,0 +1,67 @@
+# MinimalDoc
+
+- [GitHub](https://github.com/studiowebux/minimaldoc)
+
+- [Home](index.md)
+- Getting Started
+  - [Installation](getting-started/01-installation.md)
+  - [Quick Start](getting-started/02-quick-start.md)
+  - [Configuration](getting-started/03-configuration.md)
+- Core Concepts
+  - [Project Structure](core-concepts/01-project-structure.md)
+  - [Markdown Syntax](core-concepts/02-markdown-syntax.md)
+  - [Frontmatter](core-concepts/03-frontmatter.md)
+  - [Navigation](core-concepts/04-navigation.md)
+- Features
+  - [Feature Index](features/00-index.md)
+  - [Overview](features/01-overview.md)
+  - [Search](features/02-search.md)
+  - [Theming](features/03-theming.md)
+  - [Admonitions](features/04-admonitions.md)
+  - [Code Highlighting](features/05-code-highlighting.md)
+  - [SEO](features/06-seo.md)
+  - [LLMs.txt](features/07-llms-txt.md)
+  - [Landing Pages](features/08-landing-pages.md)
+  - [Multi-Version](features/09-multi-version.md)
+  - [Internationalization](features/10-i18n.md)
+  - [Analytics](features/11-analytics.md)
+  - [MCP Server Docs](features/14-mcp-docs.md)
+  - [PDF Export](features/15-pdf-export.md)
+  - [Claude Assist](features/16-claude-assist.md)
+  - [Waitlist](features/17-waitlist.md)
+- OpenAPI/Swagger
+  - [Overview](openapi/01-overview.md)
+  - [Configuration](openapi/02-configuration.md)
+  - [Views](openapi/03-views.md)
+  - [API Testing](openapi/04-testing.md)
+  - [Authentication](openapi/05-authentication.md)
+  - [Code Samples](openapi/06-code-samples.md)
+  - [Schemas](openapi/07-schemas.md)
+- Status Page
+  - [Overview](status-page/01-overview.md)
+  - [Components](status-page/02-components.md)
+  - [Incidents](status-page/03-incidents.md)
+  - [Maintenance](status-page/04-maintenance.md)
+  - [Uptime Tracking](status-page/05-uptime-tracking.md)
+  - [Health Checks](status-page/06-health-checks.md)
+- Changelog
+  - [Overview](changelog/01-overview.md)
+  - [Format](changelog/02-format.md)
+- Guides
+  - [Deployment](guides/01-deployment.md)
+  - [GitHub Pages](guides/02-github-pages.md)
+  - [Custom Themes](guides/03-custom-themes.md)
+  - [Prometheus Integration](guides/04-prometheus-integration.md)
+  - [Roadmap Pages](guides/05-roadmap-pages.md)
+  - [Portfolio](guides/06-portfolio.md)
+  - [Knowledge Base](guides/07-knowledge-base.md)
+  - [FAQ Pages](guides/08-faq.md)
+  - [Contact Page](guides/09-contact-page.md)
+  - [Legal Pages](guides/10-legal-pages.md)
+- API Reference
+  - [CLI Commands](api-reference/01-cli.md)
+  - [Config Schema](api-reference/02-config-schema.md)
+  - [Templates](api-reference/03-templates.md)
+- Resources
+  - [GitHub](https://github.com/studiowebux/minimaldoc)
+  - [Report Issue](https://github.com/studiowebux/minimaldoc/issues)
