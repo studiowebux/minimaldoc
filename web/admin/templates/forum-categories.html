@@ -90,8 +90,8 @@
                     <td>${cat.TopicCount || 0}</td>
                     <td>${cat.IsLocked ? '<span class="badge badge-warning">Locked</span>' : '<span class="badge badge-success">Open</span>'}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="editCategory('${cat.ID}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${cat.ID}')">Delete</button>
+                        <button class="btn btn-sm btn-secondary" data-action="edit-category" data-id="${escapeHtml(cat.ID)}">Edit</button>
+                        <button class="btn btn-sm btn-danger" data-action="delete-category" data-id="${escapeHtml(cat.ID)}">Delete</button>
                     </td>
                 </tr>`;
             }
@@ -162,6 +162,15 @@
                 alert('Failed to delete category');
             }
         }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'edit-category') editCategory(id);
+            else if (action === 'delete-category') deleteCategory(id);
+        });
 
         loadCategories();
     </script>

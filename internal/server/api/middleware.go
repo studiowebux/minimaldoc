@@ -47,7 +47,8 @@ func TracingMiddleware() gin.HandlerFunc {
 func generateNonce() string {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		return ""
+		slog.Error("failed to generate CSP nonce", "error", err)
+		return "csp-error" // invalid nonce blocks all inline scripts (fail-closed)
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }

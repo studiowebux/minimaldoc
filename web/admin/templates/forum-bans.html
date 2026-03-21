@@ -87,7 +87,7 @@
                     <td>${escapeHtml(ban.BannerName?.String || 'System')}</td>
                     <td>${expiry}</td>
                     <td>
-                        <button class="btn btn-sm btn-success" onclick="unbanUser('${ban.UserID}')">Unban</button>
+                        <button class="btn btn-sm btn-success" data-action="unban-user" data-id="${escapeHtml(ban.UserID)}">Unban</button>
                     </td>
                 </tr>`;
             }
@@ -155,6 +155,14 @@
             if (!dateStr) return 'N/A';
             return new Date(dateStr).toLocaleDateString();
         }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'unban-user') unbanUser(id);
+        });
 
         loadBans();
     </script>

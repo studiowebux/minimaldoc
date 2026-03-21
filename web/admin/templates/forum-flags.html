@@ -90,7 +90,7 @@
                     <td><span class="badge badge-${getStatusClass(flag.Status)}">${flag.Status}</span></td>
                     <td>${formatDate(flag.CreatedAt)}</td>
                     <td>
-                        ${flag.Status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="showResolveModal('${flag.ID}')">Resolve</button>` : ''}
+                        ${flag.Status === 'pending' ? `<button class="btn btn-sm btn-primary" data-action="resolve-flag" data-id="${escapeHtml(flag.ID)}">Resolve</button>` : ''}
                         ${flag.TopicID?.Valid ? `<a href="/admin/forum/topics?id=${flag.TopicID.String}" class="btn btn-sm btn-secondary">View</a>` : ''}
                     </td>
                 </tr>`;
@@ -153,6 +153,14 @@
             if (!dateStr) return 'N/A';
             return new Date(dateStr).toLocaleDateString();
         }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'resolve-flag') showResolveModal(id);
+        });
 
         loadFlags();
     </script>

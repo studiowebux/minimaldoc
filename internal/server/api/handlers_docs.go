@@ -60,17 +60,18 @@ func (r *Router) checkDocAccess(c *gin.Context) {
 		return
 	}
 
+	// Prefer site_id from auth context (JWT), fall back to API key header.
+	// API key is the expected auth method when called from static sites.
 	siteID, err := getSiteID(c)
-	if err != nil {
-		// Try to get from API key header
+	if err != nil || siteID == "" {
 		apiKey := c.GetHeader("X-API-Key")
 		if apiKey == "" {
-			respondBadRequest(c, ErrMissingSiteContext, "site context required")
+			respondBadRequest(c, ErrMissingSiteContext, "site context required (provide X-API-Key header)")
 			return
 		}
 		apiKeyHash := auth.HashAPIKey(apiKey, r.config.Auth.JWTSecret)
-		site, err := r.db.GetSiteByAPIKey(c.Request.Context(), apiKeyHash)
-		if err != nil || site == nil {
+		site, siteErr := r.db.GetSiteByAPIKey(c.Request.Context(), apiKeyHash)
+		if siteErr != nil || site == nil {
 			respondBadRequest(c, ErrInvalidAPIKey, "invalid API key")
 			return
 		}

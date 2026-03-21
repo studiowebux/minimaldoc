@@ -762,7 +762,7 @@ func (r *Router) createForumPost(c *gin.Context) {
 	// Create notification for topic author
 	if topic.AuthorID.Valid && topic.AuthorID.String != userID {
 		notifID := uuid.New().String()
-		_ = r.db.CreateForumNotification(c.Request.Context(), notifID, siteID, topic.AuthorID.String, "reply", "New reply to your topic", req.Content[:min(100, len(req.Content))], topic.ID, post.ID, userID)
+		_ = r.db.CreateForumNotification(c.Request.Context(), notifID, siteID, topic.AuthorID.String, "reply", "New reply to your topic", truncateUTF8(req.Content, 100), topic.ID, post.ID, userID)
 	}
 
 	// Notify subscribers
@@ -770,7 +770,7 @@ func (r *Router) createForumPost(c *gin.Context) {
 	for _, subID := range subscribers {
 		if subID != userID {
 			notifID := uuid.New().String()
-			_ = r.db.CreateForumNotification(c.Request.Context(), notifID, siteID, subID, "topic_update", "New reply in topic you're watching", req.Content[:min(100, len(req.Content))], topic.ID, post.ID, userID)
+			_ = r.db.CreateForumNotification(c.Request.Context(), notifID, siteID, subID, "topic_update", "New reply in topic you're watching", truncateUTF8(req.Content, 100), topic.ID, post.ID, userID)
 		}
 	}
 
@@ -1349,7 +1349,7 @@ func (r *Router) adminGetForumCategory(c *gin.Context) {
 
 func (r *Router) adminCreateForumCategory(c *gin.Context) {
 	siteID, err := getSiteID(c)
-	if err != nil {
+	if err != nil || siteID == "" {
 		respondUnauthorized(c, ErrUnauthorized, "unauthorized")
 		return
 	}

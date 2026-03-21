@@ -82,8 +82,8 @@
                     <div class="tag-slug"><code>${escapeHtml(tag.Slug)}</code></div>
                     ${tag.Description?.Valid ? `<div class="tag-desc">${escapeHtml(tag.Description.String)}</div>` : ''}
                     <div class="tag-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="editTag('${tag.ID}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteTag('${tag.ID}')">Delete</button>
+                        <button class="btn btn-sm btn-secondary" data-action="edit-tag" data-id="${escapeHtml(tag.ID)}">Edit</button>
+                        <button class="btn btn-sm btn-danger" data-action="delete-tag" data-id="${escapeHtml(tag.ID)}">Delete</button>
                     </div>
                 </div>`;
             }
@@ -150,6 +150,15 @@
                 alert('Failed to delete tag');
             }
         }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'edit-tag') editTag(id);
+            else if (action === 'delete-tag') deleteTag(id);
+        });
 
         loadTags();
     </script>

@@ -76,9 +76,9 @@
                     <td>${topic.view_count}</td>
                     <td>${formatDate(topic.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-secondary" onclick="togglePin('${topic.id}')">${topic.is_pinned ? 'Unpin' : 'Pin'}</button>
-                        <button class="btn btn-sm btn-secondary" onclick="toggleStatus('${topic.id}', '${topic.status}')">${topic.status === 'open' ? 'Close' : 'Open'}</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteTopic('${topic.id}')">Delete</button>
+                        <button class="btn btn-sm btn-secondary" data-action="toggle-pin" data-id="${escapeHtml(topic.id)}">${topic.is_pinned ? 'Unpin' : 'Pin'}</button>
+                        <button class="btn btn-sm btn-secondary" data-action="toggle-status" data-id="${escapeHtml(topic.id)}" data-status="${escapeHtml(topic.status)}">${topic.status === 'open' ? 'Close' : 'Open'}</button>
+                        <button class="btn btn-sm btn-danger" data-action="delete-topic" data-id="${escapeHtml(topic.id)}">Delete</button>
                     </td>
                 </tr>`;
             }
@@ -131,6 +131,16 @@
             if (!dateStr) return 'N/A';
             return new Date(dateStr).toLocaleDateString();
         }
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (action === 'toggle-pin') togglePin(id);
+            else if (action === 'toggle-status') toggleStatus(id, btn.getAttribute('data-status'));
+            else if (action === 'delete-topic') deleteTopic(id);
+        });
 
         loadTopics();
     </script>

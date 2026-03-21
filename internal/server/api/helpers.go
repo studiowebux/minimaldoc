@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -262,5 +263,15 @@ func (r *Router) getSiteIDWithFallback(c *gin.Context) string {
 	if r.config.Docs != nil && r.config.Docs.SiteID != "" {
 		return r.config.Docs.SiteID
 	}
+	slog.Warn("getSiteIDWithFallback: no site_id resolved", "path", c.Request.URL.Path)
 	return ""
+}
+
+// truncateUTF8 safely truncates a string to maxRunes runes without splitting multi-byte characters.
+func truncateUTF8(s string, maxRunes int) string {
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	return string(runes[:maxRunes])
 }

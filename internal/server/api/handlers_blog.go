@@ -471,7 +471,9 @@ func (r *Router) getPost(c *gin.Context) {
 	}
 
 	// Set post author for middleware checks
-	c.Set("post_author_id", post.AuthorID.String)
+	if post.AuthorID.Valid {
+		c.Set("post_author_id", post.AuthorID.String)
+	}
 
 	c.JSON(http.StatusOK, gin.H{"post": post})
 }
@@ -490,7 +492,7 @@ func (r *Router) updatePost(c *gin.Context) {
 		respondInternalError(c, ErrDatabaseError, "database error")
 		return
 	}
-	if post == nil {
+	if post == nil || post.SiteID != siteID {
 		respondNotFound(c, ErrPostNotFound, "post not found")
 		return
 	}
@@ -499,7 +501,7 @@ func (r *Router) updatePost(c *gin.Context) {
 	role, err := getUserRole(c)
 	if err == nil && role == "author" {
 		userID, err := getUserID(c)
-		if err != nil || post.AuthorID.String != userID {
+		if err != nil || !post.AuthorID.Valid || post.AuthorID.String != userID {
 			respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only edit own posts")
 			return
 		}
@@ -912,7 +914,8 @@ func (r *Router) adminBlogEditor(c *gin.Context) {
 			})
 			return
 		}
-		if p == nil {
+		siteID, _ := getSiteID(c)
+		if p == nil || p.SiteID != siteID {
 			c.HTML(http.StatusNotFound, "error.html", gin.H{
 				"Title": "Not Found",
 				"Error": "Post not found",
@@ -924,7 +927,7 @@ func (r *Router) adminBlogEditor(c *gin.Context) {
 		role, roleErr := getUserRole(c)
 		userID, userErr := getUserID(c)
 		if roleErr == nil && userErr == nil && role == "author" {
-			if p.AuthorID.String != userID {
+			if !p.AuthorID.Valid || p.AuthorID.String != userID {
 				c.HTML(http.StatusForbidden, "error.html", gin.H{
 					"Title": "Forbidden",
 					"Error": "You can only edit your own posts",
