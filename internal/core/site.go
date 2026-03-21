@@ -17,9 +17,8 @@ type Site struct {
 	ContactPage   *ContactPage   // Contact page data (if enabled)
 	FaqPage       *FaqPage       // FAQ page data (if enabled)
 	LegalPages    []*LegalPage   // Legal pages (if enabled)
-	KBPage        *KBPage        // Knowledge Base data (if enabled)
-	WaitlistPage  *WaitlistPage  // Waitlist page data (if enabled)
-	RoadmapPage   *RoadmapPage   // Roadmap page data (if enabled)
+	KBPage      *KBPage      // Knowledge Base data (if enabled)
+	RoadmapPage *RoadmapPage // Roadmap page data (if enabled)
 	MCPSpecs      []*MCPSpec     // MCP server documentation (if enabled)
 
 	// Versioning
@@ -98,9 +97,6 @@ type SiteConfig struct {
 
 	// Knowledge Base
 	KnowledgeBase KBConfig `yaml:"knowledgebase"` // Knowledge Base configuration
-
-	// Waitlist
-	Waitlist WaitlistConfig `yaml:"waitlist"` // Waitlist landing page configuration
 
 	// Roadmap
 	Roadmap RoadmapConfig `yaml:"roadmap"` // Roadmap page configuration
@@ -206,7 +202,6 @@ func DefaultSiteConfig() SiteConfig {
 		Faq:           DefaultFaqConfig(),
 		Legal:         DefaultLegalConfig(),
 		KnowledgeBase: DefaultKBConfig(),
-		Waitlist:      DefaultWaitlistConfig(),
 		Roadmap:       DefaultRoadmapConfig(),
 		Footer:        DefaultFooterConfig(),
 		LinkCheck:     DefaultLinkCheckConfig(),

@@ -398,20 +398,6 @@ social_links:
 #   path: "legal"
 #   footer_group: "Legal"         # Footer column header for legal links
 
-# ── Waitlist ─────────────────────────────────────────────────
-# Pre-launch landing page with newsletter signup.
-# waitlist:
-#   enabled: true
-#   title: "Coming Soon"
-#   tagline: "Sign up to be notified when we launch."
-#   newsletter_endpoint: "https://your-api.com/subscribe"
-#   site_id: "your-site-id"
-#   success_message: "You're on the list."
-#   privacy_url: "/legal/privacy/"
-#   social_links:
-#     - name: github
-#       url: https://github.com/your-org
-
 # ── PDF Export ───────────────────────────────────────────────
 # Add an "Export PDF" button to documentation pages.
 # pdf_export:
@@ -426,7 +412,7 @@ social_links:
 #   prompt: ""                    # Custom prompt prefix
 
 # ── Analytics ────────────────────────────────────────────────
-# Support for GA4, Plausible, Umami, Matomo, Fathom, and MinimalDoc.
+# Support for GA4, Plausible, Umami, Matomo, Fathom, Simple Analytics, and custom providers.
 # analytics:
 #   enabled: true
 #   providers:

@@ -25,7 +25,6 @@ var DefaultConfigRegistry = map[string]func() any{
 	"faq":           func() any { return DefaultFaqConfig() },
 	"legal":         func() any { return DefaultLegalConfig() },
 	"knowledgebase": func() any { return DefaultKBConfig() },
-	"waitlist":      func() any { return DefaultWaitlistConfig() },
 	"roadmap":       func() any { return DefaultRoadmapConfig() },
 	"footer":        func() any { return DefaultFooterConfig() },
 	"link_check":    func() any { return DefaultLinkCheckConfig() },

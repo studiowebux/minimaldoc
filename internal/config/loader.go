@@ -84,7 +84,6 @@ type FileConfig struct {
 	Faq           core.FaqConfig          `yaml:"faq"`
 	Legal         core.LegalConfig        `yaml:"legal"`
 	KnowledgeBase core.KBConfig           `yaml:"knowledgebase"`
-	Waitlist      core.WaitlistConfig     `yaml:"waitlist"`
 	Roadmap       core.RoadmapConfig      `yaml:"roadmap"`
 	Footer        core.FooterConfig       `yaml:"footer"`
 	LinkCheck     core.LinkCheckConfig    `yaml:"link_check"`
@@ -187,16 +186,16 @@ func (cfg *FileConfig) Validate() error {
 
 	// Path fields must be relative, no traversal
 	pathFields := map[string]string{
-		"status.path":       cfg.Status.Path,
-		"changelog.path":    cfg.Changelog.Path,
-		"faq.path":          cfg.Faq.Path,
-		"contact.path":      cfg.Contact.Path,
-		"portfolio.path":    cfg.Portfolio.Path,
+		"status.path":        cfg.Status.Path,
+		"changelog.path":     cfg.Changelog.Path,
+		"faq.path":           cfg.Faq.Path,
+		"contact.path":       cfg.Contact.Path,
+		"portfolio.path":     cfg.Portfolio.Path,
 		"knowledgebase.path": cfg.KnowledgeBase.Path,
-		"legal.path":        cfg.Legal.Path,
-		"roadmap.path":      cfg.Roadmap.Path,
-		"mcp.path":          cfg.MCP.Path,
-		"openapi.cache_dir": cfg.OpenAPI.CacheDir,
+		"legal.path":         cfg.Legal.Path,
+		"roadmap.path":       cfg.Roadmap.Path,
+		"mcp.path":           cfg.MCP.Path,
+		"openapi.cache_dir":  cfg.OpenAPI.CacheDir,
 	}
 	for name, val := range pathFields {
 		if val != "" && !isSafePath(val) {
@@ -320,9 +319,6 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 		if result.KnowledgeBase.Path == "" {
 			result.KnowledgeBase.Path = core.DefaultKBConfig().Path
 		}
-	}
-	if cfg.Waitlist.Enabled {
-		result.Waitlist = cfg.Waitlist
 	}
 	if cfg.Roadmap.Enabled {
 		result.Roadmap = cfg.Roadmap

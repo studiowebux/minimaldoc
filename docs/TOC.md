@@ -28,7 +28,6 @@
   - [MCP Server Docs](features/14-mcp-docs.md)
   - [PDF Export](features/15-pdf-export.md)
   - [Claude Assist](features/16-claude-assist.md)
-  - [Waitlist](features/17-waitlist.md)
 - OpenAPI/Swagger
   - [Overview](openapi/01-overview.md)
   - [Configuration](openapi/02-configuration.md)

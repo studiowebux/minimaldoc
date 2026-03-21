@@ -1,18 +1,10 @@
 # Binaries
 minimaldoc
-minimaldoc-server
-bin/minimaldoc
-bin/minimaldoc-server
+bin/
 *.exe
 *.dll
 *.so
 *.dylib
-
-# Databases
-*.db
-
-# Uploads
-uploads/
 
 # Test binary, built with `go test -c`
 *.test
