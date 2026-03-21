@@ -594,6 +594,12 @@ func (r *Router) publishPost(c *gin.Context) {
 		return
 	}
 
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
 	if !canAuthorEditPost(c, post) {
 		denyAuthorEdit(c, "publish")
 		return
@@ -622,6 +628,12 @@ func (r *Router) unpublishPost(c *gin.Context) {
 	}
 	if post == nil {
 		respondNotFound(c, ErrPostNotFound, "post not found")
+		return
+	}
+
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
 		return
 	}
 
@@ -658,6 +670,12 @@ func (r *Router) schedulePost(c *gin.Context) {
 	}
 	if post == nil {
 		respondNotFound(c, ErrPostNotFound, "post not found")
+		return
+	}
+
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
 		return
 	}
 
@@ -707,6 +725,12 @@ func (r *Router) unschedulePost(c *gin.Context) {
 		return
 	}
 
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
 	if !canAuthorEditPost(c, post) {
 		denyAuthorEdit(c, "unschedule")
 		return
@@ -742,7 +766,22 @@ func (r *Router) approveComment(c *gin.Context) {
 	id := c.Param("id")
 	moderatorID, _ := getUserID(c)
 
-	err := r.db.ModerateComment(c.Request.Context(), id, "approved", moderatorID)
+	comment, err := r.db.GetBlogCommentByID(c.Request.Context(), id)
+	if err != nil {
+		respondInternalError(c, ErrDatabaseError, "database error")
+		return
+	}
+	if comment == nil {
+		respondNotFound(c, ErrNotFound, "comment not found")
+		return
+	}
+	siteID, _ := getSiteID(c)
+	if comment.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
+	err = r.db.ModerateComment(c.Request.Context(), id, "approved", moderatorID)
 	if err != nil {
 		respondInternalError(c, ErrCommentFailed, "failed to approve comment")
 		return
@@ -759,7 +798,22 @@ func (r *Router) rejectComment(c *gin.Context) {
 	id := c.Param("id")
 	moderatorID, _ := getUserID(c)
 
-	err := r.db.ModerateComment(c.Request.Context(), id, "rejected", moderatorID)
+	comment, err := r.db.GetBlogCommentByID(c.Request.Context(), id)
+	if err != nil {
+		respondInternalError(c, ErrDatabaseError, "database error")
+		return
+	}
+	if comment == nil {
+		respondNotFound(c, ErrNotFound, "comment not found")
+		return
+	}
+	siteID, _ := getSiteID(c)
+	if comment.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
+	err = r.db.ModerateComment(c.Request.Context(), id, "rejected", moderatorID)
 	if err != nil {
 		respondInternalError(c, ErrCommentFailed, "failed to reject comment")
 		return
@@ -776,7 +830,22 @@ func (r *Router) markSpam(c *gin.Context) {
 	id := c.Param("id")
 	moderatorID, _ := getUserID(c)
 
-	err := r.db.ModerateComment(c.Request.Context(), id, "spam", moderatorID)
+	comment, err := r.db.GetBlogCommentByID(c.Request.Context(), id)
+	if err != nil {
+		respondInternalError(c, ErrDatabaseError, "database error")
+		return
+	}
+	if comment == nil {
+		respondNotFound(c, ErrNotFound, "comment not found")
+		return
+	}
+	siteID, _ := getSiteID(c)
+	if comment.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
+	err = r.db.ModerateComment(c.Request.Context(), id, "spam", moderatorID)
 	if err != nil {
 		respondInternalError(c, ErrCommentFailed, "failed to mark as spam")
 		return
@@ -789,7 +858,22 @@ func (r *Router) markSpam(c *gin.Context) {
 func (r *Router) deleteComment(c *gin.Context) {
 	id := c.Param("id")
 
-	err := r.db.DeleteBlogComment(c.Request.Context(), id)
+	comment, err := r.db.GetBlogCommentByID(c.Request.Context(), id)
+	if err != nil {
+		respondInternalError(c, ErrDatabaseError, "database error")
+		return
+	}
+	if comment == nil {
+		respondNotFound(c, ErrNotFound, "comment not found")
+		return
+	}
+	siteID, _ := getSiteID(c)
+	if comment.SiteID != siteID {
+		respondError(c, 403, ErrAccessDenied, "access denied")
+		return
+	}
+
+	err = r.db.DeleteBlogComment(c.Request.Context(), id)
 	if err != nil {
 		respondInternalError(c, ErrCommentFailed, "failed to delete comment")
 		return

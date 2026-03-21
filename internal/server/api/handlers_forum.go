@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/studiowebux/minimaldoc/internal/server/auth"
 	"github.com/studiowebux/minimaldoc/internal/server/markdown"
 	"github.com/studiowebux/minimaldoc/internal/server/store"
 )
@@ -834,6 +835,13 @@ func (r *Router) updateForumTopic(c *gin.Context) {
 		return
 	}
 
+	// Check site scoping
+	siteID, _ := getSiteID(c)
+	if topic.SiteID != siteID {
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
+		return
+	}
+
 	// Check ownership
 	if !topic.AuthorID.Valid || topic.AuthorID.String != userID {
 		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only edit own topics")
@@ -871,6 +879,13 @@ func (r *Router) updateForumPost(c *gin.Context) {
 	}
 	if post == nil {
 		respondNotFound(c, ErrNotFound, "post not found")
+		return
+	}
+
+	// Check site scoping
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
@@ -914,6 +929,13 @@ func (r *Router) deleteForumTopic(c *gin.Context) {
 		return
 	}
 
+	// Check site scoping
+	siteID, _ := getSiteID(c)
+	if topic.SiteID != siteID {
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
+		return
+	}
+
 	// Check ownership
 	if !topic.AuthorID.Valid || topic.AuthorID.String != userID {
 		respondError(c, http.StatusForbidden, ErrOwnPostsOnly, "can only delete own topics")
@@ -944,6 +966,13 @@ func (r *Router) deleteForumPost(c *gin.Context) {
 	}
 	if post == nil {
 		respondNotFound(c, ErrNotFound, "post not found")
+		return
+	}
+
+	// Check site scoping
+	siteID, _ := getSiteID(c)
+	if post.SiteID != siteID {
+		respondError(c, http.StatusForbidden, ErrAccessDenied, "access denied")
 		return
 	}
 
@@ -1235,7 +1264,14 @@ func (r *Router) getForumNotifications(c *gin.Context) {
 func (r *Router) markNotificationRead(c *gin.Context) {
 	id := c.Param("id")
 
-	if err := r.db.MarkNotificationRead(c.Request.Context(), id); err != nil {
+	userID, err := getUserID(c)
+	if err != nil {
+		respondUnauthorized(c, ErrAuthRequired, "authentication required")
+		return
+	}
+
+	// MarkNotificationRead includes user_id in WHERE to enforce ownership
+	if err := r.db.MarkNotificationRead(c.Request.Context(), id, userID); err != nil {
 		respondInternalError(c, ErrInternalError, "failed to mark as read")
 		return
 	}
@@ -1740,7 +1776,15 @@ func (r *Router) getForumStats(c *gin.Context) {
 func (r *Router) getForumLeaderboard(c *gin.Context) {
 	siteID := c.Query("site_id")
 	if siteID == "" {
-		siteID = c.GetHeader("X-API-Key")
+		if apiKey := c.GetHeader("X-API-Key"); apiKey != "" {
+			hash := auth.HashAPIKey(apiKey)
+			site, err := r.db.GetSiteByAPIKey(c.Request.Context(), hash)
+			if err != nil || site == nil {
+				respondBadRequest(c, ErrSiteInvalid, "invalid api key")
+				return
+			}
+			siteID = site.ID
+		}
 	}
 	if siteID == "" {
 		siteID, _ = getSiteID(c)

@@ -4,9 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/smtp"
+	"strings"
 
 	"github.com/studiowebux/minimaldoc/internal/server/config"
 )
+
+// sanitizeHeader strips CR/LF to prevent SMTP header injection.
+func sanitizeHeader(s string) string {
+	s = strings.ReplaceAll(s, "\r", "")
+	s = strings.ReplaceAll(s, "\n", "")
+	return s
+}
 
 // SMTPSender implements email sending via SMTP.
 type SMTPSender struct {
@@ -36,13 +44,13 @@ func (s *SMTPSender) Send(ctx context.Context, msg *Message) error {
 	addr := fmt.Sprintf("%s:%d", s.host, s.port)
 
 	// Build email content
-	headers := fmt.Sprintf("From: %s\r\n", from)
-	headers += fmt.Sprintf("To: %s\r\n", msg.To)
-	headers += fmt.Sprintf("Subject: %s\r\n", msg.Subject)
+	headers := fmt.Sprintf("From: %s\r\n", sanitizeHeader(from))
+	headers += fmt.Sprintf("To: %s\r\n", sanitizeHeader(msg.To))
+	headers += fmt.Sprintf("Subject: %s\r\n", sanitizeHeader(msg.Subject))
 	headers += "MIME-Version: 1.0\r\n"
 
 	if msg.ReplyTo != "" {
-		headers += fmt.Sprintf("Reply-To: %s\r\n", msg.ReplyTo)
+		headers += fmt.Sprintf("Reply-To: %s\r\n", sanitizeHeader(msg.ReplyTo))
 	}
 
 	var body string

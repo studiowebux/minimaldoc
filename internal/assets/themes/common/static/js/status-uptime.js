@@ -145,7 +145,7 @@
    */
   function showError(placeholder, message) {
     if (placeholder) {
-      placeholder.innerHTML = `<p class="loading-uptime error">Uptime unavailable: ${message}</p>`;
+      placeholder.textContent = 'Uptime unavailable: ' + message;
     }
   }
 

@@ -239,13 +239,15 @@ type NavItem struct {
 // NewSite creates a new Site instance
 func NewSite(docsRoot, outputRoot string, config SiteConfig) *Site {
 	return &Site{
-		Config:     config,
-		Pages:      []*Page{},
-		RootPages:  []*Page{},
-		Navigation: &Navigation{Items: []*NavItem{}},
-		APISpecs:   []*APISpec{},
-		MCPSpecs:   []*MCPSpec{},
-		DocsRoot:   docsRoot,
-		OutputRoot: outputRoot,
+		Config:         config,
+		Pages:          []*Page{},
+		RootPages:      []*Page{},
+		Navigation:     &Navigation{Items: []*NavItem{}},
+		APISpecs:       []*APISpec{},
+		MCPSpecs:       []*MCPSpec{},
+		VersionedPages: make(map[string][]*Page),
+		LocalizedPages: make(map[string][]*Page),
+		DocsRoot:       docsRoot,
+		OutputRoot:     outputRoot,
 	}
 }

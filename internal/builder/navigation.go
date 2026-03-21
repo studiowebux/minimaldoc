@@ -58,8 +58,14 @@ func (b *NavigationBuilder) buildFromTOC(pages []*core.Page, docsDir string, toc
 	tocParser := parser.NewTOCFileParser(docsDir)
 	entries, err := tocParser.Parse(tocPath)
 	if err != nil {
-		// Fall back to folder-based navigation on error
-		return b.Build(pages, docsDir, maxDepth)
+		// Fall back to folder-based navigation on error (call buildTree directly to avoid infinite recursion)
+		visiblePages := make([]*core.Page, 0)
+		for _, page := range pages {
+			if !page.IsHidden() {
+				visiblePages = append(visiblePages, page)
+			}
+		}
+		return &core.Navigation{Items: b.buildTree(visiblePages, maxDepth)}
 	}
 
 	// Create a map of file paths to pages for quick lookup

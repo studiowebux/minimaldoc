@@ -11,8 +11,33 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/studiowebux/minimaldoc/internal/server/auth"
 )
+
+// uploadUser holds the user info extracted safely from gin context.
+type uploadUser struct {
+	ID     string
+	Email  string
+	Role   string
+	SiteID string
+}
+
+// getUploadUser extracts user info from context without panicking.
+func (r *Router) getUploadUser(c *gin.Context) *uploadUser {
+	u := &uploadUser{}
+	if v, ok := c.Get("user_id"); ok {
+		u.ID, _ = v.(string)
+	}
+	if v, ok := c.Get("user_email"); ok {
+		u.Email, _ = v.(string)
+	}
+	if v, ok := c.Get("user_role"); ok {
+		u.Role, _ = v.(string)
+	}
+	if v, ok := c.Get("site_id"); ok {
+		u.SiteID, _ = v.(string)
+	}
+	return u
+}
 
 // allowedMIMETypes maps MIME types to their canonical file extensions.
 var allowedMIMETypes = map[string]string{
@@ -29,7 +54,7 @@ func (r *Router) uploadImage(c *gin.Context) {
 		return
 	}
 
-	user := c.MustGet("user").(*auth.Claims)
+	user := r.getUploadUser(c)
 
 	// Parse multipart form
 	file, header, err := c.Request.FormFile("file")
@@ -98,7 +123,7 @@ func (r *Router) deleteImage(c *gin.Context) {
 	}
 
 	uploadID := c.Param("id")
-	user := c.MustGet("user").(*auth.Claims)
+	user := r.getUploadUser(c)
 
 	// Get upload record
 	upload, err := r.db.GetUpload(c.Request.Context(), uploadID)
@@ -136,7 +161,7 @@ func (r *Router) deleteImage(c *gin.Context) {
 
 // listUploads returns uploads for the current user (or all for admin).
 func (r *Router) listUploads(c *gin.Context) {
-	user := c.MustGet("user").(*auth.Claims)
+	user := r.getUploadUser(c)
 
 	var uploads interface{}
 	var err error

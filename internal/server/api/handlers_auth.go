@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/subtle"
 	"html/template"
 	"net/http"
 	"strings"
@@ -41,7 +42,7 @@ func (r *Router) bootstrap(c *gin.Context) {
 
 	// Check bootstrap token if configured
 	if r.config.Auth.BootstrapToken != "" {
-		if req.BootstrapToken != r.config.Auth.BootstrapToken {
+		if subtle.ConstantTimeCompare([]byte(req.BootstrapToken), []byte(r.config.Auth.BootstrapToken)) != 1 {
 			respondUnauthorized(c, ErrInvalidBootstrapToken, "invalid bootstrap token")
 			return
 		}
@@ -966,9 +967,9 @@ func (r *Router) publicLoginSubmit(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(r.config.Auth.SessionCookieKey, accessToken, int(r.config.Auth.JWTExpiry.Seconds()), "/", "", r.config.Auth.SecureCookies, true)
 
-	// Redirect to specified URL or forum
+	// Redirect to specified URL or forum (validate to prevent open redirect)
 	redirectURL := c.PostForm("redirect")
-	if redirectURL == "" {
+	if redirectURL == "" || !strings.HasPrefix(redirectURL, "/") || strings.HasPrefix(redirectURL, "//") {
 		redirectURL = "/forum/"
 	}
 	c.Redirect(http.StatusFound, redirectURL)

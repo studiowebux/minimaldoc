@@ -57,7 +57,9 @@ func (sb *StatusBuilder) Build(docsRoot string, config core.StatusConfig) (*core
 	sb.sortComponents(statusPage)
 
 	// Calculate uptime data for components with mode: incidents
-	allIncidents := append(statusPage.ActiveIncidents, statusPage.ResolvedIncidents...)
+	allIncidents := make([]core.Incident, 0, len(statusPage.ActiveIncidents)+len(statusPage.ResolvedIncidents))
+	allIncidents = append(allIncidents, statusPage.ActiveIncidents...)
+	allIncidents = append(allIncidents, statusPage.ResolvedIncidents...)
 	for i := range statusPage.Components {
 		if statusPage.Components[i].Uptime.Mode == "incidents" {
 			uptimeData := sb.CalculateUptimeFromIncidents(

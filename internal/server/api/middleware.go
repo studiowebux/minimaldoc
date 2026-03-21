@@ -220,6 +220,9 @@ func AuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc {
 			revoked, err := db.IsTokenRevoked(c.Request.Context(), claims.ID)
 			if err != nil {
 				slog.Error("failed to check token revocation", "error", err)
+				respondInternalError(c, ErrInternalError, "token validation failed")
+				c.Abort()
+				return
 			}
 			if revoked {
 				respondUnauthorized(c, ErrUnauthorized, "token revoked")
@@ -277,7 +280,13 @@ func OptionalAuthMiddleware(cfg *config.Config, db store.Store) gin.HandlerFunc 
 
 		// Check if token has been revoked
 		if claims.ID != "" {
-			if revoked, _ := db.IsTokenRevoked(c.Request.Context(), claims.ID); revoked {
+			revoked, err := db.IsTokenRevoked(c.Request.Context(), claims.ID)
+			if err != nil {
+				slog.Error("failed to check token revocation", "error", err)
+				c.Next() // optional auth — degrade gracefully but log
+				return
+			}
+			if revoked {
 				respondUnauthorized(c, ErrUnauthorized, "token revoked")
 				c.Abort()
 				return

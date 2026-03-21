@@ -175,7 +175,7 @@ type ForumStore interface {
 	// Notifications
 	CreateForumNotification(ctx context.Context, id, siteID, userID, notifType, title, message, topicID, postID, actorID string) error
 	ListForumNotifications(ctx context.Context, userID string, unreadOnly bool, limit, offset int) ([]ForumNotification, error)
-	MarkNotificationRead(ctx context.Context, id string) error
+	MarkNotificationRead(ctx context.Context, id string, userID string) error
 	MarkAllNotificationsRead(ctx context.Context, userID string) error
 	GetUnreadNotificationCount(ctx context.Context, userID string) (int64, error)
 

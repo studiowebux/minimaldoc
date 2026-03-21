@@ -822,9 +822,9 @@ func (db *DB) ListForumNotifications(ctx context.Context, userID string, unreadO
 	return notifications, rows.Err()
 }
 
-func (db *DB) MarkNotificationRead(ctx context.Context, id string) error {
-	query := `UPDATE forum_notifications SET is_read = 1 WHERE id = $1`
-	_, err := db.ExecContext(ctx, query, id)
+func (db *DB) MarkNotificationRead(ctx context.Context, id string, userID string) error {
+	query := `UPDATE forum_notifications SET is_read = 1 WHERE id = $1 AND user_id = $2`
+	_, err := db.ExecContext(ctx, query, id, userID)
 	return err
 }
 

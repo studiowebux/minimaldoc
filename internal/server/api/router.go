@@ -366,7 +366,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Analytics - admin viewing
 		analytics := api.Group("/analytics")
-		analytics.Use(AuthMiddleware(cfg, r.db))
+		analytics.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			analytics.GET("/summary", r.analyticsSummary)
 			analytics.GET("/pages", r.analyticsPages)
@@ -374,7 +374,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Feedback - admin viewing
 		feedback := api.Group("/feedback")
-		feedback.Use(AuthMiddleware(cfg, r.db))
+		feedback.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			feedback.GET("/stats", r.feedbackStats)
 			feedback.GET("/list", r.feedbackList)
@@ -382,7 +382,7 @@ func NewAdminRouter(cfg *config.Config, db store.Store, emailSender email.Sender
 
 		// Newsletter - admin management
 		newsletter := api.Group("/newsletter")
-		newsletter.Use(AuthMiddleware(cfg, r.db))
+		newsletter.Use(AuthMiddleware(cfg, r.db), AdminMiddleware())
 		{
 			newsletter.GET("/subscribers", r.listSubscribers)
 		}
