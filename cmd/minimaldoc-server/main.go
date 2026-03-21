@@ -127,28 +127,33 @@ func main() {
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}
 
-	// Start public server
+	// Start servers — send errors to channel instead of os.Exit to allow cleanup
+	errCh := make(chan error, 2)
+
 	go func() {
 		slog.Info("public API started", "addr", publicAddr)
 		if err := publicSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("public server failed", "error", err)
-			os.Exit(1)
+			errCh <- err
 		}
 	}()
 
-	// Start admin server
 	go func() {
 		slog.Info("admin API started", "addr", adminAddr, "api_path", cfg.Server.APIPath, "admin_path", cfg.Server.AdminPath)
 		if err := adminSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("admin server failed", "error", err)
-			os.Exit(1)
+			errCh <- err
 		}
 	}()
 
-	// Wait for interrupt signal
+	// Wait for interrupt signal or server error
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	select {
+	case <-quit:
+	case err := <-errCh:
+		slog.Error("server startup failed, shutting down", "error", err)
+	}
 
 	slog.Info("shutting down servers")
 

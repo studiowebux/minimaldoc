@@ -135,6 +135,10 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	for path, content := range files {
+		if _, err := os.Stat(path); err == nil {
+			fmt.Fprintf(os.Stderr, "Warning: %s already exists, skipping\n", path)
+			continue
+		}
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil { // #nosec G306 -- documentation source files are not sensitive
 			return fmt.Errorf("failed to create file %s: %w", path, err)
 		}

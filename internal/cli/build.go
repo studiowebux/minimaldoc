@@ -165,7 +165,12 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	// Create link check configuration
 	linkCheckConfig := core.DefaultLinkCheckConfig()
-	linkCheckConfig.Mode = core.LinkCheckMode(linkCheckMode)
+	switch linkCheckMode {
+	case "error", "warn", "ignore":
+		linkCheckConfig.Mode = core.LinkCheckMode(linkCheckMode)
+	default:
+		return fmt.Errorf("invalid link-check mode %q (must be error, warn, or ignore)", linkCheckMode)
+	}
 	linkCheckConfig.CheckExternal = checkExternal
 	if linkCheckMode == "ignore" {
 		linkCheckConfig.Enabled = false
@@ -272,7 +277,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate llms.txt
-	if enableLLMS {
+	if site.Config.EnableLLMS {
 		llmsGen := generator.NewLLMSGenerator(site)
 		if err := llmsGen.Generate(); err != nil {
 			return fmt.Errorf("LLMS generation failed: %w", err)

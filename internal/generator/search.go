@@ -11,10 +11,11 @@ import (
 	"github.com/studiowebux/minimaldoc/internal/core"
 )
 
-// truncate returns s truncated to at most n bytes. Safe when len(s) < n.
+// truncate returns s truncated to at most n runes. UTF-8 safe.
 func truncate(s string, n int) string {
-	if len(s) > n {
-		return s[:n]
+	runes := []rune(s)
+	if len(runes) > n {
+		return string(runes[:n])
 	}
 	return s
 }

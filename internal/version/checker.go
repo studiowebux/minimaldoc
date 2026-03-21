@@ -110,10 +110,11 @@ func parseVersion(v string) [3]int {
 	return result
 }
 
-// truncateNotes truncates release notes to a maximum length
+// truncateNotes truncates release notes to a maximum rune length. UTF-8 safe.
 func truncateNotes(notes string, maxLen int) string {
-	if len(notes) <= maxLen {
+	runes := []rune(notes)
+	if len(runes) <= maxLen {
 		return notes
 	}
-	return notes[:maxLen] + "..."
+	return string(runes[:maxLen]) + "..."
 }

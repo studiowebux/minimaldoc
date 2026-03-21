@@ -30,6 +30,9 @@ Features:
 }
 
 func init() {
+	// Prevent cobra from printing errors (we handle them in main)
+	rootCmd.SilenceErrors = true
+
 	// Add subcommands
 	rootCmd.AddCommand(cli.BuildCmd)
 	rootCmd.AddCommand(cli.InitCmd)

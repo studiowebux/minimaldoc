@@ -1,5 +1,7 @@
 package core
 
+import "sort"
+
 // FaqPage represents the complete FAQ page data
 type FaqPage struct {
 	Config     FaqConfig
@@ -62,5 +64,6 @@ func CollectFaqTags(categories []FaqCategory) []string {
 	for tag := range tagMap {
 		tags = append(tags, tag)
 	}
+	sort.Strings(tags)
 	return tags
 }

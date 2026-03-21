@@ -211,8 +211,16 @@ func (g *LLMSGenerator) generateFullVersion() error {
 // shiftHeadings shifts markdown heading levels down by n levels
 func shiftHeadings(content string, levels int) string {
 	lines := strings.Split(content, "\n")
+	inCodeBlock := false
 
 	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			inCodeBlock = !inCodeBlock
+		}
+		if inCodeBlock {
+			continue
+		}
 		if strings.HasPrefix(line, "#") {
 			// Count existing hashes
 			hashes := 0

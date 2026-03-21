@@ -195,7 +195,10 @@
         }
       }
     `;
-    document.head.appendChild(style);
+    if (!document.getElementById('export-notification-style')) {
+      style.id = 'export-notification-style';
+      document.head.appendChild(style);
+    }
 
     document.body.appendChild(notification);
 

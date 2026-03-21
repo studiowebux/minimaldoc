@@ -19,6 +19,7 @@ type Scheduler struct {
 	wg       sync.WaitGroup
 	running  bool
 	mu       sync.Mutex
+	stopOnce sync.Once
 }
 
 // New creates a new scheduler with the given interval.
@@ -50,7 +51,7 @@ func (s *Scheduler) Start() {
 	slog.Info("scheduler started", "interval", s.interval)
 }
 
-// Stop gracefully stops the scheduler.
+// Stop gracefully stops the scheduler. Safe to call multiple times.
 func (s *Scheduler) Stop() {
 	s.mu.Lock()
 	if !s.running {
@@ -60,7 +61,9 @@ func (s *Scheduler) Stop() {
 	s.running = false
 	s.mu.Unlock()
 
-	close(s.done)
+	s.stopOnce.Do(func() {
+		close(s.done)
+	})
 	s.ticker.Stop()
 	s.wg.Wait()
 
