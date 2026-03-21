@@ -8,7 +8,7 @@
 <h4 class="footer-group-title">{{.Title}}</h4>
 <ul class="footer-group-list">
 {{range .Items}}
-<li>{{if or (hasPrefix .URL "http://") (hasPrefix .URL "https://")}}<a href="{{.URL}}" target="_blank" rel="noopener">{{.Text}}</a>{{else}}<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{.URL}}">{{.Text}}</a>{{end}}</li>
+<li>{{if or (hasPrefix .URL "http://") (hasPrefix .URL "https://")}}<a href="{{safeHref .URL}}" target="_blank" rel="noopener">{{.Text}}</a>{{else}}<a href="{{if hasPrefix .URL "/"}}{{$.BasePath}}{{end}}{{safeHref .URL}}">{{.Text}}</a>{{end}}</li>
 {{end}}
 </ul>
 </div>
@@ -18,7 +18,7 @@
 {{if .Footer.Social}}
 <div class="footer-social">
 {{range .Footer.Social}}
-<a href="{{.URL}}" class="social-link" title="{{.Name}}" target="_blank" rel="noopener">
+<a href="{{safeHref .URL}}" class="social-link" title="{{.Name}}" target="_blank" rel="noopener">
 <svg class="social-icon" aria-hidden="true"><use href="#icon-{{.Icon}}"></use></svg>
 <span class="sr-only">{{.Name}}</span>
 </a>
@@ -31,7 +31,7 @@
 {{if .Footer.Badges}}
 <div class="footer-badges">
 {{range .Footer.Badges}}
-<a href="{{.URL}}" class="footer-badge" target="_blank" rel="noopener">{{.Text}}</a>
+<a href="{{safeHref .URL}}" class="footer-badge" target="_blank" rel="noopener">{{.Text}}</a>
 {{end}}
 </div>
 {{end}}

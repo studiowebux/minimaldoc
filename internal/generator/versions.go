@@ -128,12 +128,12 @@ func (g *VersionGenerator) generateVersionPages(versionInfo core.VersionInfo, pa
 		// Create output directory
 		outputDir := filepath.Dir(outputPath)
 		if err := makeWebDir(outputDir); err != nil {
-			return fmt.Errorf("failed to create output directory: %w", err)
+			return fmt.Errorf("failed to create output directory for %s: %w", page.Slug, err)
 		}
 
 		// Write HTML file
 		if err := writeWebFile(outputPath, buf.Bytes()); err != nil {
-			return fmt.Errorf("failed to write file: %w", err)
+			return fmt.Errorf("failed to write HTML for page %s: %w", page.Slug, err)
 		}
 	}
 

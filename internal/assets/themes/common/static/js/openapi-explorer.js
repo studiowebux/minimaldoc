@@ -76,8 +76,6 @@
   }
 
   async function init() {
-    console.log('OpenAPI Explorer initializing...');
-
     // Load spec data
     await loadSpecData();
 
@@ -96,7 +94,6 @@
     handleHashNavigation();
     window.addEventListener('hashchange', handleHashNavigation);
 
-    console.log('OpenAPI Explorer ready');
   }
 
   // Load spec metadata
@@ -104,8 +101,6 @@
     try {
       const response = await fetch('./spec-data.json');
       state.spec = await response.json();
-      console.log('Loaded spec:', state.spec.title, 'v' + state.spec.version);
-
       // Store schemas
       if (state.spec.schemas) {
         state.schemas = state.spec.schemas;
@@ -1404,7 +1399,6 @@
       window.APITester.loadEndpoint(endpoint);
     }
 
-    console.log('Loading endpoint in tester:', endpoint.Method, endpoint.Path);
   }
 
   // Copy endpoint link
@@ -1413,8 +1407,6 @@
 
     try {
       await navigator.clipboard.writeText(url);
-      console.log('Link copied:', url);
-
       // Show visual feedback
       if (button) {
         const originalText = button.textContent;

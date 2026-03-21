@@ -152,8 +152,8 @@ func (cfg *FileConfig) Validate() error {
 	}
 
 	// OpenAPI bounds
-	if cfg.OpenAPI.LazyLoadChunkSize != nil && (*cfg.OpenAPI.LazyLoadChunkSize < 0 || *cfg.OpenAPI.LazyLoadChunkSize > 10000000) {
-		errs = append(errs, fmt.Sprintf("openapi.lazy_load_chunk_size: must be 0-10000000, got %d", *cfg.OpenAPI.LazyLoadChunkSize))
+	if cfg.OpenAPI.LazyLoadChunkSize != nil && (*cfg.OpenAPI.LazyLoadChunkSize <= 0 || *cfg.OpenAPI.LazyLoadChunkSize > 10000000) {
+		errs = append(errs, fmt.Sprintf("openapi.lazy_load_chunk_size: must be 1-10000000, got %d", *cfg.OpenAPI.LazyLoadChunkSize))
 	}
 	if len(cfg.OpenAPI.SpecURLs) > 20 {
 		errs = append(errs, fmt.Sprintf("openapi.spec_urls: max 20 entries, got %d", len(cfg.OpenAPI.SpecURLs)))
@@ -180,10 +180,49 @@ func (cfg *FileConfig) Validate() error {
 		errs = append(errs, fmt.Sprintf("stale_warning.threshold_days: must be 0-3650, got %d", *cfg.StaleWarning.ThresholdDays))
 	}
 
+	// Contact email must look like an email if set
+	if cfg.Contact.Email != "" && !strings.Contains(cfg.Contact.Email, "@") {
+		errs = append(errs, fmt.Sprintf("contact.email: invalid email address %q", cfg.Contact.Email))
+	}
+
+	// Path fields must be relative, no traversal
+	pathFields := map[string]string{
+		"status.path":       cfg.Status.Path,
+		"changelog.path":    cfg.Changelog.Path,
+		"faq.path":          cfg.Faq.Path,
+		"contact.path":      cfg.Contact.Path,
+		"portfolio.path":    cfg.Portfolio.Path,
+		"knowledgebase.path": cfg.KnowledgeBase.Path,
+		"legal.path":        cfg.Legal.Path,
+		"roadmap.path":      cfg.Roadmap.Path,
+		"mcp.path":          cfg.MCP.Path,
+		"openapi.cache_dir": cfg.OpenAPI.CacheDir,
+	}
+	for name, val := range pathFields {
+		if val != "" && !isSafePath(val) {
+			errs = append(errs, fmt.Sprintf("%s: must be a relative path without traversal, got %q", name, val))
+		}
+	}
+
 	if len(errs) > 0 {
 		return fmt.Errorf("%s", strings.Join(errs, "; "))
 	}
 	return nil
+}
+
+// isSafePath checks that a path is relative, contains no traversal, and has no absolute prefix.
+func isSafePath(p string) bool {
+	if filepath.IsAbs(p) {
+		return false
+	}
+	cleaned := filepath.Clean(p)
+	if strings.HasPrefix(cleaned, "..") {
+		return false
+	}
+	if strings.Contains(cleaned, ".."+string(filepath.Separator)) {
+		return false
+	}
+	return true
 }
 
 // MergeWithCLI merges config file with CLI flags.

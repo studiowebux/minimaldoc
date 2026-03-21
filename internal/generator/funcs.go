@@ -26,6 +26,7 @@ func BaseFuncMap() template.FuncMap {
 		"formatDate": func(t time.Time) string {
 			return t.Format("January 2, 2006")
 		},
+		"safeHref": safeHrefFunc,
 	}
 }
 
@@ -55,6 +56,19 @@ func dictFunc(values ...any) (map[string]any, error) {
 // HTML fragments). Never pass user-supplied strings through this function.
 func safeHTMLFunc(s string) template.HTML {
 	return template.HTML(s) // #nosec G203
+}
+
+// safeHrefFunc sanitizes a URL for use in href attributes.
+// Blocks javascript:, data:, and vbscript: schemes. Returns "#" for unsafe URLs.
+func safeHrefFunc(rawURL string) string {
+	trimmed := strings.TrimSpace(rawURL)
+	lower := strings.ToLower(trimmed)
+	if strings.HasPrefix(lower, "javascript:") ||
+		strings.HasPrefix(lower, "data:") ||
+		strings.HasPrefix(lower, "vbscript:") {
+		return "#"
+	}
+	return trimmed
 }
 
 // jsonFunc marshals a value to JSON for use in templates.
