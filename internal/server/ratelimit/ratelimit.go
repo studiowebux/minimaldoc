@@ -1,5 +1,7 @@
 // Package ratelimit provides rate limiting middleware for the HTTP server.
-// Uses a sliding window algorithm with in-memory storage.
+// Uses a fixed window algorithm with in-memory storage.
+// NOTE: gin.Context.ClientIP() trusts proxy headers (X-Forwarded-For, X-Real-IP).
+// Ensure Gin's trusted proxy configuration is set correctly in production.
 package ratelimit
 
 import (

@@ -79,7 +79,7 @@ func (ib *I18nBuilder) clonePage(page *core.Page, locale core.LocaleInfo, config
 		Slug:            page.Slug,
 		OutputPath:      page.OutputPath,
 		ModTime:         page.ModTime,
-		Metadata:        page.Metadata,
+		Metadata:        cloneMetadata(page.Metadata),
 		RawMD:           page.RawMD,
 		HTML:            page.HTML,
 		Order:           page.Order,
@@ -132,8 +132,8 @@ func (ib *I18nBuilder) discoverTranslations(translationDir, _ string, locale cor
 			page.Order = extractOrder(filepath.Base(path))
 		}
 
-		// Parse markdown
-		html, err := ib.markdownParser.Parse(content)
+		// Parse markdown with link transformation
+		html, err := ib.markdownParser.ParseWithContext(content, relPath, "")
 		if err != nil {
 			return err
 		}

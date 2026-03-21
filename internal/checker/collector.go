@@ -83,6 +83,10 @@ func (c *LinkCollector) extractMarkdownLinks(line, filePath string, lineNum int)
 
 	for _, match := range matches {
 		if len(match) >= 6 {
+			// Skip image links (preceded by !) to avoid double-collecting
+			if match[0] > 0 && line[match[0]-1] == '!' {
+				continue
+			}
 			text := line[match[2]:match[3]]
 			url := line[match[4]:match[5]]
 			col := match[4] + 1 // 1-based column

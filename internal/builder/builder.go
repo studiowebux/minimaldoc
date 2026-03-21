@@ -591,6 +591,23 @@ func (b *Builder) getBasePath() string {
 	return path
 }
 
+// cloneMetadata creates a deep copy of Metadata, copying Tags and Custom
+// so mutations on the clone don't affect the original.
+func cloneMetadata(m core.Metadata) core.Metadata {
+	clone := m
+	if m.Tags != nil {
+		clone.Tags = make([]string, len(m.Tags))
+		copy(clone.Tags, m.Tags)
+	}
+	if m.Custom != nil {
+		clone.Custom = make(map[string]any, len(m.Custom))
+		for k, v := range m.Custom {
+			clone.Custom[k] = v
+		}
+	}
+	return clone
+}
+
 // calculateStaleWarning calculates whether a page is stale and sets the relevant fields
 func (b *Builder) calculateStaleWarning(page *core.Page) {
 	config := b.site.Config.StaleWarning

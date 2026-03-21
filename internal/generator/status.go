@@ -143,8 +143,10 @@ func (g *StatusGenerator) generateIncidentPages(outputDir string) error {
 		return fmt.Errorf("failed to create incident directory: %w", err)
 	}
 
-	// Generate pages for all incidents (active and resolved)
-	allIncidents := append(g.site.StatusPage.ActiveIncidents, g.site.StatusPage.ResolvedIncidents...)
+	// Generate pages for all incidents (active and resolved) — safe copy to avoid slice mutation
+	allIncidents := make([]core.Incident, 0, len(g.site.StatusPage.ActiveIncidents)+len(g.site.StatusPage.ResolvedIncidents))
+	allIncidents = append(allIncidents, g.site.StatusPage.ActiveIncidents...)
+	allIncidents = append(allIncidents, g.site.StatusPage.ResolvedIncidents...)
 
 	for _, incident := range allIncidents {
 		if err := g.generateIncidentPage(incidentDir, incident); err != nil {
@@ -191,8 +193,10 @@ func (g *StatusGenerator) generateMaintenancePages(outputDir string) error {
 		return fmt.Errorf("failed to create maintenance directory: %w", err)
 	}
 
-	// Generate pages for all maintenance (scheduled and active)
-	allMaintenance := append(g.site.StatusPage.ScheduledMaintenance, g.site.StatusPage.ActiveMaintenance...)
+	// Generate pages for all maintenance (scheduled and active) — safe copy
+	allMaintenance := make([]core.Maintenance, 0, len(g.site.StatusPage.ScheduledMaintenance)+len(g.site.StatusPage.ActiveMaintenance))
+	allMaintenance = append(allMaintenance, g.site.StatusPage.ScheduledMaintenance...)
+	allMaintenance = append(allMaintenance, g.site.StatusPage.ActiveMaintenance...)
 
 	for _, maintenance := range allMaintenance {
 		if err := g.generateMaintenancePage(maintenanceDir, maintenance); err != nil {
@@ -509,31 +513,5 @@ func (g *StatusGenerator) generateRSSFeed(outputDir string) error {
 
 // getBasePath extracts the path component from BaseURL for asset linking
 func (g *StatusGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	// Remove protocol
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	// Find the first / after the domain
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	// Get the path part
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }

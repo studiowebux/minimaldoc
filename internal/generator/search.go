@@ -689,35 +689,7 @@ func generateAnchor(heading string) string {
 //   - "https://example.com/" → ""
 //   - "" → ""
 func (g *SearchGenerator) getBasePath() string {
-	baseURL := g.site.Config.BaseURL
-	if baseURL == "" {
-		return ""
-	}
-
-	// Parse the URL to extract the path
-	// Remove protocol and domain, keep only the path
-	if strings.HasPrefix(baseURL, "http://") {
-		baseURL = strings.TrimPrefix(baseURL, "http://")
-	} else if strings.HasPrefix(baseURL, "https://") {
-		baseURL = strings.TrimPrefix(baseURL, "https://")
-	}
-
-	// Find the first / after the domain
-	parts := strings.SplitN(baseURL, "/", 2)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	// Get the path part and ensure it starts with / and doesn't end with /
-	path := "/" + parts[1]
-	path = strings.TrimSuffix(path, "/")
-
-	// If path is just "/", return empty string
-	if path == "/" {
-		return ""
-	}
-
-	return path
+	return GetBasePath(g.site.Config.BaseURL)
 }
 
 // writeShardedIndex writes the search index as sharded files

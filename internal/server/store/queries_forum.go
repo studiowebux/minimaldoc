@@ -237,7 +237,7 @@ func (db *DB) ListForumTopics(ctx context.Context, siteID, categoryID, status, s
 			ft.last_post_at, ft.last_post_by, ft.created_at, ft.updated_at,
 			u.name, u.email, u.avatar_url,
 			fc.name, fc.slug
-	` + baseQuery + fmt.Sprintf(` ORDER BY ft.is_pinned DESC, ft.last_post_at DESC NULLS LAST, ft.created_at DESC LIMIT $%d OFFSET $%d`, argIndex, argIndex+1)
+	` + baseQuery + fmt.Sprintf(` ORDER BY ft.is_pinned DESC, CASE WHEN ft.last_post_at IS NULL THEN 1 ELSE 0 END, ft.last_post_at DESC, ft.created_at DESC LIMIT $%d OFFSET $%d`, argIndex, argIndex+1)
 	args = append(args, limit, offset)
 
 	rows, err := db.QueryContext(ctx, selectQuery, args...)
@@ -355,11 +355,17 @@ func (db *DB) DeleteForumTopic(ctx context.Context, id string) error {
 // Post queries
 
 func (db *DB) CreateForumPost(ctx context.Context, id, siteID, topicID, parentID, authorID, content string) (*ForumPost, error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
 	query := `
 		INSERT INTO forum_posts (id, site_id, topic_id, parent_id, author_id, content)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := db.ExecContext(ctx, query, id, siteID, topicID, nullString(parentID), nullString(authorID), content)
+	_, err = tx.ExecContext(ctx, query, id, siteID, topicID, nullString(parentID), nullString(authorID), content)
 	if err != nil {
 		return nil, err
 	}
@@ -370,8 +376,12 @@ func (db *DB) CreateForumPost(ctx context.Context, id, siteID, topicID, parentID
 		SET post_count = post_count + 1, last_post_at = CURRENT_TIMESTAMP, last_post_by = $1, updated_at = CURRENT_TIMESTAMP
 		WHERE id = $2
 	`
-	_, err = db.ExecContext(ctx, updateQuery, nullString(authorID), topicID)
+	_, err = tx.ExecContext(ctx, updateQuery, nullString(authorID), topicID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -456,40 +466,58 @@ func (db *DB) UpdateForumPost(ctx context.Context, id, content, editorID string)
 }
 
 func (db *DB) MarkPostAsSolution(ctx context.Context, postID, topicID string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
 	// Clear any existing solution
 	clearQuery := `UPDATE forum_posts SET is_solution = 0 WHERE topic_id = $1`
-	if _, err := db.ExecContext(ctx, clearQuery, topicID); err != nil {
+	if _, err := tx.ExecContext(ctx, clearQuery, topicID); err != nil {
 		return err
 	}
 
 	// Mark new solution
 	markQuery := `UPDATE forum_posts SET is_solution = 1 WHERE id = $1`
-	if _, err := db.ExecContext(ctx, markQuery, postID); err != nil {
+	if _, err := tx.ExecContext(ctx, markQuery, postID); err != nil {
 		return err
 	}
 
 	// Update topic
 	updateQuery := `UPDATE forum_topics SET is_solved = 1, solution_post_id = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
-	_, err := db.ExecContext(ctx, updateQuery, postID, topicID)
-	return err
+	if _, err := tx.ExecContext(ctx, updateQuery, postID, topicID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (db *DB) DeleteForumPost(ctx context.Context, id string) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
 	// Get topic ID first to update count
 	var topicID string
-	if err := db.QueryRowContext(ctx, `SELECT topic_id FROM forum_posts WHERE id = $1`, id).Scan(&topicID); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT topic_id FROM forum_posts WHERE id = $1`, id).Scan(&topicID); err != nil {
 		return err
 	}
 
 	// Delete post
-	if _, err := db.ExecContext(ctx, `DELETE FROM forum_posts WHERE id = $1`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM forum_posts WHERE id = $1`, id); err != nil {
 		return err
 	}
 
 	// Update topic post count
 	updateQuery := `UPDATE forum_topics SET post_count = post_count - 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
-	_, err := db.ExecContext(ctx, updateQuery, topicID)
-	return err
+	if _, err := tx.ExecContext(ctx, updateQuery, topicID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 // Tag queries
@@ -555,14 +583,18 @@ func (db *DB) DeleteForumTag(ctx context.Context, id string) error {
 
 func (db *DB) AddTagToTopic(ctx context.Context, topicID, tagID string) error {
 	query := `INSERT INTO forum_topic_tags (topic_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
-	_, err := db.ExecContext(ctx, query, topicID, tagID)
+	result, err := db.ExecContext(ctx, query, topicID, tagID)
 	if err != nil {
 		return err
 	}
-	// Update usage count
-	updateQuery := `UPDATE forum_tags SET usage_count = usage_count + 1 WHERE id = $1`
-	_, err = db.ExecContext(ctx, updateQuery, tagID)
-	return err
+	// Only increment usage count if the tag was actually attached (not a duplicate)
+	rows, _ := result.RowsAffected()
+	if rows > 0 {
+		updateQuery := `UPDATE forum_tags SET usage_count = usage_count + 1 WHERE id = $1`
+		_, err = db.ExecContext(ctx, updateQuery, tagID)
+		return err
+	}
+	return nil
 }
 
 func (db *DB) RemoveTagFromTopic(ctx context.Context, topicID, tagID string) error {
@@ -1066,8 +1098,16 @@ func (db *DB) GetOrCreateForumUserStats(ctx context.Context, id, siteID, userID 
 		return nil, err
 	}
 
-	// Return newly created
-	return db.GetOrCreateForumUserStats(ctx, id, siteID, userID)
+	// Fetch the newly created record directly (avoid recursion)
+	err = db.QueryRowContext(ctx, query, siteID, userID).Scan(
+		&s.ID, &s.SiteID, &s.UserID, &s.Reputation, &s.TopicCount, &s.PostCount,
+		&s.LikeReceivedCount, &s.LikeGivenCount, &s.SolutionCount, &s.LastSeenAt, &s.CreatedAt, &s.UpdatedAt,
+		&s.UserName, &s.UserEmail, &s.UserAvatar,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
 
 func (db *DB) UpdateForumUserLastSeen(ctx context.Context, siteID, userID string) error {

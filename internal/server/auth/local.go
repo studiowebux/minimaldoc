@@ -109,7 +109,7 @@ func (p *LocalProvider) CreateUser(ctx context.Context, siteID, email, password,
 
 	query := `
 		INSERT INTO users (id, site_id, email, password_hash, name, role, email_verified)
-		VALUES ($1, $2, $3, $4, $5, $6, true)
+		VALUES ($1, $2, $3, $4, $5, $6, false)
 		RETURNING id
 	`
 
