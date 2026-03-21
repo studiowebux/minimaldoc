@@ -386,7 +386,7 @@
 
   // Build full URL for endpoint
   function buildFullURL(endpoint) {
-    const server = getServerURL();
+    const server = getServerURL().replace(/\/$/, '');
     let url = server + endpoint.Path;
     return url;
   }

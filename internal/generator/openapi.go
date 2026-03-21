@@ -251,13 +251,13 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 	if g.site.Config.OpenAPI.Enabled {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/api/" class="active">API</a>`, basePath))
 	}
-	if g.site.Config.Portfolio.Enabled {
+	if g.site.Config.Portfolio.Enabled && g.site.Config.Portfolio.Path != "" {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Portfolio</a>`, basePath, g.site.Config.Portfolio.Path))
 	}
-	if g.site.Config.Faq.Enabled {
+	if g.site.Config.Faq.Enabled && g.site.Config.Faq.Path != "" {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">FAQ</a>`, basePath, g.site.Config.Faq.Path))
 	}
-	if g.site.Config.Contact.Enabled {
+	if g.site.Config.Contact.Enabled && g.site.Config.Contact.Path != "" {
 		navLinks.WriteString(fmt.Sprintf(`<a href="%s/%s/">Contact</a>`, basePath, g.site.Config.Contact.Path))
 	}
 

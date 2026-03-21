@@ -246,24 +246,42 @@ func (cfg *FileConfig) MergeWithCLI(cliConfig core.SiteConfig, cliFlags map[stri
 	}
 	if cfg.Portfolio.Enabled {
 		result.Portfolio = cfg.Portfolio
+		if result.Portfolio.Path == "" {
+			result.Portfolio.Path = core.DefaultPortfolioConfig().Path
+		}
 	}
 	if cfg.Contact.Enabled {
 		result.Contact = cfg.Contact
+		if result.Contact.Path == "" {
+			result.Contact.Path = core.DefaultContactConfig().Path
+		}
 	}
 	if cfg.Faq.Enabled {
 		result.Faq = cfg.Faq
+		if result.Faq.Path == "" {
+			result.Faq.Path = core.DefaultFaqConfig().Path
+		}
 	}
 	if cfg.Legal.Enabled {
 		result.Legal = cfg.Legal
+		if result.Legal.Path == "" {
+			result.Legal.Path = core.DefaultLegalConfig().Path
+		}
 	}
 	if cfg.KnowledgeBase.Enabled {
 		result.KnowledgeBase = cfg.KnowledgeBase
+		if result.KnowledgeBase.Path == "" {
+			result.KnowledgeBase.Path = core.DefaultKBConfig().Path
+		}
 	}
 	if cfg.Waitlist.Enabled {
 		result.Waitlist = cfg.Waitlist
 	}
 	if cfg.Roadmap.Enabled {
 		result.Roadmap = cfg.Roadmap
+		if result.Roadmap.Path == "" {
+			result.Roadmap.Path = core.DefaultRoadmapConfig().Path
+		}
 	}
 	if cfg.Footer.Copyright != "" || len(cfg.Footer.Links) > 0 || len(cfg.Footer.Social) > 0 {
 		result.Footer = cfg.Footer
