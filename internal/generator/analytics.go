@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"html"
 	"html/template"
 	"strings"
 
@@ -153,7 +154,7 @@ func renderGA4(provider core.AnalyticsProvider) string {
 	}
 	return fmt.Sprintf(`<script async src="https://www.googletagmanager.com/gtag/js?id=%s"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','%s');</script>`,
-		escapeHTML(measurementID), escapeHTML(measurementID))
+		escapeHTML(measurementID), escapeJS(measurementID))
 }
 
 // renderPlausible renders Plausible Analytics script tag
@@ -191,7 +192,7 @@ func renderMatomo(provider core.AnalyticsProvider) string {
 	// Ensure URL ends without trailing slash for consistency
 	url = strings.TrimSuffix(url, "/")
 	return fmt.Sprintf(`<script>var _paq=window._paq=window._paq||[];_paq.push(['trackPageView']);_paq.push(['enableLinkTracking']);(function(){var u="%s/";_paq.push(['setTrackerUrl',u+'matomo.php']);_paq.push(['setSiteId','%s']);var d=document,g=d.createElement('script'),s=d.getElementsByTagName('script')[0];g.async=true;g.src=u+'matomo.js';s.parentNode.insertBefore(g,s);})();</script>`,
-		escapeHTML(url), escapeHTML(siteID))
+		escapeJS(url), escapeJS(siteID))
 }
 
 // renderFathom renders Fathom Analytics script tag
@@ -276,12 +277,13 @@ func renderCustom(provider core.AnalyticsProvider, location string) string {
 	return fmt.Sprintf(`<script%s src="%s"></script>`, attrs.String(), escapeHTML(src))
 }
 
-// escapeHTML escapes special HTML characters
+// escapeHTML escapes special HTML characters for use in attributes.
 func escapeHTML(s string) string {
-	s = strings.ReplaceAll(s, "&", "&amp;")
-	s = strings.ReplaceAll(s, "<", "&lt;")
-	s = strings.ReplaceAll(s, ">", "&gt;")
-	s = strings.ReplaceAll(s, `"`, "&quot;")
-	s = strings.ReplaceAll(s, "'", "&#39;")
-	return s
+	return html.EscapeString(s)
+}
+
+// escapeJS escapes a string for safe embedding inside a JavaScript string literal
+// within a <script> tag (backslash-escaping, not HTML entity escaping).
+func escapeJS(s string) string {
+	return template.JSEscapeString(s)
 }

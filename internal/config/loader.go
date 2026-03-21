@@ -158,6 +158,14 @@ func (cfg *FileConfig) Validate() error {
 	if len(cfg.OpenAPI.SpecURLs) > 20 {
 		errs = append(errs, fmt.Sprintf("openapi.spec_urls: max 20 entries, got %d", len(cfg.OpenAPI.SpecURLs)))
 	}
+	for i, specURL := range cfg.OpenAPI.SpecURLs {
+		u, err := url.Parse(specURL)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("openapi.spec_urls[%d]: invalid URL: %s", i, specURL))
+		} else if u.Scheme != "http" && u.Scheme != "https" {
+			errs = append(errs, fmt.Sprintf("openapi.spec_urls[%d]: must use http or https scheme, got %q", i, u.Scheme))
+		}
+	}
 	if len(cfg.OpenAPI.SpecFiles) > 50 {
 		errs = append(errs, fmt.Sprintf("openapi.spec_files: max 50 entries, got %d", len(cfg.OpenAPI.SpecFiles)))
 	}

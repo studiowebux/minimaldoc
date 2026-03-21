@@ -78,12 +78,26 @@ func mergeStringSliceNoFlag(dst *[]string, src []string) {
 // Both dst and src must be pointers to structs with matching string fields.
 // This eliminates repetitive if statements for structs with many string fields.
 func mergeStringFields(dst, src any) {
-	dstVal := reflect.ValueOf(dst).Elem()
+	dstV := reflect.ValueOf(dst)
+	if dstV.Kind() != reflect.Pointer || dstV.IsNil() {
+		return
+	}
+	dstVal := dstV.Elem()
+	if dstVal.Kind() != reflect.Struct {
+		return
+	}
+
 	srcVal := reflect.ValueOf(src)
 
 	// Handle pointer to struct
 	if srcVal.Kind() == reflect.Pointer {
+		if srcVal.IsNil() {
+			return
+		}
 		srcVal = srcVal.Elem()
+	}
+	if srcVal.Kind() != reflect.Struct {
+		return
 	}
 
 	srcType := srcVal.Type()

@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -223,6 +224,8 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 		specSlug := strings.TrimSuffix(spec.Name, ".yaml")
 		specSlug = strings.TrimSuffix(specSlug, ".yml")
 		specSlug = strings.TrimSuffix(specSlug, ".json")
+		safeBase := html.EscapeString(basePath)
+		safeSlug := html.EscapeString(specSlug)
 		redirectHTML := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -232,7 +235,7 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 <body>
 <p>Redirecting to <a href="%s/api/%s/">API Documentation</a>...</p>
 </body>
-</html>`, basePath, specSlug, basePath, specSlug, basePath, specSlug)
+</html>`, safeBase, safeSlug, safeBase, safeSlug, safeBase, safeSlug)
 
 		indexPath := filepath.Join(apiDir, "index.html")
 		if err := writeWebFile(indexPath, []byte(redirectHTML)); err != nil {
@@ -278,7 +281,7 @@ func (g *OpenAPIGenerator) generateAPIIndex(apiDir string) error {
 
 	// Generate index HTML with proper styling
 	buf.WriteString(`<!DOCTYPE html>
-<html lang="en" data-theme="light" data-base-path="` + basePath + `">
+<html lang="en" data-theme="light" data-base-path="` + html.EscapeString(basePath) + `">
 <head>
 <script>
 (function(){var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.setAttribute('data-theme','dark');}})();
@@ -291,20 +294,20 @@ a{color:var(--link-color)}
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>API Documentation | ` + g.site.Config.Title + `</title>
-<meta name="description" content="OpenAPI documentation for ` + g.site.Config.Title + `">
-<link rel="stylesheet" href="` + basePath + `/css/tokens.css?v=` + g.version + `">
-<link rel="stylesheet" href="` + basePath + `/css/base.css?v=` + g.version + `">
-<link rel="stylesheet" href="` + basePath + `/css/main.css?v=` + g.version + `">
-<link rel="stylesheet" href="` + basePath + `/css/landing.css?v=` + g.version + `">
-<link rel="stylesheet" href="` + basePath + `/css/portfolio.css?v=` + g.version + `">
+<title>API Documentation | ` + html.EscapeString(g.site.Config.Title) + `</title>
+<meta name="description" content="OpenAPI documentation for ` + html.EscapeString(g.site.Config.Title) + `">
+<link rel="stylesheet" href="` + html.EscapeString(basePath) + `/css/tokens.css?v=` + html.EscapeString(g.version) + `">
+<link rel="stylesheet" href="` + html.EscapeString(basePath) + `/css/base.css?v=` + html.EscapeString(g.version) + `">
+<link rel="stylesheet" href="` + html.EscapeString(basePath) + `/css/main.css?v=` + html.EscapeString(g.version) + `">
+<link rel="stylesheet" href="` + html.EscapeString(basePath) + `/css/landing.css?v=` + html.EscapeString(g.version) + `">
+<link rel="stylesheet" href="` + html.EscapeString(basePath) + `/css/portfolio.css?v=` + html.EscapeString(g.version) + `">
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to main content</a>
 <div class="landing-page">
 <header class="landing-header">
 <div class="landing-header-content">
-<a href="` + basePath + `/" class="landing-logo">` + g.site.Config.Title + `</a>
+<a href="` + html.EscapeString(basePath) + `/" class="landing-logo">` + html.EscapeString(g.site.Config.Title) + `</a>
 <button class="landing-menu-toggle" id="landing-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
 <span></span>
 </button>
@@ -338,7 +341,7 @@ a{color:var(--link-color)}
 		}
 		desc = template.HTMLEscapeString(desc)
 
-		relPath := basePath + "/api/" + specName
+		relPath := html.EscapeString(basePath + "/api/" + specName)
 		buf.WriteString(fmt.Sprintf(`<a href="%s" class="project-card" style="text-decoration:none;color:inherit;cursor:pointer;display:block">
 <div class="project-content">
 <h2 class="project-title">%s</h2>
@@ -349,7 +352,7 @@ a{color:var(--link-color)}
 </div>
 </div>
 </a>
-`, relPath, spec.Title, desc, spec.Version, len(spec.Endpoints)))
+`, relPath, html.EscapeString(spec.Title), desc, html.EscapeString(spec.Version), len(spec.Endpoints)))
 	}
 
 	buf.WriteString(`</section>
@@ -357,11 +360,11 @@ a{color:var(--link-color)}
 <footer class="landing-footer">
 <div class="footer-content">
 ` + footerLinks.String() + `
-<p class="footer-copyright">` + footer.Copyright + `</p>
+<p class="footer-copyright">` + html.EscapeString(footer.Copyright) + `</p>
 </div>
 </footer>
 </div>
-<script defer src="` + basePath + `/js/theme-toggle.js?v=` + g.version + `"></script>
+<script defer src="` + html.EscapeString(basePath) + `/js/theme-toggle.js?v=` + html.EscapeString(g.version) + `"></script>
 <script>
 (function(){
     var toggle = document.getElementById('landing-menu-toggle');

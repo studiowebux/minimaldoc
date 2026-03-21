@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -132,9 +133,21 @@ func (p *TOCFileParser) Flatten(entries []*TOCEntry) []string {
 
 	flatten = func(entries []*TOCEntry) {
 		for _, entry := range entries {
-			if entry.FilePath != "" {
-				// Resolve relative path
+			if entry.FilePath != "" && !entry.IsExternal {
+				// Resolve relative path and validate against traversal
 				fullPath := filepath.Join(p.docsDir, entry.FilePath)
+				absPath, err := filepath.Abs(fullPath)
+				if err != nil {
+					continue
+				}
+				absRoot, err := filepath.Abs(p.docsDir)
+				if err != nil {
+					continue
+				}
+				if !strings.HasPrefix(absPath, absRoot+string(filepath.Separator)) && absPath != absRoot {
+					fmt.Fprintf(os.Stderr, "Warning: TOC path %q escapes docs directory, skipping\n", entry.FilePath)
+					continue
+				}
 				result = append(result, fullPath)
 			}
 			if len(entry.Children) > 0 {

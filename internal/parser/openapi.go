@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	neturl "net/url"
 	"os"
@@ -96,8 +97,20 @@ func (p *OpenAPIParser) ParseURL(url string) (*core.APISpec, error) {
 		return nil, fmt.Errorf("invalid OpenAPI spec URL (must be http or https): %s", url)
 	}
 
+	// Block requests to private/loopback IPs to prevent SSRF
+	hostname := parsed.Hostname()
+	ips, lookupErr := net.LookupIP(hostname)
+	if lookupErr != nil {
+		return nil, fmt.Errorf("DNS lookup failed for OpenAPI spec URL %s: %w", url, lookupErr)
+	}
+	for _, ip := range ips {
+		if isPrivateOrLoopback(ip) {
+			return nil, fmt.Errorf("OpenAPI spec URL %s resolves to private/loopback address", url)
+		}
+	}
+
 	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Get(url) // #nosec G107 -- scheme validated above
+	resp, err := client.Get(url) // #nosec G107 -- scheme validated, private IPs blocked
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch OpenAPI spec from %s: %w", url, err)
 	}
@@ -809,4 +822,28 @@ func decodeYAMLNodes(nodes []*yaml.Node) []any {
 		result = append(result, decodeYAMLNode(n))
 	}
 	return result
+}
+
+// privateNetworks defines CIDR ranges blocked for SSRF prevention.
+var privateNetworks = func() []*net.IPNet {
+	cidrs := []string{
+		"127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+		"169.254.0.0/16", "::1/128", "fc00::/7", "fe80::/10",
+	}
+	nets := make([]*net.IPNet, 0, len(cidrs))
+	for _, cidr := range cidrs {
+		_, n, _ := net.ParseCIDR(cidr)
+		nets = append(nets, n)
+	}
+	return nets
+}()
+
+// isPrivateOrLoopback returns true if the IP falls within a private/loopback range.
+func isPrivateOrLoopback(ip net.IP) bool {
+	for _, n := range privateNetworks {
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

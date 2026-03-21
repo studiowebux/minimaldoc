@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/studiowebux/minimaldoc/internal/core"
@@ -23,7 +24,8 @@ type LinkValidator struct {
 	cleanURLs  bool
 
 	// Cache for heading IDs in HTML files
-	headingCache map[string]map[string]bool
+	headingCache   map[string]map[string]bool
+	headingCacheMu sync.RWMutex
 
 	// HTTP client for external links
 	httpClient *http.Client
@@ -367,14 +369,19 @@ func (v *LinkValidator) resolveOutputPath(urlPath string) string {
 
 // validateFragment checks if a fragment/anchor exists in an HTML file
 func (v *LinkValidator) validateFragment(htmlPath, fragment string) bool {
-	// Check cache first
+	// Check cache first (read lock)
+	v.headingCacheMu.RLock()
 	if headings, ok := v.headingCache[htmlPath]; ok {
+		v.headingCacheMu.RUnlock()
 		return headings[fragment]
 	}
+	v.headingCacheMu.RUnlock()
 
-	// Parse HTML file for id attributes
+	// Parse HTML file for id attributes (write lock)
 	headings := v.extractHeadingIDs(htmlPath)
+	v.headingCacheMu.Lock()
 	v.headingCache[htmlPath] = headings
+	v.headingCacheMu.Unlock()
 
 	return headings[fragment]
 }
@@ -424,10 +431,15 @@ func (v *LinkValidator) findSimilarFile(path string) string {
 
 // findSimilarAnchor suggests a similar anchor name
 func (v *LinkValidator) findSimilarAnchor(htmlPath, fragment string) string {
+	v.headingCacheMu.RLock()
 	headings := v.headingCache[htmlPath]
+	v.headingCacheMu.RUnlock()
+
 	if headings == nil {
 		headings = v.extractHeadingIDs(htmlPath)
+		v.headingCacheMu.Lock()
 		v.headingCache[htmlPath] = headings
+		v.headingCacheMu.Unlock()
 	}
 
 	fragmentLower := strings.ToLower(fragment)
